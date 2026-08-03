@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cmn124you-byte.github.io/ryangames/sitemap.xml

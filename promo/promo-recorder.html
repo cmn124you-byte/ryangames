@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>تسجيل فيديو ريان ألعاب</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #08111f; font-family: 'Cairo', 'Segoe UI', Arial, sans-serif; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 20px; }
+  .wrap { position: relative; width: 100%; max-width: 1024px; }
+  canvas { width: 100%; height: auto; display: block; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+  #panel { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  #recBtn { font-family: inherit; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(90deg,#e11d48,#7c3aed); border: 3px solid #fff; border-radius: 999px; padding: 14px 40px; cursor: pointer; }
+  #recBtn:disabled { opacity: .6; cursor: default; }
+  .st { font-size: 16px; font-weight: 700; color: #fde047; min-height: 22px; }
+  .note { font-size: 14px; color: #94a3b8; max-width: 720px; text-align: center; line-height: 1.8; }
+  .music-opt { display: flex; align-items: center; gap: 8px; font-size: 15px; color: #e2e8f0; cursor: pointer; user-select: none; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="cvs" width="1280" height="720"></canvas>
+  </div>
+  <div id="panel">
+    <button id="recBtn" type="button">🎬 ابدأ تسجيل الفيديو</button>
+    <label class="music-opt"><input type="checkbox" id="musicCb" /> 🎵 تشغيل الموسيقى العربية</label>
+    <div class="st" id="st"></div>
+    <div class="note">التسجيل يستمر ~49 ثانية ثم يُحمّل ملف <b>ryaan-games-promo.webm</b> تلقائيًا.
+    بعد التسجيل يمكنك إضافة أي أغنية في محرر الفيديو (CapCut / Kinemaster / Premiere).</div>
+  </div>
+
+<script>
+var cvs = document.getElementById("cvs");
+var ctx = cvs.getContext("2d");
+var W = 1280, H = 720;
+
+var scenes = [
+  { d: 6,  draw: s0 },
+  { d: 5,  draw: s1 },
+  { d: 7,  draw: s2 },
+  { d: 5,  draw: s3 },
+  { d: 6,  draw: s4 },
+  { d: 5,  draw: s5 },
+  { d: 5,  draw: s6 },
+  { d: 8,  draw: s7 }
+];
+var TOT = 0; scenes.forEach(function(s){ TOT += s.d; });
+
+var t0 = 0, over = true;
+
+/* ---------- helpers ---------- */
+function orb(x, y, r, color, alpha) {
+  var g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, color); g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function drawBG() {
+  var g = ctx.createRadialGradient(W*0.2, H*0.25, 100, W*0.5, H*0.5, 900);
+  g.addColorStop(0, "#1e1b4b"); g.addColorStop(0.6, "#0f172a"); g.addColorStop(1, "#08111f");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  orb(180, 120, 320, "#e11d48", 0.45);
+  orb(1120, 620, 300, "#7c3aed", 0.45);
+  orb(1000, 140, 190, "#f59e0b", 0.25);
+}
+function tx(str, x, y, size, w, fill, align) {
+  ctx.font = w + " " + size + "px 'Cairo', 'Segoe UI', Tahoma, Arial";
+  ctx.textAlign = align || "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = fill || "#ffffff";
+  ctx.fillText(str, x, y);
+}
+function gold(str, x, y, size, w) {
+  ctx.font = w + " " + size + "px 'Cairo', 'Segoe UI', Tahoma, Arial";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  var g = ctx.createLinearGradient(0, y - size/2, 0, y + size/2);
+  g.addColorStop(0, "#fde047"); g.addColorStop(0.55, "#f59e0b"); g.addColorStop(1, "#e11d48");
+  ctx.fillStyle = g;
+  ctx.shadowColor = "rgba(0,0,0,.55)"; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
+  ctx.fillText(str, x, y);
+  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+}
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function pill(str, y, w) {
+  ctx.save();
+  ctx.font = "900 40px 'Cairo', 'Segoe UI', Arial";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  var tw = ctx.measureText(str).width;
+  var bw = tw + 90;
+  var g = ctx.createLinearGradient(0, y-30, 0, y+30);
+  g.addColorStop(0, "#16a34a"); g.addColorStop(1, "#65a30d");
+  ctx.fillStyle = g;
+  rrect(W/2 - bw/2, y - 34, bw, 68, 999); ctx.fill();
+  ctx.strokeStyle = "#fde047"; ctx.lineWidth = 4; ctx.stroke();
+  ctx.fillStyle = "#fff";
+  ctx.fillText(str, W/2, y + 2);
+  ctx.restore();
+}
+function emojiRow(items, y, t, size) {
+  var gap = size + 40;
+  var start = W/2 - (items.length - 1) * gap / 2;
+  ctx.font = size + "px Arial";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (var i = 0; i < items.length; i++) {
+    var oy = Math.sin(t * 2.4 + i * 1.1) * 10;
+    ctx.fillText(items[i], start + i * gap, y + oy);
+  }
+}
+function kicker(str, y) { tx(str, W/2, y, 30, 700, "#fde047"); }
+function med(str, y, size) { tx(str, W/2, y, size || 44, 700, "#e2e8f0"); }
+function card(emoji, label, x, y, w, h, t, phase) {
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,.07)";
+  ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.lineWidth = 2;
+  rrect(x, y, w, h, 20); ctx.fill(); ctx.stroke();
+  ctx.font = "46px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  var oy = Math.sin(t * 2 + phase) * 6;
+  ctx.fillText(emoji, x + w/2, y + h*0.34 + oy);
+  tx(label, x + w/2, y + h*0.68, 30, 800, "#fff");
+  ctx.restore();
+}
+
+/* ---------- scenes ---------- */
+function s0(t) {
+  kicker("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", 190);
+  gold("ريان ألعاب", W/2, 330, 120, 900);
+  med("موقعك الأول لتحميل الألعاب المعرّبة للعربية مجانًا", 470, 40);
+  emojiRow(["🎮","🎣","⚔️","✨","🎯"], 590, t, 64);
+}
+function s1(t) {
+  kicker("مكتبة ضخمة", 220);
+  tx("ألعاب معرّبة بالكامل 🗣️", W/2, 360, 84, 900, "#ffffff");
+  med("كل لعبة باللغة العربية مع شرح تثبيت خطوة بخطوة ودعم فني مجاني", 500, 40);
+}
+function s2(t) {
+  kicker("مجانًا ودائمًا", 130);
+  tx("حمّل ألعابك المفضلة مجانًا", W/2, 240, 68, 900, "#ffffff");
+  var items = [["🎣","صيد السمك"],["🏃","لعبة القفز"],["⚔️","نزال الأبطال"],["✨","كلمات بابا منصف"],["🎯","أحمد قيمز"],["📲","العب من هاتفك"]];
+  var cw = 300, ch = 130, gx = 40, gy = 24;
+  var x0 = W/2 - (cw*2 + gx)/2;
+  var y0 = 330;
+  for (var i = 0; i < 6; i++) {
+    var col = i % 2, row = Math.floor(i / 2);
+    card(items[i][0], items[i][1], x0 + col*(cw+gx), y0 + row*(ch+gy), cw, ch, t, i);
+  }
+}
+function s3(t) {
+  kicker("أينما كنت", 220);
+  tx("ألعاب بلا نت 🚀", W/2, 370, 88, 900, "#ffffff");
+  med("كل الألعاب تعمل بدون إنترنت — حتى وأنت خارج المنزل", 500, 40);
+  pill("تعمل بدون نت تمامًا", 590);
+}
+function s4(t) {
+  kicker("نافس أصدقاءك", 220);
+  tx("لوحة شرف عالمية 🏆", W/2, 360, 82, 900, "#ffffff");
+  med("سجّل دخولك بالإيميل واحفظ نقاطك، وتنافس عالميًا وحسب بلدك", 500, 40);
+}
+function s5(t) {
+  kicker("خدمة مجانية", 220);
+  tx("اطلب تعريب لعبتك ✨", W/2, 360, 82, 900, "#ffffff");
+  med("لا تجد لعبتك معرّبة؟ أرسل طلبك وسنعمل على تعريبها في أقرب وقت", 500, 40);
+}
+function s6(t) {
+  kicker("وصول سريع", 220);
+  tx("حمّل التطبيق على جهازك 📲", W/2, 360, 76, 900, "#ffffff");
+  med("ثبّت الموقع كتطبيق وافتح ألعابك بنقرة واحدة", 500, 40);
+  pill("ألعاب معرّبة · بلا نت · مجانية", 580);
+}
+function s7(t) {
+  kicker("انضم الآن", 200);
+  gold("ريان ألعاب 🎮", W/2, 340, 112, 900);
+  med("ألعاب معرّبة · بلا نت · مجانية · لوحة شرف عالمية", 470, 40);
+  var s = 1 + Math.sin(t * 3) * 0.04;
+  ctx.save();
+  ctx.translate(W/2, 570); ctx.scale(s, s); ctx.translate(-W/2, -570);
+  pill("زورنا الآن", 570);
+  ctx.restore();
+}
+
+/* ---------- timeline ---------- */
+function startPlayback() {
+  t0 = performance.now();
+  over = false;
+  requestAnimationFrame(draw);
+}
+function draw(now) {
+  var T = (now - t0) / 1000;
+  if (T >= TOT) { over = true; drawEnd(); return; }
+  var acc = 0, idx = 0, local = 0;
+  for (var k = 0; k < scenes.length; k++) {
+    if (T < acc + scenes[k].d) { idx = k; local = T - acc; break; }
+    acc += scenes[k].d;
+  }
+  drawBG();
+  var rem = scenes[idx].d - local;
+  var fade = rem < 0.8 ? (1 - rem / 0.8) : 0;
+  scenes[idx].draw(local);
+  if (fade > 0 && idx + 1 < scenes.length) {
+    ctx.save();
+    ctx.globalAlpha = fade;
+    scenes[idx + 1].draw(0);
+    ctx.restore();
+  }
+  drawWatermark();
+  requestAnimationFrame(draw);
+}
+function drawEnd() {
+  drawBG();
+  scenes[scenes.length - 1].draw(8);
+  drawWatermark();
+}
+
+/* ---------- watermark ---------- */
+function drawWatermark() {
+  ctx.save();
+  ctx.globalAlpha = 0.6;
+  var txt = "🎮 ريان ألعاب";
+  ctx.font = "700 34px 'Cairo', 'Segoe UI', Tahoma, Arial";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  var tw = ctx.measureText(txt).width;
+  var w = tw + 56, h = 58;
+  var x = 28, y = H - 28 - h;
+  ctx.fillStyle = "rgba(8,11,23,.6)";
+  rrect(x, y, w, h, 29); ctx.fill();
+  ctx.strokeStyle = "rgba(253,224,71,.85)"; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(txt, x + w / 2, y + h / 2);
+  ctx.restore();
+}
+
+/* ---------- synthesized Arabic music (original, maqam Hijaz + darbuka) ---------- */
+var musicStream = null;
+function startMusic() {
+  try {
+    var ACX = window.AudioContext || window.webkitAudioContext;
+    var actx = new ACX();
+    if (actx.state === "suspended") { actx.resume(); }
+    var t0 = actx.currentTime + 0.15;
+    var bpm = 80, beat = 60 / bpm;
+    var total = TOT + 2;
+    var dest = actx.createMediaStreamDestination();
+    var g = actx.createGain(); g.gain.value = 0.5;
+    g.connect(dest);
+    var out = actx.createGain(); out.gain.value = 0.5;
+    g.connect(out); out.connect(actx.destination);
+    /* drone on D3 */
+    var d = actx.createOscillator(); d.type = "sine"; d.frequency.value = 146.83;
+    var dg = actx.createGain(); dg.gain.value = 0.05;
+    d.connect(dg); dg.connect(g); d.start(t0); d.stop(t0 + total);
+    /* darbuka + melody */
+    var melody = [587.33, 523.25, 466.16, 440, 523.25, 466.16, 440, 392, 466.16, 440, 392, 369.99, 440, 392, 440, 466.16];
+    var steps = Math.ceil(total / (beat / 2));
+    for (var s = 0; s < steps; s++) {
+      var t = t0 + s * (beat / 2);
+      if (s % 2 === 0) {
+        pluck(actx, g, melody[Math.floor(s / 2) % melody.length], t, beat * 0.85);
+        dum(actx, g, t);
+      } else {
+        tak(actx, g, t);
+      }
+    }
+    musicStream = dest.stream;
+  } catch (e) { musicStream = null; }
+}
+function pluck(actx, dest, f, t, dur) {
+  var o = actx.createOscillator(); o.type = "triangle"; o.frequency.value = f;
+  var og = actx.createGain();
+  og.gain.setValueAtTime(0, t);
+  og.gain.linearRampToValueAtTime(0.22, t + 0.02);
+  og.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(og); og.connect(dest);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+function dum(actx, dest, t) {
+  var o = actx.createOscillator(); o.type = "sine";
+  o.frequency.setValueAtTime(150, t);
+  o.frequency.exponentialRampToValueAtTime(55, t + 0.12);
+  var og = actx.createGain();
+  og.gain.setValueAtTime(0.5, t);
+  og.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+  o.connect(og); og.connect(dest); o.start(t); o.stop(t + 0.32);
+}
+function tak(actx, dest, t) {
+  var dur = 0.09;
+  var buf = actx.createBuffer(1, Math.ceil(actx.sampleRate * dur), actx.sampleRate);
+  var dd = buf.getChannelData(0);
+  for (var i = 0; i < dd.length; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / dd.length);
+  var src = actx.createBufferSource(); src.buffer = buf;
+  var bp = actx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 3000; bp.Q.value = 1.2;
+  var og = actx.createGain(); og.gain.value = 0.35;
+  src.connect(bp); bp.connect(og); og.connect(dest); src.start(t);
+}
+
+/* ---------- recorder ---------- */
+var btn = document.getElementById("recBtn");
+var st = document.getElementById("st");
+btn.addEventListener("click", function () {
+  if (typeof MediaRecorder === "undefined" || typeof cvs.captureStream === "undefined") {
+    st.textContent = "متصفحك لا يدعم التسجيل — استخدم أحدث Chrome أو Edge";
+    return;
+  }
+  btn.disabled = true;
+  st.textContent = "جاري التحضير…";
+  setTimeout(function () { startRec(); }, 600);
+});
+function startRec() {
+  var mime = "";
+  ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].forEach(function (t) {
+    if (!mime && MediaRecorder.isTypeSupported(t)) mime = t;
+  });
+  var low = location.hash.indexOf("low") !== -1;
+  var bits = low ? 2500000 : 8000000;
+  try {
+    var stream = cvs.captureStream(30);
+    var wantMusic = document.getElementById("musicCb").checked || location.hash.indexOf("music") !== -1;
+    if (wantMusic) {
+      startMusic();
+      if (musicStream && musicStream.getAudioTracks().length) {
+        stream.addTrack(musicStream.getAudioTracks()[0]);
+      }
+    }
+    var rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bits });
+    var chunks = [];
+    log("REC_START mime=" + mime + " cs=" + (typeof cvs.captureStream !== "undefined"));
+    rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onerror = function (e) { log("REC_ERR " + (e && e.error ? e.error.message : "?")); };
+    rec.onstop = function () {
+      var blob = new Blob(chunks, { type: mime || "video/webm" });
+      log("REC_DONE chunks=" + chunks.length + " size=" + blob.size);
+      try {
+        var fr = new FileReader();
+        fr.onloadend = function () { window.__b64 = fr.result; window.__done = true; log("B64_OK"); };
+        fr.readAsDataURL(blob);
+      } catch (e) { log("FR_ERR " + e.message); }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "ryaan-games-promo.webm";
+      document.body.appendChild(a); a.click();
+      setTimeout(function () {
+        st.innerHTML = "تم التسجيل ✓ حمّلنا لك ملف <b>ryaan-games-promo.webm</b>";
+        btn.disabled = false;
+        st.scrollIntoView({ behavior: "smooth" });
+      }, 500);
+    };
+    rec.start();
+    startPlayback();
+    st.textContent = "يتم التسجيل… ~" + Math.round(TOT) + " ثانية";
+    setTimeout(function () { if (rec.state !== "inactive") rec.stop(); }, (TOT + 1.5) * 1000);
+  } catch (err) {
+    log("REC_CATCH " + err.message);
+    st.textContent = "تعذّر بدء التسجيل: " + err.message;
+    btn.disabled = false;
+  }
+}
+function log(msg) {
+  var d = document.createElement("div");
+  d.style.fontSize = "12px"; d.style.color = "#94a3b8";
+  d.textContent = msg;
+  st.appendChild(d);
+  document.title = msg;
+}
+
+/* preview once on load */
+startPlayback();
+
+/* auto mode: open the file with #auto to record without clicking */
+if (location.hash.indexOf("auto") !== -1) {
+  setTimeout(function () { btn.click(); }, 900);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "rayan-play",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^7.4.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

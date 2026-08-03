@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: radial-gradient(circle at 15% 20%, #1e1b4b 0%, #0f172a 55%, #08111f 100%);
+    position: relative;
+    color: #fff;
+  }
+  .bg-orb { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.55; }
+  .orb1 { width: 480px; height: 480px; background: #e11d48; top: -140px; right: -120px; }
+  .orb2 { width: 420px; height: 420px; background: #7c3aed; bottom: -160px; left: -100px; }
+  .orb3 { width: 300px; height: 300px; background: #f59e0b; top: 40px; left: 200px; opacity: 0.35; }
+  .spark { position: absolute; animation: tw 2.4s ease-in-out infinite; }
+  @keyframes tw { 0%,100% { opacity: .15; transform: scale(.8);} 50% { opacity: .9; transform: scale(1.15);} }
+  .frame { position: absolute; inset: 14px; border: 4px solid rgba(253,224,71,.85); border-radius: 34px; box-shadow: inset 0 0 60px rgba(253,224,71,.15); }
+  .content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+  .badge {
+    background: linear-gradient(90deg,#16a34a,#65a30d);
+    color:#fff; font-weight: 900; font-size: 30px;
+    padding: 10px 34px; border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(22,163,74,.45);
+    margin-bottom: 24px; border: 3px solid #fde047;
+  }
+  .title {
+    font-size: 92px; font-weight: 900; line-height: 1.15;
+    background: linear-gradient(180deg,#fde047 10%,#f59e0b 55%,#e11d48 120%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,.5));
+    margin-bottom: 16px;
+  }
+  .sub {
+    font-size: 42px; font-weight: 800; color: #fff;
+    text-shadow: 0 4px 14px rgba(0,0,0,.6);
+    margin-bottom: 30px;
+  }
+  .games {
+    display: flex; gap: 22px; font-size: 58px;
+    background: rgba(255,255,255,.08);
+    border: 2px solid rgba(255,255,255,.18);
+    padding: 18px 38px; border-radius: 26px;
+    backdrop-filter: blur(4px);
+  }
+  .games span { animation: bounce 2.2s ease-in-out infinite; display: inline-block; }
+  .games span:nth-child(2){animation-delay:.2s} .games span:nth-child(3){animation-delay:.4s}
+  .games span:nth-child(4){animation-delay:.6s} .games span:nth-child(5){animation-delay:.8s}
+  @keyframes bounce { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-14px);} }
+  .cta {
+    margin-top: 30px; font-size: 34px; font-weight: 900;
+    background: linear-gradient(90deg,#e11d48,#7c3aed);
+    padding: 14px 44px; border-radius: 999px;
+    box-shadow: 0 10px 24px rgba(225,29,72,.5);
+    border: 3px solid #fff;
+  }
+  .foot { position: absolute; bottom: 30px; left: 0; right: 0; text-align: center; font-size: 26px; font-weight: 700; color: rgba(255,255,255,.75); }
+</style>
+</head>
+<body>
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="bg-orb orb3"></div>
+  <span class="spark" style="font-size:44px;top:70px;right:120px;">✦</span>
+  <span class="spark" style="font-size:36px;top:180px;left:90px;animation-delay:.5s">✦</span>
+  <span class="spark" style="font-size:50px;bottom:120px;right:200px;animation-delay:1s">✦</span>
+  <span class="spark" style="font-size:30px;bottom:60px;left:300px;animation-delay:1.4s">✨</span>
+  <div class="frame"></div>
+  <div class="content">
+    <div class="badge">🎮 موقع الألعاب الأول</div>
+    <div class="title">ريان ألعاب</div>
+    <div class="sub">تحميل ألعاب معرّبة مجانًا</div>
+    <div class="games">
+      <span>🎣</span><span>🏃</span><span>⚔️</span><span>✨</span><span>🎯</span>
+    </div>
+    <div class="cta">تعمل بدون إنترنت 📲</div>
+  </div>
+  <div class="foot">ألعاب بلا نت · لوحة شرف عالمية · اطلب تعريب لعبتك</div>
+</body>
+</html>
