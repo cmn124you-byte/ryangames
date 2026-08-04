@@ -1087,9 +1087,9 @@
         "</div>";
       return;
     }
-    document.title = esc(g.title) + " — " + data.settings.site.name;
+    document.title = esc(g.browserTitle || g.title) + " — " + data.settings.site.name;
     setMeta("description", String(g.desc || "").slice(0, 160));
-    setOg("og:title", g.title);
+    setOg("og:title", g.browserTitle || g.title);
     setOg("og:description", String(g.desc || "").slice(0, 200));
     setOg("og:image", g.cover || "");
 
