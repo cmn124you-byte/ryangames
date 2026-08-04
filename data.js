@@ -32,15 +32,16 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 14;
+var DATA_VERSION = 15;
 
 var DEFAULT_GAMES = [];
 
 var DEFAULT_LESSONS = [
-  { id: 1, icon: "🔄", title: "تحديث اللعبة المتوافق", desc: "كيف أنزّل تحديث اللعبة المتوافق مع التعريب؟", link: "" },
+  { id: 1, icon: "🛠️", title: "تحديث اللعبة المتوافق", desc: "كيف أنزّل تحديث اللعبة المتوافق مع التعريب؟", link: "" },
   { id: 2, icon: "🛡️", title: "الحصول على الألعاب قانونيًا", desc: "كيف أحصل على الألعاب بدون اللجوء للقرصنة؟", link: "" },
   { id: 3, icon: "📁", title: "معرفة مسار التنصيب", desc: "أين أثبّت التعريب؟ وأين أجد اللعبة على حاسبي؟", link: "" },
   { id: 4, icon: "⬇️", title: "طريقة التحميل والتشغيل", desc: "كيف تحمّل اللعبة من الموقع وتثبّتها وتشغّلها على جهازك؟ اتبع الخطوات بالترتيب لتحصل على تجربة سلسة.", link: "" },
+  { id: 5, icon: "🔄", title: "عنوان جديد", desc: "وصف", link: "" },
 ];
 
 var DEFAULT_UPDATES = [];
