@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 26;
+var DATA_VERSION = 28;
 
 var DEFAULT_GAMES = [
   {
@@ -60,33 +60,6 @@ var DEFAULT_GAMES = [
     video: "",
     free: false,
     isApp: false,
-  },
-  {
-    id: 2,
-    title: "",
-    ar: "",
-    browserTitle: "",
-    cover: "",
-    gallery: [],
-    video: "",
-    size: "",
-    genres: [],
-    platforms: ["ويندوز"],
-    desc: "",
-    min: "",
-    rec: "",
-    downloads: "0",
-    date: "2026-08-04",
-    link: "",
-    linkAlt: "",
-    buy: "",
-    tradRate: "100%",
-    installTime: "5 دقائق",
-    compat: "Windows 10/11",
-    arLocal: true,
-    free: false,
-    isApp: false,
-    pass: "",
   },
 ];
 
