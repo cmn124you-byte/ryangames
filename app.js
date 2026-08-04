@@ -51,6 +51,10 @@
       if (!Array.isArray(g.genres)) g.genres = [];
       return g;
     });
+    if (!DEFAULT_GAMES.length && data.games.length) {
+      data.games = [];
+      store(K_GAMES, []);
+    }
     data.lessons = normArray(load(K_LESSONS, null), DEFAULT_LESSONS, function (l) {
       var def = mergeDefaults(l, DEFAULT_LESSONS);
       return Object.assign({}, def, l);
