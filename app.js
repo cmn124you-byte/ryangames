@@ -44,8 +44,8 @@
       var def = mergeDefaults(g, DEFAULT_GAMES);
       g = Object.assign({}, def, g);
       if (def) {
-        if (g.min === "" && def.min) g.min = def.min;
-        if (g.rec === "" && def.rec) g.rec = def.rec;
+        if ((g.min === "" || g.min === null) && def.min) g.min = def.min;
+        if ((g.rec === "" || g.rec === null) && def.rec) g.rec = def.rec;
       }
       if (!Array.isArray(g.platforms)) g.platforms = [];
       if (!Array.isArray(g.genres)) g.genres = [];
