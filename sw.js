@@ -1,4 +1,4 @@
-var CACHE = "ry-cache-v31";
+var CACHE = "ry-cache-v32";
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
@@ -17,6 +17,13 @@ self.addEventListener("activate", function (e) {
         if (k !== CACHE) return caches.delete(k);
       }));
     }).then(function () { return self.clients.claim(); })
+      .then(function () {
+        return self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (list) {
+          return Promise.all(list.map(function (c) {
+            try { return c.navigate(c.url); } catch (err) { return null; }
+          }));
+        });
+      })
   );
 });
 

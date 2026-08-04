@@ -32,6 +32,8 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
+var DATA_VERSION = 5;
+
 var DEFAULT_GAMES = [];
 
 var DEFAULT_LESSONS = [

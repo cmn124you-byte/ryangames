@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var SITE_VERSION = "v4";
+  var SITE_VERSION = "v5";
   var K_GAMES = "ry_games";
   var K_LESSONS = "ry_lessons";
   var K_UPDATES = "ry_updates";
@@ -41,6 +41,12 @@
   }
 
   function loadAll() {
+    if (typeof DATA_VERSION === "number" && load("ry_dv", 0) !== DATA_VERSION) {
+      store(K_GAMES, DEFAULT_GAMES.slice());
+      store(K_LESSONS, DEFAULT_LESSONS.slice());
+      store(K_UPDATES, DEFAULT_UPDATES.slice());
+      store("ry_dv", DATA_VERSION);
+    }
     data.games = normArray(load(K_GAMES, null), DEFAULT_GAMES, function (g) {
       var def = mergeDefaults(g, DEFAULT_GAMES);
       g = Object.assign({}, def, g);
