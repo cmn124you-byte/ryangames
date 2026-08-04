@@ -32,9 +32,31 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 21;
+var DATA_VERSION = 23;
 
-var DEFAULT_GAMES = [];
+var DEFAULT_GAMES = [
+  {
+    id: 1,
+    title: "New Game",
+    ar: "لعبة جديدة",
+    cover: "",
+    genres: [],
+    platforms: ["ويندوز"],
+    size: "",
+    downloads: "0",
+    date: "2026-08-04",
+    desc: "",
+    min: "",
+    rec: "",
+    link: "",
+    buy: "",
+    tradRate: "100%",
+    installTime: "5 دقائق",
+    compat: "Windows 10/11",
+    arLocal: true,
+    linkAlt: "",
+  },
+];
 
 var DEFAULT_LESSONS = [
   { id: 1, icon: "🛠️", title: "تحديث اللعبة المتوافق", desc: "كيف أنزّل تحديث اللعبة المتوافق مع التعريب؟", link: "" },
