@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 31;
+var DATA_VERSION = 32;
 
 var DEFAULT_GAMES = [
   {
@@ -70,7 +70,7 @@ var DEFAULT_LESSONS = [
 ];
 
 var DEFAULT_UPDATES = [
-  { id: 1, title: "تعريب لعبة the supper", ar: "العشاء ", days: "محدث منذ يوم", link: "https://cmn124you-byte.github.io/ryangames/game.html?id=1" },
+  { id: 1, title: "تعريب لعبة the supper", ar: "العشاء ", days: "محدث منذ يوم", link: "https://cmn124you-byte.github.io/ryangames/game-the-supper.html" },
 ];
 
 var DEFAULT_SETTINGS = {
