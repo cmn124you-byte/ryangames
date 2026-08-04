@@ -1,4 +1,4 @@
-var CACHE = "ry-cache-v29";
+var CACHE = "ry-cache-v30";
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
@@ -27,15 +27,14 @@ self.addEventListener("fetch", function (e) {
   if (url.pathname.indexOf("/api/") !== -1) return;
 
   e.respondWith(
-    caches.match(e.request).then(function (hit) {
-      var fetchPromise = fetch(e.request).then(function (r) {
-        if (r && r.status === 200 && r.type === "basic") {
-          var copy = r.clone();
-          caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-        }
-        return r;
-      }).catch(function () { return hit; });
-      return hit || fetchPromise;
+    fetch(e.request).then(function (r) {
+      if (r && r.status === 200 && r.type === "basic") {
+        var copy = r.clone();
+        caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+      }
+      return r;
+    }).catch(function () {
+      return caches.match(e.request);
     })
   );
 });
