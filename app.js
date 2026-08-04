@@ -1,6 +1,7 @@
 (function () {
   "use strict";
 
+  var SITE_VERSION = "v4";
   var K_GAMES = "ry_games";
   var K_LESSONS = "ry_lessons";
   var K_UPDATES = "ry_updates";
@@ -860,7 +861,7 @@
     var fat = document.getElementById("footerAboutText");
     if (fat) fat.textContent = data.settings.about;
     var fc = document.getElementById("footerCopyright");
-    if (fc) fc.textContent = "© " + new Date().getFullYear() + " " + data.settings.site.name + " — جميع الحقوق محفوظة";
+    if (fc) fc.textContent = "© " + new Date().getFullYear() + " " + data.settings.site.name + " — جميع الحقوق محفوظة · " + SITE_VERSION;
 
     var links = document.getElementById("footerLinks");
     if (!links) return;

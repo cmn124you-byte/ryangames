@@ -1,4 +1,4 @@
-var CACHE = "ry-cache-v30";
+var CACHE = "ry-cache-v31";
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
