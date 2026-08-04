@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 17;
+var DATA_VERSION = 18;
 
 var DEFAULT_GAMES = [];
 
@@ -42,7 +42,6 @@ var DEFAULT_LESSONS = [
   { id: 3, icon: "📁", title: "معرفة مسار التنصيب", desc: "أين أثبّت التعريب؟ وأين أجد اللعبة على حاسبي؟", link: "" },
   { id: 4, icon: "⬇️", title: "طريقة التحميل والتشغيل", desc: "كيف تحمّل اللعبة من الموقع وتثبّتها وتشغّلها على جهازك؟ اتبع الخطوات بالترتيب لتحصل على تجربة سلسة.", link: "" },
   { id: 5, icon: "📁", title: "عنوان جديد", desc: "وصف", link: "" },
-  { id: 6, icon: "📁", title: "عنوان جديد", desc: "وصف", link: "" },
 ];
 
 var DEFAULT_UPDATES = [];
