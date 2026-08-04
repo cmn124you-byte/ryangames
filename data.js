@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 28;
+var DATA_VERSION = 30;
 
 var DEFAULT_GAMES = [
   {
@@ -54,7 +54,6 @@ var DEFAULT_GAMES = [
     installTime: "2 دقائق",
     compat: "Windows 10/11",
     arLocal: true,
-    linkAlt: "http://127.0.0.1:8974/downloads/The-Supper-Arabic-Patch-v1.0.exe?k=ab0dbbe96119d917d97c1b226f5a6483",
     browserTitle: "تعريب لعبة the supper",
     gallery: [],
     video: "",
@@ -70,7 +69,9 @@ var DEFAULT_LESSONS = [
   { id: 4, icon: "⬇️", title: "طريقة التحميل والتشغيل", desc: "كيف تحمّل اللعبة من الموقع وتثبّتها وتشغّلها على جهازك؟ اتبع الخطوات بالترتيب لتحصل على تجربة سلسة.", link: "" },
 ];
 
-var DEFAULT_UPDATES = [];
+var DEFAULT_UPDATES = [
+  { id: 1, title: "تعريب لعبة the supper", ar: "العشاء ", days: "محدث منذ يوم", link: "https://cmn124you-byte.github.io/ryangames/game.html?id=1" },
+];
 
 var DEFAULT_SETTINGS = {
   site: { name: "ريان", mark: "ر", tagline: "ألعابُك بِلمسةٍ عربيةٍ أصيلة" },
