@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 9;
+var DATA_VERSION = 10;
 
 var DEFAULT_GAMES = [];
 
@@ -44,7 +44,6 @@ var DEFAULT_LESSONS = [
 ];
 
 var DEFAULT_UPDATES = [
-  { id: 5, title: "Grill Masters", ar: "أساتذة الشواء", days: "محدث منذ 3 أيام", link: "" },
   { id: 6, title: "Sushi Sensei", ar: "سوشي سينسي", days: "محدث منذ 5 أيام", link: "" },
   { id: 7, title: "Pizza Empire", ar: "إمبراطورية البيتزا", days: "محدث منذ 8 أيام", link: "" },
   { id: 8, title: "Coffee Barista", ar: "باريستا القهوة", days: "محدث منذ 10 أيام", link: "" },
