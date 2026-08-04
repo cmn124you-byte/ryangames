@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 11;
+var DATA_VERSION = 14;
 
 var DEFAULT_GAMES = [];
 
@@ -43,11 +43,7 @@ var DEFAULT_LESSONS = [
   { id: 4, icon: "⬇️", title: "طريقة التحميل والتشغيل", desc: "كيف تحمّل اللعبة من الموقع وتثبّتها وتشغّلها على جهازك؟ اتبع الخطوات بالترتيب لتحصل على تجربة سلسة.", link: "" },
 ];
 
-var DEFAULT_UPDATES = [
-  { id: 7, title: "Pizza Empire", ar: "إمبراطورية البيتزا", days: "محدث منذ 8 أيام", link: "" },
-  { id: 8, title: "Coffee Barista", ar: "باريستا القهوة", days: "محدث منذ 10 أيام", link: "" },
-  { id: 9, title: "Family Feast", ar: "وليمة العائلة", days: "محدث منذ أسبوعين", link: "" },
-];
+var DEFAULT_UPDATES = [];
 
 var DEFAULT_SETTINGS = {
   site: { name: "ريان", mark: "ر", tagline: "ألعابُك بِلمسةٍ عربيةٍ أصيلة" },
