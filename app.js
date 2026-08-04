@@ -334,6 +334,8 @@
   }
 
   function gamePageHref(id) {
+    var g = gameById(id);
+    if (g && g.title && slugify(g.title)) return "game-" + slugify(g.title) + ".html";
     return "game.html?id=" + encodeURIComponent(id);
   }
 
@@ -862,7 +864,9 @@
     var bt = document.getElementById("brandTagline");
     if (bt) bt.textContent = data.settings.site.tagline || "";
     var page = document.body && document.body.dataset.page;
-    document.title = data.settings.site.name + " — " + (PAGE_TITLES[page] || "ألعاب معرّبة");
+    if (page !== "game") {
+      document.title = data.settings.site.name + " — " + (PAGE_TITLES[page] || "ألعاب معرّبة");
+    }
 
     var fat = document.getElementById("footerAboutText");
     if (fat) fat.textContent = data.settings.about;
@@ -1075,6 +1079,8 @@
       g = gameById(parseInt(p.id, 10));
     } else if (p.slug) {
       g = data.games.filter(function (x) { return slugify(x.title) === p.slug; })[0];
+    } else if (window.__GAME_ID !== undefined) {
+      g = gameById(window.__GAME_ID);
     }
     if (!g) {
       document.title = "اللعبة غير موجودة — " + data.settings.site.name;
@@ -1087,13 +1093,15 @@
         "</div>";
       return;
     }
-    document.title = esc(g.browserTitle || g.title) + " — " + data.settings.site.name;
+    if (!wrap.dataset.staticId || String(wrap.dataset.staticId) !== String(g.id)) {
+      document.title = esc(g.browserTitle || g.title) + " — " + data.settings.site.name;
     setMeta("description", String(g.desc || "").slice(0, 160));
     setOg("og:title", g.browserTitle || g.title);
     setOg("og:description", String(g.desc || "").slice(0, 200));
     setOg("og:image", g.cover || "");
 
     wrap.innerHTML = gamePageHTML(g);
+    }
 
     var imgs = [];
     if (g.cover) imgs.push(g.cover);
