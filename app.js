@@ -33,21 +33,38 @@
     return def;
   }
 
+  function mergeDefaults(stored, defaults) {
+    var d = null;
+    for (var di = 0; di < defaults.length; di++) if (defaults[di].id === stored.id) { d = defaults[di]; break; }
+    return d;
+  }
+
   function loadAll() {
     data.games = normArray(load(K_GAMES, null), DEFAULT_GAMES, function (g) {
-      g = Object.assign({}, g);
+      var def = mergeDefaults(g, DEFAULT_GAMES);
+      g = Object.assign({}, def, g);
+      if (def) {
+        if (g.min === "" && def.min) g.min = def.min;
+        if (g.rec === "" && def.rec) g.rec = def.rec;
+      }
       if (!Array.isArray(g.platforms)) g.platforms = [];
       if (!Array.isArray(g.genres)) g.genres = [];
       return g;
     });
-    data.lessons = normArray(load(K_LESSONS, null), DEFAULT_LESSONS);
+    data.lessons = normArray(load(K_LESSONS, null), DEFAULT_LESSONS, function (l) {
+      var def = mergeDefaults(l, DEFAULT_LESSONS);
+      return Object.assign({}, def, l);
+    });
     if (load("ry_data_v", 0) < 2) {
       var known = {};
       data.lessons.forEach(function (l) { known[l.id] = true; });
       DEFAULT_LESSONS.forEach(function (d) { if (!known[d.id]) data.lessons.push(Object.assign({}, d)); });
       store("ry_data_v", 2);
     }
-    data.updates = normArray(load(K_UPDATES, null), DEFAULT_UPDATES);
+    data.updates = normArray(load(K_UPDATES, null), DEFAULT_UPDATES, function (u) {
+      var def = mergeDefaults(u, DEFAULT_UPDATES);
+      return Object.assign({}, def, u);
+    });
     if (load("ry_games_v", 0) < 1) {
       var haveG = {};
       data.games.forEach(function (g) { haveG[g.id] = true; });
