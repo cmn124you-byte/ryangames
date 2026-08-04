@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 7;
+var DATA_VERSION = 8;
 
 var DEFAULT_GAMES = [];
 
@@ -44,7 +44,6 @@ var DEFAULT_LESSONS = [
 ];
 
 var DEFAULT_UPDATES = [
-  { id: 3, title: "Chef's Journey", ar: "رحلة الشيف", days: "محدث منذ أسبوع", link: "" },
   { id: 4, title: "Sweet Kingdom", ar: "مملكة الحلويات", days: "محدث منذ يوم", link: "" },
   { id: 5, title: "Grill Masters", ar: "أساتذة الشواء", days: "محدث منذ 3 أيام", link: "" },
   { id: 6, title: "Sushi Sensei", ar: "سوشي سينسي", days: "محدث منذ 5 أيام", link: "" },
