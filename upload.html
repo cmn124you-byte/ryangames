@@ -54,6 +54,8 @@ button{font-family:inherit;cursor:pointer}
 .targetbar code{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--acc);font-weight:700;direction:ltr}
 .targetbar input{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:5px 10px;font-family:inherit;font-size:12px;width:220px}
 .targetbar input:focus{outline:none;border-color:var(--acc)}
+.targetbar select{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:5px 8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.targetbar select:focus{outline:none;border-color:var(--acc)}
 .urow{display:flex;align-items:center;gap:12px;padding:8px 20px;border-bottom:1px solid #0e1524}
 .urow .nm{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .urow .st{font-size:12px;font-weight:800;display:flex;align-items:center;gap:6px}
@@ -127,12 +129,13 @@ button{font-family:inherit;cursor:pointer}
   <div class="sp"></div>
   <button class="btn" id="btnRefresh">⟳ تحديث</button>
   <button class="btn blu" id="btnSite" title="فتح الموقع الحي">🌐 فتح الموقع</button>
+  <button class="btn" id="btnMode">🎛 الملفات</button>
   <button class="btn" id="btnCfg">⚙️ الإعدادات</button>
   <button class="btn red sm" id="btnLogout" title="تغيير الحساب">🚪 خروج</button>
 </div>
 
 <div class="wrap">
-  <aside class="side">
+  <aside class="side" id="side">
     <h3>مجلدات سريعة</h3>
     <div class="q" id="quick"></div>
     <h3>كل المجلدات</h3>
@@ -149,6 +152,14 @@ button{font-family:inherit;cursor:pointer}
     </div>
     <div class="targetbar">
       <span class="lbl">الرفع إلى:</span>
+      <select id="folderSel" title="اختر المجلد">
+        <option value="">الرئيسية</option>
+        <option value="games">الألعاب</option>
+        <option value="minigames">الألعاب الصغيرة</option>
+        <option value="downloads">التحميلات</option>
+        <option value="promo">الصور</option>
+        <option value="icons">الأيقونات</option>
+      </select>
       <code id="targetPath">/</code>
       <input id="targetOver" type="text" placeholder="مسار فرعي إضافي (اختياري)">
       <span class="sp"></span>
@@ -159,7 +170,7 @@ button{font-family:inherit;cursor:pointer}
     <div class="bar" id="bar"><i id="barFill"></i></div>
     <div id="results"></div>
 
-    <div class="fhead">
+    <div class="fhead" id="fhead">
       <span class="fpath" id="pathLabel">/</span>
       <input id="search" type="text" placeholder="🔍 بحث بالاسم...">
       <button class="btn acc sm" id="btnNew">＋ ملف جديد</button>
@@ -229,6 +240,7 @@ var CFG = {
 };
 var TOKEN = localStorage.getItem(LS.tok) || "";
 var TREE = null, CUR = "", LOADING = false;
+var SIMPLE = localStorage.getItem("ry_up_mode") !== "files";
 
 var $ = function(id){ return document.getElementById(id); };
 var ICON = {
@@ -376,7 +388,30 @@ function renderFiles(){
   });
 }
 
-function render(){ quickFolders(); renderTree(); renderBread(); renderFiles(); setStatus(); $("targetPath").textContent="/"+CUR+(CUR?"/":""); }
+function render(){
+  quickFolders(); renderTree(); renderBread(); renderFiles(); setStatus();
+  $("targetPath").textContent="/"+CUR+(CUR?"/":"");
+  $("folderSel").value=CUR;
+}
+
+function applyMode(){
+  var on = SIMPLE;
+  $("btnMode").textContent = on ? "🎛 وضع الملفات" : "🛋 وضع بسيط";
+  $("btnMode").title = on ? "إظهار كل الملفات وإدارتها" : "إخفاء الملفات وإبقاء الرفع فقط";
+  var hide = on ? "none" : "";
+  var side = $("side"); if(side) side.style.display = hide;
+  var bread = $("bread"); if(bread) bread.style.display = hide;
+  var fhead = $("fhead"); if(fhead) fhead.style.display = hide;
+  var files = $("files"); if(files) files.style.display = hide;
+  var sel = $("folderSel"); if(sel) sel.style.display = on ? "" : "none";
+}
+$("btnMode").onclick=function(){
+  SIMPLE = !SIMPLE;
+  localStorage.setItem("ry_up_mode", SIMPLE ? "simple" : "files");
+  applyMode();
+};
+$("folderSel").onchange=function(){ openDir(this.value); };
+applyMode();
 
 var LINK_PATH = "";
 function copyLink(p){
