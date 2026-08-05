@@ -1,10 +1,10 @@
-var CACHE = "ry-cache-v32";
+var CACHE = "ry-cache-v33";
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
     caches.open(CACHE)
       .then(function (c) {
-        return c.addAll(["./", "./index.html", "./game.html", "./style.css", "./data.js", "./app.js", "./minigames.html", "./minigames.js", "./manifest.json"]);
+        return c.addAll(["./", "./index.html", "./admin.html", "./game.html", "./style.css", "./data.js", "./app.js", "./minigames.html", "./minigames.js", "./manifest.json"]);
       })
       .then(function () { return self.skipWaiting(); })
   );
@@ -25,6 +25,7 @@ self.addEventListener("fetch", function (e) {
 
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   if (url.pathname.indexOf("/api/") !== -1) return;
+  if (url.pathname.indexOf("/.netlify/") !== -1) return;
 
   e.respondWith(
     fetch(e.request).then(function (r) {

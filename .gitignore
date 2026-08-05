@@ -1,4 +1,4 @@
 # Surge-specific (would hijack GitHub Pages custom-domain config)
 CNAME
-# Netlify-specific config
-netlify.toml
+# Netlify-specific config (now deployed on Netlify)
+!netlify.toml

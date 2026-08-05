@@ -79,6 +79,7 @@ var DEFAULT_SETTINGS = {
   supportNote: "ادعمنا لمواصلة تعريب الألعاب مجانًا.",
   contactEmail: "",
   adminPass: "",
+  publishKey: "ryan2026",
   slides: [
     { id: 1, gameId: 1, badge: "تعريب جديد", tagline: "تجربة عربية كاملة في مطبخك! إعدّ أطباقًا شهية واخدُم زبائنك تحت ضغط الوقت." },
     { id: 2, gameId: 3, badge: "قصة ممتعة", tagline: "رافق الشيف في رحلته من مطعم متواضع إلى مطبخ عالمي." },

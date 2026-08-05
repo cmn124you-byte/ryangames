@@ -11,6 +11,8 @@
   var S_ADMIN = "ry_admin_ok";
   var S_OWNER = "ry_owner_ok";
   var OWNER_EMAIL = "cmn124you@gmail.com";
+  var REMOTE_URL = "/.netlify/functions/site-data";
+  var REMOTE_OK = false;
 
   var data = {
     games: [],
@@ -111,7 +113,75 @@
     ok = store(K_UPDATES, data.updates) && ok;
     ok = store(K_SETTINGS, data.settings) && ok;
     if (!ok) alert("تعذّر الحفظ! مساحة التخزين في المتصفح ممتلئة.\nالحل: قلّل حجم الصور أو احذف بعض العناصر ثم جرّب مجددًا.");
+    if (ok) pushRemote();
     return ok;
+  }
+
+  /* ---------- Remote sync (Netlify) ---------- */
+  function publishKey() {
+    try {
+      var k = (data.settings && data.settings.publishKey) || "";
+      if (k) return k;
+    } catch (e) {}
+    return "ryan2026";
+  }
+
+  function fetchRemoteData() {
+    if (!window.fetch) return Promise.resolve(false);
+    return fetch(REMOTE_URL)
+      .then(function (r) { if (!r.ok) throw new Error("http_" + r.status); return r.json(); })
+      .then(function (doc) {
+        if (!doc || typeof doc !== "object") return false;
+        var remoteTs = (typeof doc.updatedAt === "number") ? doc.updatedAt : 0;
+        if (!remoteTs || remoteTs <= 0) return false;
+        var localTs = load("ry_remote_ts", 0);
+        if (typeof localTs === "number" && localTs >= remoteTs) return false;
+        var applied = false;
+        if (Array.isArray(doc.games) && doc.games.length) { data.games = doc.games.slice(); applied = true; }
+        if (Array.isArray(doc.lessons) && doc.lessons.length) { data.lessons = doc.lessons.slice(); applied = true; }
+        if (Array.isArray(doc.updates) && doc.updates.length) { data.updates = doc.updates.slice(); applied = true; }
+        if (doc.settings && typeof doc.settings === "object") {
+          data.settings = Object.assign({}, DEFAULT_SETTINGS, data.settings || {}, doc.settings);
+          applied = true;
+        }
+        if (applied) {
+          store(K_GAMES, data.games);
+          store(K_LESSONS, data.lessons);
+          store(K_UPDATES, data.updates);
+          store(K_SETTINGS, data.settings);
+          store("ry_remote_ts", remoteTs);
+          REMOTE_OK = true;
+        }
+        return applied;
+      })
+      .catch(function () { return false; });
+  }
+
+  function pushRemote() {
+    if (!window.fetch) return;
+    if (!isLoggedIn() && !isOwner()) return;
+    var payload = {
+      games: data.games,
+      lessons: data.lessons,
+      updates: data.updates,
+      settings: data.settings,
+    };
+    var body = JSON.stringify(payload);
+    if (body.length > 8 * 1024 * 1024) return;
+    fetch(REMOTE_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Admin-Key": publishKey() },
+      body: body,
+    }).then(function (r) {
+      if (r.status === 403) {
+        alert("⚠️ فشل نشر التعديلات على السيرفر: مفتاح النشر غير صحيح.\n\nفي لوحة Netlify أضف متغير ADMIN_WRITE_KEY بنفس قيمة «مفتاح النشر» في إعدادات المالك.\n\nحُفظت التعديلات على هذا الجهاز فقط.");
+        return null;
+      }
+      if (!r.ok) return null;
+      return r.json();
+    }).then(function (res) {
+      if (res && typeof res.updatedAt === "number") store("ry_remote_ts", res.updatedAt);
+    }).catch(function () {});
   }
 
   /* ---------- Helpers ---------- */
@@ -1491,6 +1561,10 @@
 
   /* ---------- Admin: login ---------- */
   function openAdmin() {
+    if (!document.getElementById("adminModal")) {
+      window.location.href = "admin.html";
+      return;
+    }
     renderAdminGames(); renderAdminSlider(); renderAdminLessons(); renderAdminUpdates(); fillSettingsForm(); renderAdminRequests();
     applyOwnerLock();
     openModal("adminModal");
@@ -1499,7 +1573,10 @@
   function openLogin() {
     var body = document.getElementById("loginBody");
     var title = document.getElementById("loginTitle");
-    if (!body || !title) return;
+    if (!body || !title) {
+      window.location.href = "admin.html";
+      return;
+    }
     body.innerHTML = "";
     var msg = function (m, ok) {
       var n = document.getElementById("loginMsg");
@@ -1591,7 +1668,7 @@
       done(false);
     };
     try {
-      fetch("api/request", {
+      fetch("/.netlify/functions/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(item),
@@ -1629,7 +1706,7 @@
     }
 
     try {
-      fetch("api/requests")
+      fetch("/.netlify/functions/requests")
         .then(function (r) { return r.json(); })
         .then(function (arr) {
           if (Array.isArray(arr)) render(arr);
@@ -1648,7 +1725,7 @@
     };
     if (!remote) { fallback(); return; }
     try {
-      fetch("api/request?id=" + encodeURIComponent(id), { method: "DELETE" })
+      fetch("/.netlify/functions/request?id=" + encodeURIComponent(id), { method: "DELETE" })
         .then(function (r) { if (r.ok) renderAdminRequests(); else fallback(); })
         .catch(fallback);
     } catch (err) { fallback(); }
@@ -1967,6 +2044,7 @@
     setF("sAdInFeed", ads.inFeed);
     setF("sAdBottom", ads.bottom);
     setF("sOwnerEmail", OWNER_EMAIL);
+    setF("sPublishKey", publishKey());
   }
 
   function handleSettingsSubmit(e) {
@@ -1978,6 +2056,7 @@
       s.about = getF("sAbout");
       s.supportNote = getF("sSupportNote");
       s.contactEmail = getF("sContactEmail");
+      s.publishKey = getF("sPublishKey") || "ryan2026";
       s.socials = {
         telegram: getF("sTelegram"), youtube: getF("sYoutube"), discord: getF("sDiscord"),
         twitter: getF("sTwitter"), instagram: getF("sInstagram"), facebook: getF("sFacebook"),
@@ -2644,6 +2723,9 @@
   function init() {
     loadAll();
     refreshSite();
+    fetchRemoteData().then(function (applied) {
+      if (applied) refreshSite();
+    });
     setupDownloadApp();
     renderStoreBanner();
     setupTheme();
@@ -2730,4 +2812,10 @@
   }
 
   document.addEventListener("DOMContentLoaded", init);
+
+  /* Expose admin entry points so admin.html can open the panel */
+  window.openAdmin = openAdmin;
+  window.openLogin = openLogin;
+  window.isLoggedIn = isLoggedIn;
+  window.isOwner = isOwner;
 })();

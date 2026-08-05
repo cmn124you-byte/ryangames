@@ -79,7 +79,7 @@
   <!-- Ad slot top -->
   <div class="ad-slot" id="adTop"></div>
 
-  <main id="top">
+  <main id="top" style="display:none">
     <!-- Hero slider -->
     <section class="hero">
       <div class="hero-track" id="heroTrack"></div>
@@ -265,11 +265,12 @@
   </div>
 
   <!-- Admin modal -->
-  <div class="modal-backdrop" id="adminModal" hidden>
+  <div class="modal-backdrop" id="adminModal">
     <div class="modal modal-wide">
       <div class="modal-head admin-head">
         <h3>لوحة التحكم</h3>
         <div class="admin-head-btns">
+          <a class="btn btn-ghost btn-sm" href="index.html">🏠 الموقع</a>
           <button class="btn btn-ghost btn-sm" id="adminOwnerLockBtn" type="button" hidden>🔓 فتح إعدادات المالك</button>
           <button class="btn btn-ghost btn-sm" id="adminLogoutBtn" type="button">🚪 خروج</button>
           <button class="modal-close" data-close="adminModal" type="button">✕</button>
@@ -331,7 +332,7 @@
           <span class="hint" id="requestsCount"></span>
         </div>
         <ul class="admin-list" id="adminRequestsList"></ul>
-        <p class="hint">تُرسل طلبات الزوار إلى خادم الموقع مباشرة وتصل إليك هنا في هذه اللوحة. إن تعذّر الوصول للخادم (بدون إنترنت) تُحفظ في متصفحك مؤقتًا.</p>
+        <p class="hint">تُحفظ الطلبات في ملف على جهازك (المجلد _data) عند فتح الموقع عبر السيرفر. إن فتح الموقع مباشرة من الملف فتُحفظ في متصفحك فقط.</p>
       </div>
 
       <!-- Tab: settings -->
@@ -681,6 +682,17 @@
         navigator.serviceWorker.register("sw.js").catch(function () {});
       });
     }
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(function () {
+        if (typeof openAdmin === "function") {
+          if (typeof isLoggedIn === "function" && isLoggedIn()) openAdmin();
+          else if (typeof openLogin === "function") openLogin();
+          else window.location.href = "index.html";
+        } else {
+          window.location.href = "index.html";
+        }
+      }, 50);
+    });
   </script>
 </body>
 </html>
