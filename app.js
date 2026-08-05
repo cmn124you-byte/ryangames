@@ -11,7 +11,7 @@
   var S_ADMIN = "ry_admin_ok";
   var S_OWNER = "ry_owner_ok";
   var OWNER_EMAIL = "cmn124you@gmail.com";
-  var REMOTE_URL = "/.netlify/functions/site-data";
+  var REMOTE_URL = "/api/site-data";
   var REMOTE_OK = false;
 
   var data = {
@@ -1668,7 +1668,7 @@
       done(false);
     };
     try {
-      fetch("/.netlify/functions/request", {
+      fetch("/api/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(item),
@@ -1706,7 +1706,7 @@
     }
 
     try {
-      fetch("/.netlify/functions/requests")
+      fetch("/api/requests")
         .then(function (r) { return r.json(); })
         .then(function (arr) {
           if (Array.isArray(arr)) render(arr);
@@ -1725,7 +1725,7 @@
     };
     if (!remote) { fallback(); return; }
     try {
-      fetch("/.netlify/functions/request?id=" + encodeURIComponent(id), { method: "DELETE" })
+      fetch("/api/request?id=" + encodeURIComponent(id), { method: "DELETE" })
         .then(function (r) { if (r.ok) renderAdminRequests(); else fallback(); })
         .catch(fallback);
     } catch (err) { fallback(); }

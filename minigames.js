@@ -2665,7 +2665,7 @@
   }
 
   function finishSave(game, score) {
-    fetch("/.netlify/functions/submit-score", {
+    fetch("/api/submit-score", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -2725,7 +2725,7 @@
     var q = "game=" + encodeURIComponent(lbGame);
     if (lbTab === "country" && lbCountry) q += "&country=" + encodeURIComponent(lbCountry);
     listEl.innerHTML = '<p class="lb-empty">جارٍ التحميل…</p>';
-    fetch("/.netlify/functions/leaderboard?" + q)
+    fetch("/api/leaderboard?" + q)
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (!res || !res.list || !res.list.length) {

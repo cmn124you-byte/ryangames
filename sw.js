@@ -25,7 +25,7 @@ self.addEventListener("fetch", function (e) {
 
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   if (url.pathname.indexOf("/api/") !== -1) return;
-  if (url.pathname.indexOf("/.netlify/") !== -1) return;
+  if (url.pathname.indexOf("/_worker.js") !== -1) return;
 
   e.respondWith(
     fetch(e.request).then(function (r) {
