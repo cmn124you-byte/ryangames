@@ -63,6 +63,14 @@ button{font-family:inherit;cursor:pointer}
 @keyframes sp{to{transform:rotate(360deg)}}
 .bar{height:4px;background:var(--panel2);border-radius:4px;overflow:hidden;margin:0 20px}
 .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#3b82f6);transition:.2s;border-radius:4px}
+.res{background:var(--panel);border:1px solid #14532d;border-radius:var(--r);margin:10px 20px 6px;padding:14px 16px}
+.res h4{font-size:14px;font-weight:900;color:var(--acc);display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.rrow{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:9px;background:var(--panel2);margin-bottom:6px;flex-wrap:wrap}
+.rrow .ic{font-size:16px}
+.rrow .nm{font-weight:800;font-size:13px;min-width:120px}
+.rrow .lnk{flex:1;font-size:11px;color:var(--mut);direction:ltr;text-align:start;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:120px}
+.rrow .lnk a{color:var(--blu);text-decoration:none}
+.rrow .lnk a:hover{text-decoration:underline}
 .scroll{flex:1;overflow-y:auto;padding:10px 12px 20px}
 .fhead{display:flex;align-items:center;gap:10px;padding:8px 12px;color:var(--mut);font-size:12px;font-weight:800}
 .fhead .fpath{flex:1;font-size:13px;color:var(--acc);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -149,6 +157,7 @@ button{font-family:inherit;cursor:pointer}
     </div>
     <div id="uploads"></div>
     <div class="bar" id="bar"><i id="barFill"></i></div>
+    <div id="results"></div>
 
     <div class="fhead">
       <span class="fpath" id="pathLabel">/</span>
@@ -170,6 +179,14 @@ button{font-family:inherit;cursor:pointer}
       <div class="hint" id="edHint"></div>
     </div>
     <div class="mf"><button class="btn red" id="edDel">🗑 حذف</button><span class="sp"></span><button class="btn" id="edCancel">إلغاء</button><button class="btn acc" id="edSave">💾 حفظ ونشر</button></div>
+  </div>
+</div>
+
+<div class="mask" id="linkMask">
+  <div class="modal" style="width:520px">
+    <div class="mh"><span>🔗 رابط الملف</span><span class="sp"></span><button class="btn sm" id="lnkClose">✕</button></div>
+    <div class="mb" id="linkBody"></div>
+    <div class="mf"><button class="btn blu" id="lnkOpen">🌐 فتح الرابط</button><span class="sp"></span><button class="btn acc" id="lnkCopy">📋 نسخ الرابط</button></div>
   </div>
 </div>
 
@@ -361,11 +378,39 @@ function renderFiles(){
 
 function render(){ quickFolders(); renderTree(); renderBread(); renderFiles(); setStatus(); $("targetPath").textContent="/"+CUR+(CUR?"/":""); }
 
+var LINK_PATH = "";
 function copyLink(p){
-  var txt="الرابط المباشر:\n"+siteUrl(p)+"\n\nرابط GitHub:\n"+rawUrl(p);
-  var ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select();
-  try{ document.execCommand("copy"); toast("تم نسخ روابط "+base(p)+" ✔"); }catch(e){ toast("انسخ يدوياً:\n"+txt,"wr"); }
+  LINK_PATH=p;
+  var site=siteUrl(p), raw=rawUrl(p);
+  $("linkBody").innerHTML=
+    '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--panel2);border-radius:10px"><div style="font-size:22px">'+iconFor(p)+'</div><div><div style="font-weight:800;font-size:14px">'+esc(base(p))+'</div><div style="font-size:11px;color:var(--mut)">/'+esc(p)+'</div></div></div>'
+    +'<div><label>رابط الملف على موقعك (جاهز للمشاركة)</label><input type="text" readonly value="'+esc(site)+'" dir="ltr" style="text-align:start" onclick="this.select()"></div>'
+    +'<div><label>رابط GitHub الخام</label><input type="text" readonly value="'+esc(raw)+'" dir="ltr" style="text-align:start" onclick="this.select()"></div>'
+    +'<div class="hint">الرابط يشتغل مباشرة، والملف ينشر على الموقع خلال 1–2 دقيقة من رفعه.</div>';
+  $("linkMask").classList.add("show");
+}
+$("lnkClose").onclick=function(){ $("linkMask").classList.remove("show"); };
+$("lnkCopy").onclick=function(){
+  var ta=document.createElement("textarea"); ta.value=siteUrl(LINK_PATH); document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("تم نسخ الرابط ✔"); }catch(e){ toast("انسخ يدوياً","wr"); }
   ta.remove();
+};
+$("lnkOpen").onclick=function(){ window.open(siteUrl(LINK_PATH),"_blank"); };
+
+function showResults(list){
+  var r=$("results");
+  if(!list||!list.length){ r.innerHTML=""; return; }
+  var html='<div class="res"><h4>✔ تم الرفع — الروابط الجاهزة</h4>';
+  list.forEach(function(p){
+    html+='<div class="rrow"><span class="ic">'+iconFor(p)+'</span><span class="nm">'+esc(base(p))+'</span>'
+      +'<span class="lnk"><a href="'+esc(siteUrl(p))+'" target="_blank">'+esc(siteUrl(p))+'</a></span>'
+      +'<button class="btn sm blu" data-cp="'+esc(p)+'">📋 نسخ</button>'
+      +'<button class="btn sm" data-op="'+esc(p)+'">🌐 فتح</button></div>';
+  });
+  html+='<div class="hint" style="margin-top:6px">بعد 1–2 دقيقة الرابط يشتغل على الموقع مباشرة.</div></div>';
+  r.innerHTML=html;
+  r.querySelectorAll("button[data-cp]").forEach(function(b){ b.onclick=function(){ LINK_PATH=b.getAttribute("data-cp"); $("lnkCopy").click(); }; });
+  r.querySelectorAll("button[data-op]").forEach(function(b){ b.onclick=function(){ window.open(siteUrl(b.getAttribute("data-op")),"_blank"); }; });
 }
 
 async function base64(file){
@@ -381,7 +426,7 @@ async function uploadFiles(fileList){
   if(!files.length) return;
   var big=files.filter(function(x){ return x.size>25000000; });
   if(big.length && !confirm(big.length+" ملف أكبر من 25MB. رفعها يستغرق وقت. متابعة؟")) return;
-  var total=files.length, done=0, up=$("uploads");
+  var total=files.length, done=0, failed=[], ok=[], up=$("uploads");
   var u=document.createElement("div");
   u.innerHTML='<div class="urow"><div class="nm">رفع '+total+' ملف...</div><div class="st"><span class="sp"></span><span>0/'+total+'</span></div></div>';
   up.insertBefore(u, up.firstChild);
@@ -398,15 +443,17 @@ async function uploadFiles(fileList){
       var body={ message:"رفع: "+tp, content:b, branch:CFG.branch };
       if(ex) body.sha=ex.sha;
       await gh("/repos/"+CFG.owner+"/"+CFG.repo+"/contents/"+tp, { method:"PUT", body:JSON.stringify(body) });
-      done++;
+      done++; ok.push(tp);
       bar.style.width=Math.round((i+1)/total*100)+"%";
     }catch(e){
+      failed.push(f.name);
       toast("فشل "+f.name+": "+e.message,"er");
     }
   }
-  if(done===total){ u.querySelector(".st").innerHTML='<span style="color:var(--acc)">✔ تم رفع '+total+' ملف</span>'; toast("تم رفع "+total+" ملف — الموقع يتحدث خلال دقيقة أو دقيقتين ✔"); }
-  else { u.querySelector(".st").innerHTML='<span style="color:var(--yel)">⚠ انتهى مع بعض الأخطاء ('+done+'/'+total+')</span>'; }
-  setTimeout(function(){ u.remove(); bar.style.width="0%"; }, done===total?6000:10000);
+  if(done===total){ u.querySelector(".st").innerHTML='<span style="color:var(--acc)">✔ تم رفع '+total+' ملف</span>'; toast("تم رفع "+total+" ملف ✔"); }
+  else { u.querySelector(".st").innerHTML='<span style="color:var(--yel)">⚠ انتهى ('+done+'/'+total+') — فشل: '+failed.join("، ")+'</span>'; }
+  setTimeout(function(){ u.remove(); bar.style.width="0%"; }, 6000);
+  showResults(ok);
   await loadTree(true);
 }
 
