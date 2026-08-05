@@ -70,11 +70,240 @@
     html.studio-mode #loginModal .modal-close {
       display: none !important;
     }
+
+    html.studio-mode .modal-backdrop {
+      background: #0f0f13;
+    }
+    html.studio-mode #adminModal .modal {
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      max-height: 100%;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 64px 1fr;
+      grid-template-columns: 232px 1fr;
+      background: var(--surface);
+    }
+    html.studio-mode #adminModal .admin-head {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+      padding: 0 22px;
+      background: #16161c;
+      border-bottom: 1px solid rgba(127,127,127,.16);
+    }
+    html.studio-mode #adminModal .admin-head h3 {
+      font-size: 19px;
+      font-weight: 900;
+      color: #fff;
+    }
+    html.studio-mode #adminModal .admin-head-btns {
+      margin-inline-start: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    html.studio-mode .admin-tabs {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 14px 12px;
+      background: #16161c;
+      border-inline-end: 1px solid rgba(127,127,127,.16);
+      overflow-y: auto;
+    }
+    html.studio-mode .admin-tabs .tab {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: flex-start;
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #b6bcc8;
+      text-align: start;
+      cursor: pointer;
+    }
+    html.studio-mode .admin-tabs .tab .tab-ic {
+      font-size: 17px;
+      width: 22px;
+      text-align: center;
+    }
+    html.studio-mode .admin-tabs .tab:hover {
+      background: rgba(255,255,255,.07);
+      color: #fff;
+    }
+    html.studio-mode .admin-tabs .tab.active {
+      background: #30303a;
+      color: #fff;
+      box-shadow: inset 3px 0 0 #f43f5e;
+    }
+    html.studio-mode .admin-tabs .tab[hidden] {
+      display: none;
+    }
+    html.studio-mode .tab-panel {
+      grid-column: 2;
+      grid-row: 2;
+      overflow-y: auto;
+      padding: 22px 28px;
+      background: var(--surface);
+    }
+    html.studio-mode .tab-panel[hidden] {
+      display: none;
+    }
+    html.studio-mode #adminModal .admin-bar {
+      margin-bottom: 14px;
+    }
+    html.studio-mode #adminModal .admin-bar h4 {
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .dash-hero {
+      padding: 20px 22px;
+      border-radius: 16px;
+      background: linear-gradient(120deg, rgba(244,63,94,.22), rgba(59,130,246,.08));
+      border: 1px solid rgba(127,127,127,.18);
+      margin-bottom: 18px;
+    }
+    .dash-hero .dash-greet {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fb7185;
+    }
+    .dash-hero h4 {
+      font-size: 23px;
+      font-weight: 900;
+      margin: 3px 0 3px;
+      color: var(--txt, inherit);
+    }
+    .dash-hero p {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .dash-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .stat {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 15px;
+    }
+    .stat .n {
+      font-size: 27px;
+      font-weight: 900;
+      color: #f43f5e;
+    }
+    .stat .l {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 3px;
+    }
+    .dash-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .dash-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 17px;
+    }
+    .dash-card h5 {
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .dash-recent {
+      list-style: none;
+    }
+    .dash-recent li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .dash-recent li:last-child { border-bottom: none; }
+    .dash-recent li img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #1c2030;
+      flex-shrink: 0;
+    }
+    .dash-recent li small {
+      display: block;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .dash-recent li:hover { color: #f43f5e; }
+    .dash-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .dash-actions .btn {
+      justify-content: center;
+      padding: 12px 8px;
+      font-size: 13px;
+      border-radius: 11px;
+    }
+    .dash-tip {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .dash-owner {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    @media (max-width: 860px) {
+      html.studio-mode #adminModal .modal {
+        grid-template-columns: 74px 1fr;
+      }
+      html.studio-mode .admin-tabs .tab .lbl {
+        display: none;
+      }
+      html.studio-mode .admin-tabs .tab {
+        justify-content: center;
+        padding: 12px;
+      }
+      .dash-cols { grid-template-columns: 1fr; }
+    }
   </style>
   <script>
     (function () {
       if (!/studio/i.test(location.search)) return;
       document.documentElement.classList.add("studio-mode");
+      try { document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {}
       document.addEventListener("DOMContentLoaded", function () {
         try {
           document.title = "استوديو ريان - لوحة التحكم";
@@ -350,16 +579,39 @@
         </div>
       </div>
       <div class="admin-tabs" id="adminTabs">
-        <button class="tab active" data-tab="games">الألعاب</button>
-        <button class="tab" data-tab="slider">السلايدر</button>
-        <button class="tab" data-tab="lessons">الدروس</button>
-        <button class="tab" data-tab="updates">التحديثات</button>
-        <button class="tab" data-tab="requests">طلبات التعريب</button>
-        <button class="tab" data-tab="settings" hidden>الإعدادات والإعلانات</button>
+        <button class="tab active" data-tab="home"><span class="tab-ic">🏠</span><span class="lbl">الرئيسية</span></button>
+        <button class="tab" data-tab="games"><span class="tab-ic">🎮</span><span class="lbl">الألعاب</span></button>
+        <button class="tab" data-tab="slider"><span class="tab-ic">🎠</span><span class="lbl">السلايدر</span></button>
+        <button class="tab" data-tab="lessons"><span class="tab-ic">📘</span><span class="lbl">الدروس</span></button>
+        <button class="tab" data-tab="updates"><span class="tab-ic">🗞️</span><span class="lbl">التحديثات</span></button>
+        <button class="tab" data-tab="requests"><span class="tab-ic">📬</span><span class="lbl">طلبات التعريب</span></button>
+        <button class="tab" data-tab="settings" hidden><span class="tab-ic">⚙️</span><span class="lbl">الإعدادات</span></button>
+      </div>
+
+      <!-- Tab: home -->
+      <div class="tab-panel" id="tab-home">
+        <div class="dash-hero">
+          <div class="dash-greet">أهلاً بك 👋</div>
+          <h4>استوديو ريان</h4>
+          <p>إدارة محتوى موقع ريان ألعاب كاملة — مثل استوديو يوتيوب تمامًا. أضف الألعاب والدروس والتحديثات وكل شيء بسهولة.</p>
+        </div>
+        <div class="dash-stats" id="dashStats"></div>
+        <div class="dash-cols">
+          <div class="dash-card">
+            <h5>🕹️ أحدث الألعاب</h5>
+            <ul class="dash-recent" id="dashRecent"></ul>
+          </div>
+          <div class="dash-card">
+            <h5>⚡ إجراءات سريعة</h5>
+            <div class="dash-actions" id="dashActions"></div>
+          </div>
+        </div>
+        <div class="dash-tip">💡 أي تعديل تحفظه ينشر تلقائيًا على الموقع خلال ثوانٍ. افحص موقعك من زر «🌐 الموقع» بالأعلى.</div>
+        <div class="dash-owner" id="dashOwner"></div>
       </div>
 
       <!-- Tab: games -->
-      <div class="tab-panel" id="tab-games">
+      <div class="tab-panel" id="tab-games" hidden>
         <div class="admin-bar">
           <h4>إدارة الألعاب</h4>
           <button class="btn btn-primary btn-sm" id="addGameBtn" type="button">+ إضافة لعبة</button>
@@ -749,6 +1001,75 @@
 
   <script src="data.js"></script>
   <script src="app.js"></script>
+  <script>
+    function renderAdminHome() {
+      var el = document.getElementById("dashStats");
+      if (!el || typeof data === "undefined") return;
+      var games = data.games || [], lessons = data.lessons || [], updates = data.updates || [], reqs = data.requests || [];
+      var slides = (data.settings && data.settings.slides) || [];
+      var dl = 0;
+      games.forEach(function (g) { dl += parseInt(g.downloads, 10) || 0; });
+      var cards = [
+        { ic: "🎮", n: games.length, l: "الألعاب" },
+        { ic: "🎠", n: slides.length, l: "شرائح السلايدر" },
+        { ic: "📘", n: lessons.length, l: "الدروس" },
+        { ic: "🗞️", n: updates.length, l: "التحديثات" },
+        { ic: "📬", n: reqs.length, l: "طلبات التعريب" },
+        { ic: "⬇️", n: dl.toLocaleString("ar-EG"), l: "إجمالي التحميلات" }
+      ];
+      el.innerHTML = cards.map(function (c) {
+        return '<div class="stat"><div class="n">' + c.ic + ' ' + c.n + '</div><div class="l">' + c.l + '</div></div>';
+      }).join("");
+
+      var recent = document.getElementById("dashRecent");
+      if (recent) {
+        var last = games.slice(-5).reverse();
+        recent.innerHTML = last.length
+          ? last.map(function (g) {
+              var img = g.cover ? '<img src="' + g.cover + '" alt="" onerror="this.style.visibility=&quot;hidden&quot;">' : '<img src="" alt="" style="visibility:hidden">';
+              return '<li data-id="' + g.id + '">' + img + '<span>' + (g.ar || g.title) + '<small>' + (g.size || "بدون حجم") + " • " + (parseInt(g.downloads, 10) || 0) + " تحميل" + "</small></span></li>";
+            }).join("")
+          : '<li style="cursor:default;color:var(--muted)">لا توجد ألعاب بعد — أضف أول لعبة! 🎮</li>';
+        recent.querySelectorAll("li[data-id]").forEach(function (li) {
+          li.onclick = function () { studioGoTab("games"); };
+        });
+      }
+
+      var acts = document.getElementById("dashActions");
+      if (acts) {
+        acts.innerHTML =
+          '<button class="btn btn-primary" data-q="games-add">➕ لعبة جديدة</button>' +
+          '<button class="btn" data-q="lessons-add">📘 درس جديد</button>' +
+          '<button class="btn" data-q="updates-add">🗞️ تحديث جديد</button>' +
+          '<button class="btn" data-q="slider">🎠 السلايدر</button>' +
+          '<button class="btn" data-q="requests">📬 الطلبات</button>' +
+          '<a class="btn btn-ghost" href="index.html" target="_blank" rel="noopener">🌐 فتح الموقع</a>';
+        acts.querySelectorAll("button[data-q]").forEach(function (b) {
+          b.onclick = function () {
+            var q = b.getAttribute("data-q");
+            if (q === "games-add") { studioGoTab("games"); setTimeout(function () { var x = document.getElementById("addGameBtn"); if (x) x.click(); }, 80); }
+            else if (q === "lessons-add") { studioGoTab("lessons"); setTimeout(function () { var x = document.getElementById("addLessonBtn"); if (x) x.click(); }, 80); }
+            else if (q === "updates-add") { studioGoTab("updates"); setTimeout(function () { var x = document.getElementById("addUpdateBtn"); if (x) x.click(); }, 80); }
+            else studioGoTab(q);
+          };
+        });
+      }
+
+      var owner = document.getElementById("dashOwner");
+      if (owner) {
+        var stTab = document.querySelector('#adminTabs .tab[data-tab="settings"]');
+        var isOwn = stTab ? !stTab.hidden : false;
+        owner.innerHTML = isOwn
+          ? "👑 أنت المالك — كل الإعدادات مفتوحة لك."
+          : "🔒 الإعدادات محمية — افتحها من زر «فتح إعدادات المالك» في الأعلى.";
+      }
+    }
+
+    function studioGoTab(name) {
+      var t = document.querySelector('#adminTabs .tab[data-tab="' + name + '"]');
+      if (t) t.click();
+    }
+  </script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {

@@ -1567,6 +1567,7 @@
     }
     renderAdminGames(); renderAdminSlider(); renderAdminLessons(); renderAdminUpdates(); fillSettingsForm(); renderAdminRequests();
     applyOwnerLock();
+    if (typeof window.renderAdminHome === "function") window.renderAdminHome();
     openModal("adminModal");
   }
 
@@ -1764,10 +1765,11 @@
         document.querySelectorAll("#adminTabs .tab").forEach(function (t) { t.classList.remove("active"); });
         tab.classList.add("active");
         var name = tab.dataset.tab;
-        ["games", "slider", "lessons", "updates", "requests", "settings"].forEach(function (n) {
+        ["home", "games", "slider", "lessons", "updates", "requests", "settings"].forEach(function (n) {
           var panel = document.getElementById("tab-" + n);
           if (panel) panel.hidden = n !== name;
         });
+        if (name === "home" && typeof window.renderAdminHome === "function") window.renderAdminHome();
         if (name === "requests") renderAdminRequests();
         if (name === "settings") fillSettingsForm();
       });
