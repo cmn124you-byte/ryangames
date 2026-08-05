@@ -27,6 +27,79 @@
   </script>
   <meta name="theme-color" content="#e11d48" />
   <script>try{var t=localStorage.getItem("ry-theme")||"light";var d=t==="dark";var ua=navigator.userAgent;var p=/Android/i.test(ua)?"play":(/iPhone|iPad|iPod/i.test(ua)?"appstore":"desktop");var r=document.documentElement;if(d)r.setAttribute("data-theme","dark");r.setAttribute("data-platform",p);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",p==="appstore"?"#0a84ff":(p==="play"?"#0f9d58":(d?"#0f1117":"#e11d48")));}catch(e){}</script>
+  <style id="studioModeCss">
+    html.studio-mode .bismillah,
+    html.studio-mode .site-header,
+    html.studio-mode main#top,
+    html.studio-mode #seo,
+    html.studio-mode .ad-slot,
+    html.studio-mode .site-footer {
+      display: none !important;
+    }
+    html.studio-mode .modal-backdrop {
+      padding: 0;
+      background: var(--surface);
+      backdrop-filter: none;
+    }
+    html.studio-mode #adminModal .modal,
+    html.studio-mode #loginModal .modal {
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      max-height: 100%;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    html.studio-mode #adminModal .admin-head,
+    html.studio-mode #loginModal .modal-head {
+      position: sticky;
+      top: 0;
+      z-index: 6;
+      background: var(--surface);
+      margin: 0;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(127,127,127,.18);
+    }
+    html.studio-mode .admin-tabs {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--surface);
+    }
+    html.studio-mode #adminModal .modal-close,
+    html.studio-mode #loginModal .modal-close {
+      display: none !important;
+    }
+  </style>
+  <script>
+    (function () {
+      if (!/studio/i.test(location.search)) return;
+      document.documentElement.classList.add("studio-mode");
+      document.addEventListener("DOMContentLoaded", function () {
+        try {
+          document.title = "استوديو ريان - لوحة التحكم";
+          var h3 = document.querySelector("#adminModal .admin-head h3");
+          if (h3) h3.textContent = "🎮 استوديو ريان";
+          var siteLink = document.querySelector("#adminModal .admin-head-btns a[href='index.html']");
+          if (siteLink) {
+            siteLink.textContent = "🌐 الموقع";
+            siteLink.setAttribute("target", "_blank");
+            siteLink.setAttribute("rel", "noopener");
+          }
+          document.addEventListener("click", function (e) {
+            var t = e.target;
+            if (t === document.getElementById("adminModal") || t === document.getElementById("loginModal")) e.stopPropagation();
+          }, true);
+          var logBtn = document.getElementById("adminLogoutBtn");
+          if (logBtn) logBtn.addEventListener("click", function () {
+            setTimeout(function () {
+              try { if (window.isLoggedIn && !window.isLoggedIn() && window.openLogin) window.openLogin(); } catch (err) {}
+            }, 400);
+          });
+        } catch (err) {}
+      });
+    })();
+  </script>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
