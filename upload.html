@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مرفّع ريان — تعديل الموقع ورفع الملفات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0b0f1a;--panel:#111827;--panel2:#0f172a;--line:#1f2937;--txt:#e5e7eb;--mut:#9ca3af;--acc:#22c55e;--blu:#3b82f6;--red:#ef4444;--yel:#f59e0b;--r:14px}
+html,body{height:100%}
+body{background:radial-gradient(1200px 600px at 80% -10%,#132a1e 0%,transparent 55%),var(--bg);color:var(--txt);font-family:"Cairo",sans-serif;overflow:hidden}
+button{font-family:inherit;cursor:pointer}
+.top{display:flex;align-items:center;gap:12px;padding:12px 18px;background:rgba(17,24,39,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);position:relative;z-index:5}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:19px}
+.logo .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:20px;background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 14px rgba(34,197,94,.35)}
+.logo small{display:block;font-size:11px;font-weight:600;color:var(--mut)}
+.top .sp{flex:1}
+.btn{border:none;border-radius:10px;padding:8px 14px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:.15s;background:var(--line);color:var(--txt)}
+.btn:hover{filter:brightness(1.15)}
+.btn.acc{background:linear-gradient(135deg,#22c55e,#15803d);color:#fff}
+.btn.blu{background:var(--blu);color:#fff}
+.btn.red{background:rgba(239,68,68,.15);color:#fca5a5}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.wrap{display:flex;height:calc(100% - 62px)}
+.side{width:250px;min-width:250px;background:var(--panel);border-inline-start:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.side h3{font-size:12px;color:var(--mut);padding:14px 16px 6px;font-weight:800}
+.side .q{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 10px}
+.side .q button{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.side .q button:hover{border-color:var(--acc);color:var(--acc)}
+.tree{flex:1;overflow-y:auto;padding:4px 8px 14px}
+.tree .grp{font-size:11px;color:var(--mut);font-weight:800;padding:8px 8px 2px}
+.tnode{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;user-select:none}
+.tnode:hover{background:var(--panel2)}
+.tnode.on{background:rgba(34,197,94,.12);color:var(--acc)}
+.tnode .arrow{transition:.15s;font-size:10px;color:var(--mut)}
+.tnode.open .arrow{transform:rotate(90deg)}
+.tnode .cnt{font-size:10px;color:var(--mut);font-weight:600;margin-inline-start:auto}
+.tnode.dim{opacity:.55;font-weight:600}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.bread{display:flex;align-items:center;gap:6px;padding:12px 20px;font-size:13px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.bread b{font-weight:800}
+.bread .sep{color:var(--mut)}
+.bread button{background:none;border:none;color:var(--blu);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.drop{background:var(--panel);border:2px dashed #334155;border-radius:var(--r);margin:16px 20px 8px;padding:26px 16px;text-align:center;transition:.2s;cursor:pointer;position:relative}
+.drop.hot{border-color:var(--acc);background:rgba(34,197,94,.08)}
+.drop .big{font-size:34px}
+.drop h4{font-size:16px;font-weight:800;margin:4px 0 2px}
+.drop p{font-size:12px;color:var(--mut)}
+.drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.targetbar{display:flex;align-items:center;gap:10px;padding:10px 20px 4px;flex-wrap:wrap}
+.targetbar .lbl{font-size:12px;color:var(--mut);font-weight:800}
+.targetbar code{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--acc);font-weight:700;direction:ltr}
+.targetbar input{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:5px 10px;font-family:inherit;font-size:12px;width:220px}
+.targetbar input:focus{outline:none;border-color:var(--acc)}
+.urow{display:flex;align-items:center;gap:12px;padding:8px 20px;border-bottom:1px solid #0e1524}
+.urow .nm{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.urow .st{font-size:12px;font-weight:800;display:flex;align-items:center;gap:6px}
+.urow .st.ok{color:var(--acc)}
+.urow .st.er{color:var(--red)}
+.urow .st .sp{width:15px;height:15px;border:2px solid #334155;border-top-color:var(--acc);border-radius:50%;animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.bar{height:4px;background:var(--panel2);border-radius:4px;overflow:hidden;margin:0 20px}
+.bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#3b82f6);transition:.2s;border-radius:4px}
+.scroll{flex:1;overflow-y:auto;padding:10px 12px 20px}
+.fhead{display:flex;align-items:center;gap:10px;padding:8px 12px;color:var(--mut);font-size:12px;font-weight:800}
+.fhead .fpath{flex:1;font-size:13px;color:var(--acc);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fhead input{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:5px 10px;font-family:inherit;font-size:12px;width:170px}
+.frow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;font-size:13px}
+.frow:hover{background:var(--panel)}
+.frow .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:15px;background:var(--panel2);flex-shrink:0}
+.frow .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow .nm small{display:block;font-weight:600;color:var(--mut);font-size:11px}
+.frow .sz{color:var(--mut);font-size:12px;font-weight:600;flex-shrink:0}
+.frow .acts{display:flex;gap:5px;flex-shrink:0}
+.acts .btn.sm{padding:4px 8px;font-size:11px}
+.empty{text-align:center;color:var(--mut);padding:50px 0;font-size:14px;font-weight:700}
+.empty .ic{font-size:40px;display:block;margin-bottom:8px}
+.mask{position:fixed;inset:0;background:rgba(3,7,12,.8);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.mask.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;width:560px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal .mh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);font-weight:800;font-size:15px}
+.modal .mh .sp{flex:1}
+.modal .mb{padding:16px 18px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.modal .mf{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
+.modal label{font-size:12px;color:var(--mut);font-weight:700}
+.modal input[type=text],.modal input[type=password],.modal textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px 12px;font-family:inherit;font-size:14px}
+.modal textarea{min-height:280px;resize:vertical;line-height:1.7;font-family:Consolas,monospace;font-size:13px}
+.modal .hint{font-size:11px;color:var(--mut);line-height:1.7}
+.modal .hint code{background:var(--panel2);padding:1px 6px;border-radius:6px;color:var(--acc);font-size:11px}
+.mask .btn{padding:9px 18px;font-size:14px}
+.toasts{position:fixed;bottom:18px;inset-inline-start:18px;display:flex;flex-direction:column;gap:8px;z-index:100}
+.toast{background:var(--panel);border:1px solid var(--line);border-inline-start:4px solid var(--acc);border-radius:12px;padding:11px 15px;font-size:13px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.4);display:flex;gap:10px;align-items:center;max-width:380px;animation:in .25s}
+.toast.er{border-inline-start-color:var(--red)}
+.toast.wr{border-inline-start-color:var(--yel)}
+@keyframes in{from{transform:translateY(12px);opacity:0}}
+.login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:80;background:radial-gradient(1000px 500px at 20% 0%,#142b1f,transparent 60%),var(--bg);padding:20px}
+.lbox{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:34px 32px;width:430px;max-width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.lbox .lic{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:32px;background:linear-gradient(135deg,#22c55e,#15803d);margin:0 auto 14px;box-shadow:0 8px 24px rgba(34,197,94,.35)}
+.lbox h1{font-size:21px;font-weight:900;margin-bottom:4px}
+.lbox p{color:var(--mut);font-size:13px;margin-bottom:20px;line-height:1.8}
+.lbox label{display:block;text-align:start;font-size:12px;color:var(--mut);font-weight:700;margin:12px 0 6px}
+.lbox input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:11px 13px;font-family:inherit;font-size:14px;direction:ltr;text-align:start}
+.lbox .btn{width:100%;justify-content:center;padding:12px;font-size:15px;margin-top:18px}
+.lbox .hint{font-size:11px;color:var(--mut);line-height:1.9;margin-top:14px}
+.lbox .hint a{color:var(--acc);font-weight:700}
+.status{position:fixed;bottom:14px;inset-inline-end:18px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 13px;font-size:11px;color:var(--mut);font-weight:700;z-index:5;display:flex;gap:8px;align-items:center}
+.status b{color:var(--acc)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#26324a;border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="logo"><div class="ic">⚡</div><div>مرفّع ريان<small>تعديل الموقع ورفع الملفات</small></div></div>
+  <div class="sp"></div>
+  <button class="btn" id="btnRefresh">⟳ تحديث</button>
+  <button class="btn blu" id="btnSite" title="فتح الموقع الحي">🌐 فتح الموقع</button>
+  <button class="btn" id="btnCfg">⚙️ الإعدادات</button>
+  <button class="btn red sm" id="btnLogout" title="تغيير الحساب">🚪 خروج</button>
+</div>
+
+<div class="wrap">
+  <aside class="side">
+    <h3>مجلدات سريعة</h3>
+    <div class="q" id="quick"></div>
+    <h3>كل المجلدات</h3>
+    <div class="tree" id="tree"></div>
+  </aside>
+
+  <main class="main">
+    <div class="bread" id="bread"></div>
+    <div class="drop" id="drop">
+      <input type="file" id="fileInput" multiple>
+      <div class="big">📁</div>
+      <h4>اسحب الملفات هنا أو اضغط للاختيار</h4>
+      <p>تقدر تختار عدة ملفات مرة وحدة، أو تسحب مجلد كامل</p>
+    </div>
+    <div class="targetbar">
+      <span class="lbl">الرفع إلى:</span>
+      <code id="targetPath">/</code>
+      <input id="targetOver" type="text" placeholder="مسار فرعي إضافي (اختياري)">
+      <span class="sp"></span>
+      <button class="btn sm blu" id="btnFolderUp">📂 رفع مجلد كامل</button>
+      <input type="file" id="folderInput" webkitdirectory multiple style="display:none">
+    </div>
+    <div id="uploads"></div>
+    <div class="bar" id="bar"><i id="barFill"></i></div>
+
+    <div class="fhead">
+      <span class="fpath" id="pathLabel">/</span>
+      <input id="search" type="text" placeholder="🔍 بحث بالاسم...">
+      <button class="btn acc sm" id="btnNew">＋ ملف جديد</button>
+    </div>
+    <div class="scroll" id="files"></div>
+  </main>
+</div>
+
+<div class="status" id="status"><span>الفرع:</span><b id="stBranch">...</b></div>
+
+<div class="mask" id="editorMask">
+  <div class="modal">
+    <div class="mh"><span id="edIcon">✏️</span> <span id="edTitle">تعديل الملف</span><span class="sp"></span><button class="btn sm" id="edClose">✕</button></div>
+    <div class="mb">
+      <div><label>اسم الملف (المسار)</label><input type="text" id="edPath" dir="ltr" style="text-align:start"></div>
+      <div><label>محتوى الملف</label><textarea id="edBody" spellcheck="false"></textarea></div>
+      <div class="hint" id="edHint"></div>
+    </div>
+    <div class="mf"><button class="btn red" id="edDel">🗑 حذف</button><span class="sp"></span><button class="btn" id="edCancel">إلغاء</button><button class="btn acc" id="edSave">💾 حفظ ونشر</button></div>
+  </div>
+</div>
+
+<div class="mask" id="cfgMask">
+  <div class="modal" style="width:460px">
+    <div class="mh"><span>⚙️ الإعدادات</span><span class="sp"></span><button class="btn sm" id="cfgClose">✕</button></div>
+    <div class="mb">
+      <div><label>رمز GitHub (Token)</label><input type="password" id="cfgTok" placeholder="ghp_... أو github_pat_..." dir="ltr" style="text-align:start"></div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label>المالك</label><input type="text" id="cfgOwner" dir="ltr" style="text-align:start"></div>
+        <div style="flex:1"><label>المستودع</label><input type="text" id="cfgRepo" dir="ltr" style="text-align:start"></div>
+        <div style="flex:1"><label>الفرع</label><input type="text" id="cfgBranch" dir="ltr" style="text-align:start"></div>
+      </div>
+      <div class="hint">الرمز يُحفظ على جهازك فقط (localStorage) ولا يُرفع لأي مكان. الموقع ينشر تلقائياً خلال 1–2 دقيقة بعد أي حفظ.</div>
+    </div>
+    <div class="mf"><button class="btn" id="cfgTest">🔎 فحص الاتصال</button><span class="sp"></span><button class="btn acc" id="cfgSave">حفظ</button></div>
+  </div>
+</div>
+
+<div class="login" id="login">
+  <div class="lbox">
+    <div class="lic">⚡</div>
+    <h1>مرفّع ريان</h1>
+    <p>مرحباً! للاتصال بمستودع الموقع تحتاج رمز GitHub (Token) — تكتبه مرة وحدة وبيبقى محفوظاً على جهازك.</p>
+    <label>رمز GitHub</label>
+    <input type="password" id="loginTok" placeholder="ghp_... أو github_pat_..." dir="ltr">
+    <button class="btn acc" id="loginBtn">🔗 اتصال</button>
+    <div class="hint">ماعندك رمز؟ <a href="https://github.com/settings/tokens" target="_blank">اضغط هنا لإنشائه</a><br>من صفحة التوكن: Generate new token → Mark ✅ <code>repo</code> (full control) و<code>workflow</code> إن طلب. الصلاحيات ما تحتاج تختار منها.</div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+var LS = { tok:"ry_gh_tok", owner:"ry_gh_owner", repo:"ry_gh_repo", br:"ry_gh_br" };
+var CFG = {
+  owner: localStorage.getItem(LS.owner) || "cmn124you-byte",
+  repo:  localStorage.getItem(LS.repo)  || "ryangames",
+  branch:localStorage.getItem(LS.br)    || "main"
+};
+var TOKEN = localStorage.getItem(LS.tok) || "";
+var TREE = null, CUR = "", LOADING = false;
+
+var $ = function(id){ return document.getElementById(id); };
+var ICON = {
+  html:"🌐", htm:"🌐", css:"🎨", js:"⚙️", json:"🧾", png:"🖼️", jpg:"🖼️", jpeg:"🖼️", gif:"🖼️",
+  webp:"🖼️", svg:"🖼️", ico:"🖼️", zip:"🗜️", rar:"🗜️", mp4:"🎬", webm:"🎬", mp3:"🎵", wav:"🎵",
+  pdf:"📄", txt:"📝", md:"📝", xml:"📝", sw:"🔧", apk:"📱", db:"🗄️", otf:"🔤", ttf:"🔤", woff:"🔤", exe:"💿"
+};
+function iconFor(p){ var e=p.split(".").pop().toLowerCase(); return ICON[e] || "📄"; }
+function isText(p){ return /\.(html|htm|css|js|mjs|json|txt|md|xml|svg|sw|jsx|ts|csv|yml|yaml|toml|netlify|map|gitignore|ico)$/i.test(p); }
+function sizeF(n){ if(n==null) return "—"; if(n>1048576) return (n/1048576).toFixed(1)+" MB"; if(n>1024) return Math.round(n/1024)+" KB"; return n+" B"; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function b64(str){ return btoa(unescape(encodeURIComponent(str))); }
+function unb64(b){ return decodeURIComponent(escape(atob(b.replace(/\s/g,"")))); }
+function toast(msg,type){ var t=document.createElement("div"); t.className="toast"+(type==="er"?" er":type==="wr"?" wr":""); t.textContent=msg; $("toasts").appendChild(t); setTimeout(function(){ t.style.opacity="0"; setTimeout(function(){ t.remove(); },300); },3800); }
+function rawUrl(p){ return "https://raw.githubusercontent.com/"+CFG.owner+"/"+CFG.repo+"/"+CFG.branch+"/"+p; }
+function siteUrl(p){ return "https://"+CFG.owner+".github.io/"+CFG.repo+"/"+p; }
+function parts(path){ return path.split("/").filter(Boolean); }
+function base(path){ var a=parts(path); return a[a.length-1]||""; }
+function dirn(path){ var a=parts(path); a.pop(); return a.join("/"); }
+function join(a,b){ a=(a||"").replace(/^\/+|\/+$/g,""); return a? a+"/"+b : b; }
+
+async function gh(path, opts){
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  opts.headers.Accept = "application/vnd.github+json";
+  opts.headers["X-GitHub-Api-Version"] = "2022-11-28";
+  if (TOKEN) opts.headers.Authorization = "Bearer " + TOKEN;
+  var res = await fetch("https://api.github.com"+path, opts);
+  if (res.status===401) throw new Error("الرمز غير صالح (401)");
+  if (res.status===403) { try { var j=await res.json(); throw new Error("تم تجاوز الحد: "+j.message); }catch(e){ throw new Error("تم تجاوز حد GitHub (403)"); } }
+  if (res.status===404) throw new Error("غير موجود (404)");
+  if (!res.ok) { var t=""; try{ t=JSON.stringify(await res.json()).slice(0,200); }catch(e){} throw new Error("خطأ "+res.status+" "+t); }
+  return res;
+}
+
+async function loadTree(silent){
+  LOADING=true; setStatus();
+  try{
+    var res=await gh("/repos/"+CFG.owner+"/"+CFG.repo+"/git/trees/"+CFG.branch+"?recursive=1");
+    var j=await res.json();
+    if(j.truncated){ toast("المستودع كبير والعرض ناقص (truncated)","wr"); }
+    TREE=j.tree||[];
+    LOADING=false;
+    if(!silent) toast("تم تحميل الملفات ✔");
+    render();
+  }catch(e){
+    LOADING=false; setStatus();
+    if(String(e.message).indexOf("401")>-1){ showLogin(); }
+    toast(e.message,"er");
+  }
+}
+function setStatus(){ var st=$("status"); if(st) st.querySelector("#stBranch").textContent=LOADING?"جارٍ التحميل...":CFG.branch+" ("+((TREE||[]).length)+" ملف)"; }
+
+function quickFolders(){
+  var q=$("quick");
+  var defs=[{l:"الرئيسية",p:""},{l:"الألعاب",p:"games"},{l:"الألعاب الصغيرة",p:"minigames"},{l:"التحميلات",p:"downloads"},{l:"الصور",p:"promo"},{l:"الأيقونات",p:"icons"}];
+  var seen={};
+  var html="";
+  defs.forEach(function(d){ seen[d.p]=1; html+='<button data-p="'+d.p+'">'+d.l+'</button>'; });
+  if(TREE){ var tops={}; TREE.forEach(function(t){ var d=dirn(t.path); if(!d)return; var r=parts(d)[0]; tops[r]=1; }); Object.keys(tops).sort().forEach(function(r){ if(seen[r])return; seen[r]=1; html+='<button data-p="'+r+'">'+r+'</button>'; }); }
+  q.innerHTML=html;
+  q.querySelectorAll("button").forEach(function(b){ b.onclick=function(){ openDir(b.getAttribute("data-p")); }; });
+}
+
+function renderTree(){
+  var t=$("tree");
+  if(!TREE){ t.innerHTML='<div class="empty" style="padding:20px 0;font-size:13px">لا توجد مجلدات</div>'; return; }
+  var tops={}; TREE.forEach(function(x){ var d=dirn(x.path); if(!d) return; var r=parts(d)[0]; tops[r]=1; });
+  var keys=Object.keys(tops).sort();
+  var html='<div class="grp">مجلد المستودع</div>';
+  html+='<div class="tnode'+(CUR===""?" on":"")+'" data-p="">📁 <span>الرئيسية</span><span class="cnt">'+(TREE.filter(function(x){return dirn(x.path)==="";}).length)+'</span></div>';
+  keys.forEach(function(k){
+    var open=parts(CUR)[0]===k;
+    var filesIn=TREE.filter(function(x){ return parts(x.path)[0]===k; });
+    var sub=TREE.filter(function(x){ return x.type==="tree" && x.path.startsWith(k+"/"); });
+    var subs={}; sub.forEach(function(s){ var rest=s.path.slice(k.length+1); if(rest.indexOf("/")>-1) subs[rest.split("/")[0]]=1; });
+    html+='<div class="tnode'+(open?" open":"")+(k==="node_modules"?" dim":"")+'" data-p="'+k+'"><span class="arrow">▶</span>📁 <span>'+esc(k)+'</span><span class="cnt">'+filesIn.length+'</span></div>';
+    if(open) Object.keys(subs).sort().forEach(function(s){
+      html+='<div class="tnode dim" data-p="'+join(k,s)+'">↳ 📁 '+esc(s)+'</div>';
+    });
+  });
+  t.innerHTML=html;
+  t.querySelectorAll(".tnode").forEach(function(n){
+    n.onclick=function(){ openDir(n.getAttribute("data-p")); };
+  });
+}
+
+function renderBread(){
+  var b=$("bread");
+  var p=parts(CUR); var html='<button data-p="">🏠 الرئيسية</button>';
+  var acc="";
+  p.forEach(function(s,i){ acc=join(acc,s); html+='<span class="sep">/</span><button data-p="'+acc+'">'+esc(s)+'</button>'; });
+  b.innerHTML=html;
+  b.querySelectorAll("button").forEach(function(x){ x.onclick=function(){ openDir(x.getAttribute("data-p")); }; });
+}
+
+function openDir(p){
+  p=(p||"").replace(/^\/+|\/+$/g,"");
+  CUR=p; $("search").value="";
+  render();
+}
+
+function currentFiles(){
+  if(!TREE) return [];
+  var pre=CUR?CUR+"/":"";
+  return TREE.filter(function(x){
+    if(x.type==="tree") return false;
+    if(!pre) return x.path.indexOf("/")===-1;
+    return x.path.indexOf(pre)===0 && x.path.slice(pre.length).indexOf("/")===-1;
+  });
+}
+
+function renderFiles(){
+  var f=$("files");
+  var files=currentFiles();
+  var q=$("search").value.trim().toLowerCase();
+  if(q) files=files.filter(function(x){ return x.path.toLowerCase().indexOf(q)>-1; });
+  $("pathLabel").textContent="/"+CUR+(CUR?"/":"");
+  if(!files.length){ f.innerHTML='<div class="empty"><span class="ic">🗂️</span>لا توجد ملفات هنا<br><small style="font-weight:600;font-size:12px">اسحب ملفات في الأعلى وبيتم رفعها لهذا المجلد مباشرة</small></div>'; return; }
+  var sorted=files.slice().sort(function(a,b){ return base(a.path).localeCompare(base(b.path),"ar"); });
+  var html="";
+  sorted.forEach(function(x){
+    var nm=base(x.path), isT=isText(x.path);
+    html+='<div class="frow" data-p="'+esc(x.path)+'">'
+      +'<div class="ic">'+iconFor(x.path)+'</div>'
+      +'<div class="nm">'+esc(nm)+'<small>/'+esc(x.path)+'</small></div>'
+      +'<div class="sz">'+sizeF(x.size)+'</div>'
+      +'<div class="acts">'
+      +'<button class="btn sm blu" data-act="open" title="نسخ الرابط">🔗</button>'
+      +(isT?'<button class="btn sm" data-act="edit" title="تعديل">✏️</button>':'')
+      +'<button class="btn sm red" data-act="del" title="حذف">🗑</button>'
+      +'</div></div>';
+  });
+  f.innerHTML=html;
+  f.querySelectorAll(".frow").forEach(function(row){
+    var p=row.getAttribute("data-p");
+    row.querySelectorAll("button[data-act]").forEach(function(b){
+      b.onclick=function(e){ e.stopPropagation(); var a=b.getAttribute("data-act");
+        if(a==="open") copyLink(p);
+        else if(a==="edit") openEditor(p);
+        else if(a==="del") confirmDel(p);
+      };
+    });
+  });
+}
+
+function render(){ quickFolders(); renderTree(); renderBread(); renderFiles(); setStatus(); $("targetPath").textContent="/"+CUR+(CUR?"/":""); }
+
+function copyLink(p){
+  var txt="الرابط المباشر:\n"+siteUrl(p)+"\n\nرابط GitHub:\n"+rawUrl(p);
+  var ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("تم نسخ روابط "+base(p)+" ✔"); }catch(e){ toast("انسخ يدوياً:\n"+txt,"wr"); }
+  ta.remove();
+}
+
+async function base64(file){
+  return new Promise(function(ok,err){
+    var r=new FileReader();
+    r.onload=function(){ var s=r.result; ok(s.slice(s.indexOf(",")+1)); };
+    r.onerror=err; r.readAsDataURL(file);
+  });
+}
+
+async function uploadFiles(fileList){
+  var files=Array.prototype.slice.call(fileList);
+  if(!files.length) return;
+  var big=files.filter(function(x){ return x.size>25000000; });
+  if(big.length && !confirm(big.length+" ملف أكبر من 25MB. رفعها يستغرق وقت. متابعة؟")) return;
+  var total=files.length, done=0, up=$("uploads");
+  var u=document.createElement("div");
+  u.innerHTML='<div class="urow"><div class="nm">رفع '+total+' ملف...</div><div class="st"><span class="sp"></span><span>0/'+total+'</span></div></div>';
+  up.insertBefore(u, up.firstChild);
+  var bar=$("barFill"); bar.style.width="0%";
+  for(var i=0;i<files.length;i++){
+    var f=files[i];
+    var rel=f.webkitRelativePath ? f.webkitRelativePath.split("/").slice(1).join("/") : f.name;
+    var tp=join(CUR, join($("targetOver")?$("targetOver").value.trim():"", rel));
+    var stEl=u.querySelector(".st span:last-child");
+    stEl.textContent=(i+1)+"/"+total;
+    try{
+      var b=await base64(f);
+      var ex=TREE?TREE.find(function(t){ return t.path===tp; }):null;
+      var body={ message:"رفع: "+tp, content:b, branch:CFG.branch };
+      if(ex) body.sha=ex.sha;
+      await gh("/repos/"+CFG.owner+"/"+CFG.repo+"/contents/"+tp, { method:"PUT", body:JSON.stringify(body) });
+      done++;
+      bar.style.width=Math.round((i+1)/total*100)+"%";
+    }catch(e){
+      toast("فشل "+f.name+": "+e.message,"er");
+    }
+  }
+  if(done===total){ u.querySelector(".st").innerHTML='<span style="color:var(--acc)">✔ تم رفع '+total+' ملف</span>'; toast("تم رفع "+total+" ملف — الموقع يتحدث خلال دقيقة أو دقيقتين ✔"); }
+  else { u.querySelector(".st").innerHTML='<span style="color:var(--yel)">⚠ انتهى مع بعض الأخطاء ('+done+'/'+total+')</span>'; }
+  setTimeout(function(){ u.remove(); bar.style.width="0%"; }, done===total?6000:10000);
+  await loadTree(true);
+}
+
+var drop=$("drop"), fileInput=$("fileInput"), folderInput=$("folderInput");
+fileInput.addEventListener("change", function(){ uploadFiles(fileInput.files); fileInput.value=""; });
+$("btnFolderUp").onclick=function(){ folderInput.click(); };
+folderInput.addEventListener("change", function(){
+  if(folderInput.files.length){ toast("جاري رفع "+folderInput.files.length+" ملف من المجلد ✔"); uploadFiles(folderInput.files); }
+  folderInput.value="";
+});
+["dragenter","dragover"].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.add("hot"); }); });
+["dragleave","drop"].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.remove("hot"); }); });
+drop.addEventListener("drop", function(e){ if(e.dataTransfer&&e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files); });
+
+$("search").addEventListener("input", renderFiles);
+$("btnRefresh").onclick=function(){ loadTree(); };
+$("btnSite").onclick=function(){ window.open(siteUrl(""),"_blank"); };
+$("btnLogout").onclick=function(){ if(confirm("إغلاق الجلسة وتغيير الرمز؟")){ localStorage.removeItem(LS.tok); showLogin(); } };
+$("btnNew").onclick=function(){ openEditor("", true); };
+
+function showLogin(){ $("login").style.display="flex"; }
+function hideLogin(){ $("login").style.display="none"; }
+$("loginBtn").onclick=async function(){
+  var t=$("loginTok").value.trim();
+  if(!t) return toast("اكتب الرمز أولاً","wr");
+  var btn=$("loginBtn"); btn.disabled=true; btn.textContent="جارٍ الاتصال...";
+  try{
+    var res=await fetch("https://api.github.com/repos/"+CFG.owner+"/"+CFG.repo,{ headers:{Authorization:"Bearer "+t} });
+    if(res.status===401) throw new Error("الرمز غير صحيح (401)");
+    if(res.status===403) throw new Error("تم تجاوز حد GitHub (403)");
+    if(!res.ok) throw new Error("خطأ "+res.status);
+    TOKEN=t; localStorage.setItem(LS.tok,t);
+    await loadTree(true);
+    hideLogin(); toast("تم الاتصال بمستودع "+CFG.owner+"/"+CFG.repo+" ✔");
+  }catch(e){ toast(e.message,"er"); }
+  btn.disabled=false; btn.textContent="🔗 اتصال";
+};
+$("loginTok").addEventListener("keydown",function(e){ if(e.key==="Enter") $("loginBtn").click(); });
+
+function openEditor(path, isNew){
+  var mask=$("editorMask"); mask.classList.add("show");
+  $("edTitle").textContent=isNew?"إنشاء ملف جديد":"تعديل: "+path;
+  $("edIcon").textContent=isNew?"＋":"✏️";
+  $("edPath").value=isNew? join(CUR,"اسم-الملف.txt") : path;
+  $("edBody").value="";
+  $("edHint").innerHTML=isNew
+    ? "اكتب اسم الملف (بامتداده) والمحتوى، واضغط حفظ — الموقع ينشر تلقائياً."
+    : "الحفظ يعمل مباشرة على <code>"+CFG.branch+"</code> — الموقع ينشر تلقائياً خلال 1–2 دقيقة.";
+  $("edDel").style.display=isNew?"none":"";
+  if(!isNew){
+    loadContent(path).then(function(c){ $("edBody").value=c; })
+      .catch(function(e){ toast(e.message,"er"); $("edBody").value=""; });
+  }
+  $("edPath").focus();
+  $("edPath").onkeydown=function(e){ if(e.key==="Enter") $("edSave").click(); };
+}
+
+async function loadContent(path){
+  var t=TREE&&TREE.find(function(x){ return x.path===path; });
+  if(t && t.size>800000){
+    var r=await fetch(rawUrl(path));
+    if(!r.ok) throw new Error("تعذر جلب محتوى الملف الكبير");
+    return await r.text();
+  }
+  var res=await gh("/repos/"+CFG.owner+"/"+CFG.repo+"/contents/"+path+"?ref="+CFG.branch);
+  var j=await res.json();
+  if(j.encoding==="base64") return unb64(j.content);
+  return j.content||"";
+}
+
+$("edClose").onclick=$("edCancel").onclick=function(){ $("editorMask").classList.remove("show"); };
+$("edSave").onclick=async function(){
+  var p=$("edPath").value.trim().replace(/^\/+/,"");
+  var body=$("edBody").value;
+  if(!p) return toast("اكتب اسم الملف","wr");
+  var btn=$("edSave"); btn.disabled=true;
+  try{
+    var ex=TREE&&TREE.find(function(x){ return x.path===p; });
+    var payload={ message: ex?"تعديل: "+p:"إضافة: "+p, content:b64(body), branch:CFG.branch };
+    if(ex) payload.sha=ex.sha;
+    await gh("/repos/"+CFG.owner+"/"+CFG.repo+"/contents/"+p,{ method:"PUT", body:JSON.stringify(payload) });
+    $("editorMask").classList.remove("show");
+    toast("تم حفظ "+p+" — الموقع ينشر خلال دقيقة ✔");
+    await loadTree(true);
+  }catch(e){ toast(e.message,"er"); }
+  btn.disabled=false;
+};
+$("edDel").onclick=async function(){
+  var p=$("edPath").value.trim().replace(/^\/+/,"");
+  if(!confirm("حذف "+p+" نهائياً؟")) return;
+  var btn=$("edDel"); btn.disabled=true;
+  try{
+    var ex=TREE&&TREE.find(function(x){ return x.path===p; });
+    if(!ex) throw new Error("الملف غير موجود");
+    await gh("/repos/"+CFG.owner+"/"+CFG.repo+"/contents/"+p,{ method:"DELETE", body:JSON.stringify({message:"حذف: "+p, branch:CFG.branch, sha:ex.sha}) });
+    $("editorMask").classList.remove("show");
+    toast("تم حذف "+p+" ✔");
+    await loadTree(true);
+  }catch(e){ toast(e.message,"er"); }
+  btn.disabled=false;
+};
+
+function confirmDel(p){
+  if(!confirm("حذف "+p+" نهائياً من الموقع؟")) return;
+  var ex=TREE&&TREE.find(function(x){ return x.path===p; });
+  if(!ex) return toast("الملف غير موجود","wr");
+  gh("/repos/"+CFG.owner+"/"+CFG.repo+"/contents/"+p,{ method:"DELETE", body:JSON.stringify({message:"حذف: "+p, branch:CFG.branch, sha:ex.sha}) })
+    .then(function(){ toast("تم حذف "+p+" ✔"); return loadTree(true); })
+    .catch(function(e){ toast(e.message,"er"); });
+}
+
+$("cfgSave").onclick=function(){
+  var t=$("cfgTok").value.trim();
+  if(t) TOKEN=t;
+  CFG.owner=$("cfgOwner").value.trim()||CFG.owner;
+  CFG.repo=$("cfgRepo").value.trim()||CFG.repo;
+  CFG.branch=$("cfgBranch").value.trim()||CFG.branch;
+  localStorage.setItem(LS.tok,t?t:"");
+  localStorage.setItem(LS.owner,CFG.owner); localStorage.setItem(LS.repo,CFG.repo); localStorage.setItem(LS.br,CFG.branch);
+  $("cfgMask").classList.remove("show");
+  toast("تم حفظ الإعدادات ✔");
+  loadTree();
+};
+$("cfgClose").onclick=function(){ $("cfgMask").classList.remove("show"); };
+$("btnCfg").onclick=function(){
+  $("cfgTok").value=TOKEN; $("cfgOwner").value=CFG.owner; $("cfgRepo").value=CFG.repo; $("cfgBranch").value=CFG.branch;
+  $("cfgMask").classList.add("show");
+};
+$("cfgTest").onclick=async function(){
+  var t=$("cfgTok").value.trim()||TOKEN;
+  var btn=$("cfgTest"); btn.disabled=true; btn.textContent="جارٍ الفحص...";
+  try{
+    var o=$("cfgOwner").value.trim()||CFG.owner, r=$("cfgRepo").value.trim()||CFG.repo;
+    var res=await fetch("https://api.github.com/repos/"+o+"/"+r,{ headers:{Authorization:"Bearer "+t} });
+    var j=await res.json();
+    if(!res.ok) throw new Error(j.message||"غير متاح");
+    toast("متصل بـ "+o+"/"+r+" — الفرع: "+j.default_branch+" ✔");
+    $("cfgBranch").value=j.default_branch;
+  }catch(e){ toast("فشل: "+e.message,"er"); }
+  btn.disabled=false; btn.textContent="🔎 فحص الاتصال";
+};
+
+if(TOKEN) loadTree(); else showLogin();
+</script>
+</body>
+</html>
