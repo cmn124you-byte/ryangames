@@ -154,6 +154,13 @@ button{font-family:inherit;cursor:pointer}
 .progwrap .pl{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;font-weight:800}
 .progwrap .pl .pc{color:var(--acc);font-weight:900}
 .progwrap .bar{height:8px;margin:0}
+.pubstages{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.pubstage{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--mut);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.pubstage .st-ic{font-size:14px;width:18px;text-align:center}
+.pubstage.ok{color:#4ade80;border-color:rgba(74,222,128,.35)}
+.pubstage.act{color:var(--txt);border-color:var(--acc);animation:pspulse 1.2s infinite}
+.pubstage.er{color:#f87171;border-color:rgba(248,113,113,.4)}
+@keyframes pspulse{50%{box-shadow:0 0 0 3px rgba(99,102,241,.15)}}
 .pubsteps{margin-top:10px;display:grid;gap:6px}
 .pubstep{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:var(--mut)}
 .pubstep .st-ic{font-size:13px;width:20px;text-align:center}
@@ -347,6 +354,7 @@ button{font-family:inherit;cursor:pointer}
     <div class="progwrap" id="pubProg" style="display:none">
       <div class="pl"><span id="pubProgLabel">جارٍ النشر...</span><span class="pc" id="pubProgPct">0%</span></div>
       <div class="bar"><i id="pubProgFill"></i></div>
+      <div class="pubstages" id="pubStages"></div>
       <div class="pubsteps" id="pubSteps"></div>
     </div>
     <div class="dcard">
@@ -1336,13 +1344,30 @@ async function findPublishRun(before){
   }
   toast("لم يتم العثور على التشغيل — تحقق من تبويب Actions","wr");
 }
+var PUB_STAGES = [
+  { k: "check", t: "التحقق من البيانات", ic: "🔍" },
+  { k: "upload", t: "رفع الملفات", ic: "⬆️" },
+  { k: "commit", t: "إنشاء Commit", ic: "📝" },
+  { k: "run", t: "تشغيل Workflow", ic: "🚀" },
+  { k: "wait", t: "انتظار النشر", ic: "⏳" },
+  { k: "done", t: "اكتمل النشر", ic: "🎉" }
+];
+function pubStagesHTML(state){
+  return PUB_STAGES.map(function(s){
+    var st = state[s.k] || "";
+    var ic = st === "ok" ? "✅" : (st === "act" ? s.ic : "⬜");
+    return '<div class="pubstage ' + st + '"><span class="st-ic">' + ic + "</span> " + s.t + "</div>";
+  }).join("");
+}
 function startPollRun(id){
   var prog = $("pubProg"), label = $("pubProgLabel"), pct = $("pubProgPct"), fill = $("pubProgFill"), steps = $("pubSteps");
+  var st = $("pubStages");
   if (prog) prog.style.display = "";
   if (label) label.textContent = "جارٍ النشر...";
   if (pct) pct.textContent = "0%";
   if (fill) fill.style.width = "0%";
   if (steps) steps.innerHTML = "";
+  if (st) st.innerHTML = pubStagesHTML({ check: "ok" });
   var lastStatus = null;
   DEPLOY.timer = setInterval(function(){
     Promise.all([
@@ -1360,9 +1385,19 @@ function startPollRun(id){
       if (pct) pct.textContent = p + "%";
       if (fill) fill.style.width = p + "%";
       if (label) label.textContent = run.status === "completed" ? "اكتمل النشر" : "جارٍ النشر... (التشغيل #" + run.run_number + ")";
+      var stepStat = {};
+      all.forEach(function(s){ stepStat[s.name] = s.status; });
+      var state = { check: "ok", upload: "", commit: "", run: "", wait: "", done: "" };
+      if (stepStat["Checkout"] === "in_progress") state.upload = "act";
+      if (stepStat["Checkout"] === "completed") state.upload = "ok";
+      if (stepStat["Bump deploy marker"] === "in_progress") state.commit = "act";
+      if (stepStat["Bump deploy marker"] === "completed") state.commit = "ok";
+      if (run.status === "queued" || run.status === "in_progress") state.run = "act";
+      if (run.status === "completed") { state.run = "ok"; state.wait = "act"; }
+      if (st) st.innerHTML = pubStagesHTML(state);
       if (steps) {
         var html = "";
-        all.forEach(function(s, i){
+        all.forEach(function(s){
           var ic = s.status === "completed" ? "✅" : (s.status === "in_progress" ? "⏳" : "⬜");
           var cls = s.status === "completed" ? "done" : (s.status === "in_progress" ? "act" : "");
           html += '<div class="pubstep ' + cls + '"><span class="st-ic">' + ic + "</span> " + esc(s.name) + "</div>";
@@ -1376,11 +1411,58 @@ function startPollRun(id){
         addPubHist(run);
         renderPubStatus();
         logActivity(ok ? "✅" : "❌", "انتهى النشر: " + (ok ? "نجاح" : run.conclusion));
+        if (ok) startPagesWatch();
+        else {
+          if (st) st.innerHTML = pubStagesHTML({ check: "ok", upload: "ok", commit: "ok", run: "ok", wait: "er", done: "er" });
+          toast("فشل النشر: " + run.conclusion, "er");
+        }
         if (getAuto().notify) notify("نشر ريان", ok ? "تم نشر الموقع بنجاح ✔" : "فشل النشر: " + run.conclusion, ok);
-        toast(ok ? "تم نشر الموقع بنجاح ✔" : "فشل النشر: " + run.conclusion, ok ? "" : "er");
       }
     }).catch(function(e){ logError("poll: " + e.message); });
   }, 3000);
+}
+async function startPagesWatch(){
+  var st = $("pubStages"), label = $("pubProgLabel"), pct = $("pubProgPct"), fill = $("pubProgFill");
+  var state = { check: "ok", upload: "ok", commit: "ok", run: "ok", wait: "act", done: "" };
+  if (label) label.textContent = "انتظار بناء الموقع على GitHub Pages...";
+  if (pct) pct.textContent = "—";
+  if (fill) fill.style.width = "99%";
+  if (st) st.innerHTML = pubStagesHTML(state);
+  for (var i = 0; i < 30; i++) {
+    await sleep(5000);
+    try {
+      var res = await gh(repoBase() + "/pages/builds/latest");
+      var b = await res.json();
+      if (!res.ok) throw new Error((b && b.message) || "غير متاح");
+      if (b.status === "built") {
+        state.wait = "ok"; state.done = "ok";
+        if (st) st.innerHTML = pubStagesHTML(state);
+        if (label) label.textContent = "تم نشر الموقع بنجاح 🎉";
+        if (pct) pct.textContent = "100%";
+        if (fill) fill.style.width = "100%";
+        logActivity("🎉", "اكتمل نشر الموقع");
+        if (getAuto().notify) notify("نشر ريان", "تم نشر الموقع بنجاح ✔");
+        toast("تم نشر الموقع بنجاح ✔");
+        return;
+      }
+      if (b.status === "errored") {
+        state.wait = "er"; state.done = "er";
+        if (st) st.innerHTML = pubStagesHTML(state);
+        toast("تعذر بناء الموقع: " + ((b.error && b.error.message) || "خطأ في البناء"), "er");
+        return;
+      }
+    } catch(e) {
+      logError("pages watch: " + e.message);
+      state.wait = "ok"; state.done = "ok";
+      if (st) st.innerHTML = pubStagesHTML(state);
+      if (label) label.textContent = "اكتمل النشر — الموقع يُبنى خلال 1–2 دقيقة 🎉";
+      toast("اكتمل النشر — الموقع يُبنى خلال دقيقة أو دقيقتين ✔");
+      return;
+    }
+  }
+  state.wait = "ok"; state.done = "ok";
+  if (st) st.innerHTML = pubStagesHTML(state);
+  toast("اكتمل النشر — يُبنى الموقع حاليًا ✔");
 }
 
 /* ================= GitHub section ================= */
