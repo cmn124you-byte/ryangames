@@ -120,13 +120,137 @@ button{font-family:inherit;cursor:pointer}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:#26324a;border-radius:8px}
 ::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- Studio layout ---------- */
+.snav{width:218px;min-width:218px;background:var(--panel);border-inline-start:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+.snav .sgrp{font-size:11px;color:var(--mut);font-weight:800;padding:14px 16px 6px}
+.sbtn{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:10px;background:none;border:none;color:var(--txt);font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;text-align:start;transition:.15s}
+.sbtn .si{font-size:16px;width:22px;text-align:center}
+.sbtn:hover{background:var(--panel2)}
+.sbtn.on{background:rgba(59,130,246,.14);color:#60a5fa}
+.sbtn.on .si{transform:scale(1.1)}
+.sbtn small{margin-inline-start:auto;font-size:10px;color:var(--mut);font-weight:600;background:var(--panel2);border-radius:6px;padding:1px 6px}
+.secpanel{flex:1;min-width:0;overflow-y:auto;display:none;padding:16px 20px 30px}
+.secpanel.on{display:block}
+.secpanel h2{font-size:19px;font-weight:900;display:flex;align-items:center;gap:10px;margin:2px 0 4px}
+.secpanel h2 small{font-size:11px;color:var(--mut);font-weight:600}
+.sec-sub{font-size:12.5px;color:var(--mut);line-height:1.8;margin-bottom:14px}
+.gobtn{background:none;border:none;color:var(--blu);font-family:inherit;font-weight:800;font-size:12.5px;cursor:pointer;padding:0}
+.gobtn:hover{text-decoration:underline}
+
+/* Publish */
+.pub-hero{display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(34,197,94,.14),rgba(59,130,246,.10));border:1px solid #14532d;border-radius:var(--r);padding:18px 20px;margin-bottom:14px;flex-wrap:wrap}
+.pub-hero .pb{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:26px;background:linear-gradient(135deg,#22c55e,#15803d);box-shadow:0 8px 22px rgba(34,197,94,.35)}
+.pub-hero .pi{flex:1;min-width:180px}
+.pub-hero .pi h3{font-size:16px;font-weight:900;margin-bottom:2px}
+.pub-hero .pi p{font-size:12px;color:var(--mut)}
+.pub-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:800;background:var(--panel2);border:1px solid var(--line);color:var(--txt)}
+.badge.ok{color:#4ade80;border-color:#14532d;background:rgba(34,197,94,.10)}
+.badge.run{color:#60a5fa;border-color:#1d4ed8;background:rgba(59,130,246,.12)}
+.badge.er{color:#f87171;border-color:#7f1d1d;background:rgba(239,68,68,.12)}
+.badge.wr{color:#fbbf24;border-color:#78350f;background:rgba(245,158,11,.12)}
+.progwrap{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.progwrap .pl{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;font-weight:800}
+.progwrap .pl .pc{color:var(--acc);font-weight:900}
+.progwrap .bar{height:8px;margin:0}
+.pubsteps{margin-top:10px;display:grid;gap:6px}
+.pubstep{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:var(--mut)}
+.pubstep .st-ic{font-size:13px;width:20px;text-align:center}
+.pubstep.done{color:#4ade80}
+.pubstep.act{color:var(--txt)}
+.pubmsg{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.pubmsg input{flex:1;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:11px 13px;font-family:inherit;font-size:13px}
+.pubmsg input:focus{outline:none;border-color:var(--acc)}
+.hlist{display:grid;gap:8px;margin-top:6px}
+.hrow{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px 14px;flex-wrap:wrap;font-size:13px}
+.hrow .hd{font-weight:900;flex:1;min-width:140px;display:flex;align-items:center;gap:8px}
+.hrow .hm{color:var(--mut);font-size:11.5px}
+.hrow .ht{font-size:11.5px;color:var(--mut);direction:ltr;font-family:Consolas,monospace}
+.hrow .acts{display:flex;gap:6px}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:start;padding:9px 12px;color:var(--mut);font-size:11.5px;font-weight:800;border-bottom:1px solid var(--line);background:var(--panel2)}
+.tbl td{padding:9px 12px;border-bottom:1px solid #0e1524;vertical-align:middle}
+.tbl tr:hover td{background:rgba(59,130,246,.05)}
+.tbl .ltr{direction:ltr;font-family:Consolas,monospace;font-size:11.5px;color:var(--mut)}
+
+/* Stat cards */
+.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.scard{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:14px 16px}
+.scard .sci{font-size:20px}
+.scard .scv{font-size:22px;font-weight:900;margin-top:4px}
+.scard .scl{font-size:11.5px;color:var(--mut);font-weight:700}
+.dcard{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:12px}
+.dcard h4{font-size:14px;font-weight:900;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.slist{display:grid;gap:6px;max-height:300px;overflow-y:auto}
+.srow{display:flex;align-items:center;gap:10px;font-size:12.5px;padding:7px 8px;border-radius:9px;background:var(--panel);font-weight:700}
+.srow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .val{color:var(--acc);font-weight:900}
+
+/* Images */
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.icard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.icard .ith{height:110px;display:grid;place-items:center;background:#0b0f1a;padding:6px}
+.icard .ith img{max-width:100%;max-height:100%;border-radius:6px}
+.icard .ibody{padding:8px 10px;font-size:11.5px}
+.icard .ibody .inm{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:start}
+.icard .ibody .isz{color:var(--mut);font-size:10.5px}
+.icard .ibody .acts{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.icard .btn.sm{padding:3px 7px;font-size:10.5px}
+
+/* AI */
+.airow{display:grid;gap:12px;margin-bottom:12px}
+.aiopts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.aiopts select,.aiopts input{background:var(--panel);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:7px 10px;font-family:inherit;font-size:12px;font-weight:700}
+.aiopts input{width:150px}
+.achips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.achip{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit}
+.achip:hover{border-color:var(--acc);color:var(--acc)}
+.aiout{min-height:170px;resize:vertical;font-family:Consolas,monospace;font-size:12.5px;line-height:1.7}
+
+/* Security */
+.secrow{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:10px;flex-wrap:wrap}
+.secrow .si{font-size:22px}
+.secrow .stx{flex:1;min-width:150px}
+.secrow .stx b{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px}
+.secrow .stx small{font-size:11.5px;color:var(--mut);line-height:1.7}
+.switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .sl{position:absolute;inset:0;background:var(--line);border-radius:999px;cursor:pointer;transition:.2s}
+.switch .sl:before{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;inset-inline-start:3px;transition:.2s}
+.switch input:checked + .sl{background:var(--acc)}
+.switch input:checked + .sl:before{transform:translateX(-20px)}
+.secrow input[type=password],.secrow input[type=number],.secrow input[type=text]{background:var(--panel);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 11px;font-family:inherit;font-size:12.5px;width:150px}
+.secrow input:focus{outline:none;border-color:var(--acc)}
+
+/* Automation */
+.auto-card{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:16px;margin-bottom:10px}
+.auto-card h4{font-size:14px;font-weight:900;margin-bottom:4px}
+.auto-card p{font-size:11.5px;color:var(--mut);line-height:1.8;margin-bottom:10px}
+
+/* Netlify / misc */
+.net-card{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:16px;margin-bottom:12px}
+.net-card label{font-size:12px;color:var(--mut);font-weight:800;display:block;margin:10px 0 5px}
+.net-card input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px 12px;font-family:inherit;font-size:13px;direction:ltr;text-align:start}
+.net-card input:focus{outline:none;border-color:var(--acc)}
+.mini{font-size:11.5px;color:var(--mut);line-height:1.8}
+.qrbox{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0}
+.qrbox img{background:#fff;border-radius:10px;padding:10px;width:220px;height:220px;object-fit:contain}
+.qrbox input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px 12px;font-family:inherit;font-size:12.5px;direction:ltr;text-align:start}
+.renpairs{display:grid;gap:6px;margin-bottom:10px}
+.renpairs input{background:var(--panel);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 11px;font-family:Consolas,monospace;font-size:12px;direction:ltr;text-align:start}
+
 </style>
 </head>
 <body>
 
 <div class="top">
-  <div class="logo"><div class="ic">⚡</div><div>مرفّع ريان<small>تعديل الموقع ورفع الملفات</small></div></div>
+  <div class="logo"><div class="ic">⚡</div><div>استوديو ريان<small>إدارة موقع ريان ألعاب</small></div></div>
   <div class="sp"></div>
+  <span class="badge wr" id="topSecLabel" title="القسم الحالي">🚀 النشر</span>
+  <button class="btn acc" id="btnPublishQuick" title="نشر الموقع الآن">🚀 نشر</button>
   <button class="btn" id="btnRefresh">⟳ تحديث</button>
   <button class="btn blu" id="btnSite" title="فتح الموقع الحي">🌐 فتح الموقع</button>
   <button class="btn" id="btnMode">🎛 الملفات</button>
@@ -135,6 +259,27 @@ button{font-family:inherit;cursor:pointer}
 </div>
 
 <div class="wrap">
+  <aside class="snav" id="snav">
+    <div class="sgrp">الاستوديو</div>
+    <button class="sbtn" data-sec="publish" data-label="النشر"><span class="si">🚀</span> النشر <small id="badgePublish"></small></button>
+    <button class="sbtn" data-sec="github" data-label="GitHub"><span class="si">🧭</span> GitHub <small id="badgeGithub"></small></button>
+    <div class="sgrp">المحتوى</div>
+    <button class="sbtn" data-sec="files" data-label="الملفات"><span class="si">📁</span> الملفات</button>
+    <button class="sbtn" data-sec="images" data-label="الصور"><span class="si">🖼️</span> الصور</button>
+    <button class="sbtn" data-sec="trans" data-label="الترجمات"><span class="si">🌍</span> الترجمات</button>
+    <button class="sbtn" data-sec="games" data-label="الألعاب"><span class="si">🎮</span> الألعاب</button>
+    <button class="sbtn" data-sec="news" data-label="الأخبار"><span class="si">📰</span> الأخبار</button>
+    <button class="sbtn" data-sec="db" data-label="قاعدة البيانات"><span class="si">🗄️</span> قاعدة البيانات</button>
+    <div class="sgrp">التحليل</div>
+    <button class="sbtn" data-sec="stats" data-label="الإحصائيات"><span class="si">📊</span> الإحصائيات</button>
+    <button class="sbtn" data-sec="ai" data-label="الذكاء الاصطناعي"><span class="si">✨</span> الذكاء الاصطناعي</button>
+    <div class="sgrp">الأنظمة</div>
+    <button class="sbtn" data-sec="tools" data-label="الأدوات"><span class="si">🧰</span> الأدوات</button>
+    <button class="sbtn" data-sec="security" data-label="الأمان"><span class="si">🔐</span> الأمان</button>
+    <button class="sbtn" data-sec="auto" data-label="التشغيل التلقائي"><span class="si">⚡</span> التشغيل التلقائي</button>
+    <button class="sbtn" data-sec="netlify" data-label="Netlify"><span class="si">🛰️</span> Netlify</button>
+  </aside>
+
   <aside class="side" id="side">
     <h3>مجلدات سريعة</h3>
     <div class="q" id="quick"></div>
@@ -142,7 +287,7 @@ button{font-family:inherit;cursor:pointer}
     <div class="tree" id="tree"></div>
   </aside>
 
-  <main class="main">
+  <main class="main" id="main">
     <div class="bread" id="bread"></div>
     <div class="drop" id="drop">
       <input type="file" id="fileInput" multiple>
@@ -177,6 +322,319 @@ button{font-family:inherit;cursor:pointer}
     </div>
     <div class="scroll" id="files"></div>
   </main>
+
+  <!-- Sec: publish -->
+  <section class="secpanel" id="sec-publish">
+    <h2>🚀 نشر الموقع <small>بضغطة واحدة عبر GitHub Actions</small></h2>
+    <p class="sec-sub">النشر يشغّل Workflow يدفع تغييرًا إلى الفرع الرئيسي، فيعيد GitHub Pages بناء الموقع تلقائيًا. تُعرض الحالة والتقدم مباشرةً.</p>
+    <div class="pub-hero">
+      <div class="pb">🚀</div>
+      <div class="pi">
+        <h3>أحدث نشر</h3>
+        <p id="pubLastLine">لم يُنشر بعد من الاستوديو.</p>
+      </div>
+      <div class="pub-meta">
+        <span class="badge" id="pubBadge">—</span>
+        <button class="btn blu" id="btnOpenRun" style="display:none" title="فتح تفاصيل التشغيل">🔗 التفاصيل</button>
+      </div>
+    </div>
+    <div class="pubmsg">
+      <input id="pubMsgInput" placeholder="وصف النشر (اختياري)" maxlength="120" />
+      <button class="btn acc" id="btnPublish">🚀 نشر الموقع الآن</button>
+      <button class="btn" id="btnWorkflowOk">📦 تأكد من جاهزية Workflow</button>
+      <button class="btn" id="btnSetupWorkflow">⚙️ إنشاء Workflow تلقائيًا</button>
+    </div>
+    <div class="progwrap" id="pubProg" style="display:none">
+      <div class="pl"><span id="pubProgLabel">جارٍ النشر...</span><span class="pc" id="pubProgPct">0%</span></div>
+      <div class="bar"><i id="pubProgFill"></i></div>
+      <div class="pubsteps" id="pubSteps"></div>
+    </div>
+    <div class="dcard">
+      <h4>🕘 سجل عمليات النشر</h4>
+      <div class="hlist" id="pubHistory"><p class="mini">لا يوجد سجل بعد.</p></div>
+    </div>
+  </section>
+
+  <!-- Sec: github -->
+  <section class="secpanel" id="sec-github">
+    <h2>🧭 GitHub <small>المستودع المرتبط</small></h2>
+    <p class="sec-sub" id="ghRepoLine">—</p>
+    <div class="scards" id="ghCards"></div>
+    <div class="dcard">
+      <h4>🕘 سجل Commits</h4>
+      <div class="hlist" id="ghCommits"><p class="mini">جارٍ التحميل...</p></div>
+    </div>
+    <div class="dcard">
+      <h4>📄 سجل ملف واسترجاع إصدار سابق</h4>
+      <p class="mini" style="margin-bottom:8px">اكتب مسار ملف لترى تعديلاته وتستعيد أي إصدار قديم منه.</p>
+      <div class="pubmsg">
+        <input id="ghHistPath" placeholder="مثال: index.html أو _data/translations.json" dir="ltr" style="text-align:start" />
+        <button class="btn blu" id="btnHistLoad">عرض السجل</button>
+      </div>
+      <div class="hlist" id="ghHistList"><p class="mini">لا يوجد سجل بعد.</p></div>
+    </div>
+  </section>
+
+  <!-- Sec: images -->
+  <section class="secpanel" id="sec-images">
+    <h2>🖼️ إدارة الصور <small>ضغط · WebP · مصغرات · استبدال</small></h2>
+    <p class="sec-sub">جميع صور المستودع. اختر صورة للضغط أو التحويل إلى WebP أو إنشاء مصغرة أو استبدالها مع بقاء نفس الرابط.</p>
+    <div class="pubmsg">
+      <select id="imgFolder" title="مجلد الصور"><option value="">كل الصور</option></select>
+      <input id="imgSearch" placeholder="🔍 بحث عن صورة..." />
+      <button class="btn" id="imgRefresh">⟳ تحديث</button>
+    </div>
+    <div class="igrid" id="imgGrid"><p class="mini">جارٍ تحميل الصور...</p></div>
+  </section>
+
+  <!-- Sec: trans -->
+  <section class="secpanel" id="sec-trans">
+    <h2>🌍 إدارة الترجمات <small>حالة التعريب + ملفات الترجمة</small></h2>
+    <p class="sec-sub">تُحفظ بيانات الترجمات في <b style="direction:ltr;font-family:Consolas,monospace">_data/translations.json</b> داخل المستودع وتُنشر على الموقع مباشرة.</p>
+    <div class="dcard">
+      <h4>🎮 حالة تعريب الألعاب</h4>
+      <div class="hlist" id="transGames"><p class="mini">جارٍ التحميل...</p></div>
+    </div>
+    <div class="dcard">
+      <h4>📝 نصوص الترجمة</h4>
+      <div class="pubmsg">
+        <input id="trTitle" placeholder="عنوان النص (مثال: قائمة الإعدادات)" style="min-width:180px" />
+        <input id="trText" placeholder="النص المترجم" style="min-width:200px" />
+        <select id="trStatus" title="الحالة"><option value="done">مكتمل</option><option value="wip">قيد المراجعة</option></select>
+        <button class="btn acc" id="trAdd">+ إضافة</button>
+      </div>
+      <div class="hlist" id="transEntries"></div>
+    </div>
+    <div class="dcard">
+      <h4>📤 رفع ملف ترجمة</h4>
+      <p class="mini" style="margin-bottom:8px">يُرفع الملف إلى <b style="direction:ltr;font-family:Consolas,monospace">_data/translations/files/</b> مع اختيار مجلد اللعبة.</p>
+      <div class="pubmsg">
+        <select id="trFileGame" title="مجلد اللعبة"><option value="">المجلد الرئيسي</option></select>
+        <input type="file" id="trFileInput" style="color:var(--txt);font-size:12px" />
+        <button class="btn blu" id="trFileUp">📤 رفع ملف الترجمة</button>
+      </div>
+    </div>
+    <button class="btn acc" id="transSave">💾 حفظ كل الترجمات ونشرها</button>
+  </section>
+
+  <!-- Sec: games -->
+  <section class="secpanel" id="sec-games">
+    <h2>🎮 إدارة الألعاب</h2>
+    <p class="sec-sub">إدارة الألعاب الكاملة (إضافة، تعديل، حذف، صور، متطلبات، روابط تحميل) تتم في استوديو الموقع الرئيسي وتُطبَّق على الموقع مباشرة.</p>
+    <div class="dcard">
+      <h4 id="gamesCountLine">عدد الألعاب: —</h4>
+      <div class="hlist" id="gamesQuick"></div>
+    </div>
+    <button class="btn blu" id="btnOpenGames">🎮 فتح إدارة الألعاب (admin.html)</button>
+  </section>
+
+  <!-- Sec: news -->
+  <section class="secpanel" id="sec-news">
+    <h2>📰 إدارة الأخبار</h2>
+    <p class="sec-sub">إضافة وتعديل وحذف الأخبار وتثبيت المهم منها يتم في استوديو الموقع الرئيسي (تبويب «الأخبار»).</p>
+    <div class="dcard">
+      <h4 id="newsCountLine">عدد الأخبار: —</h4>
+      <div class="hlist" id="newsQuick"></div>
+    </div>
+    <button class="btn blu" id="btnOpenNews">📰 فتح إدارة الأخبار</button>
+  </section>
+
+  <!-- Sec: db -->
+  <section class="secpanel" id="sec-db">
+    <h2>🗄️ قاعدة البيانات <small>نسخ احتياطي · استرجاع · مزامنة</small></h2>
+    <p class="sec-sub">مصدر البيانات الرئيسي هو <b style="direction:ltr;font-family:Consolas,monospace">data-backup.json</b> في المستودع. يمكنك تنزيل نسخة أو رفع نسخة للاسترجاع أو إنشاء نسخ احتياطية مجدولة.</p>
+    <div class="dcard" id="dbSummary"></div>
+    <div class="dcard">
+      <h4>⚡ إجراءات</h4>
+      <div class="pubmsg">
+        <button class="btn blu" id="dbDownload">⬇ تنزيل نسخة البيانات</button>
+        <button class="btn acc" id="dbBackup">🗄️ إنشاء نسخة احتياطية جديدة</button>
+        <button class="btn" id="dbSync">🔄 مزامنة إلى المستودع</button>
+      </div>
+      <p class="mini" style="margin-bottom:8px">استرجاع من ملف: اختر ملف JSON من جهازك وسيحل محل بيانات الموقع.</p>
+      <input type="file" id="dbFileInput" accept=".json" style="color:var(--txt);font-size:12px;margin-bottom:8px" />
+      <button class="btn" id="dbRestore">📥 استرجاع من ملف</button>
+    </div>
+    <div class="dcard">
+      <h4>🗃️ النسخ الاحتياطية في المستودع</h4>
+      <div class="hlist" id="dbBackups"><p class="mini">جارٍ التحميل...</p></div>
+    </div>
+  </section>
+
+  <!-- Sec: stats -->
+  <section class="secpanel" id="sec-stats">
+    <h2>📊 الإحصائيات <small>من GitHub API مباشرة</small></h2>
+    <p class="sec-sub">إحصاءات GitHub Traffic (زوار/مشاهدات/استنساخ) تأتي من GitHub مباشرة، مع تنزيلات الألعاب من ملف البيانات.</p>
+    <div class="scards" id="statCards"></div>
+    <div class="dcard">
+      <h4>👁️ المشاهدات اليومية (آخر 14 يوم)</h4>
+      <div class="slist" id="statViews"></div>
+    </div>
+    <div class="dcard">
+      <h4>🏆 أكثر الصفحات مشاهدة</h4>
+      <div class="slist" id="statPopular"></div>
+    </div>
+    <div class="dcard">
+      <h4>🎮 تنزيلات الألعاب</h4>
+      <div class="slist" id="statDownloads"></div>
+    </div>
+    <div class="dcard">
+      <h4>⚠️ آخر الأخطاء المسجلة</h4>
+      <div class="slist" id="statErrors"></div>
+    </div>
+  </section>
+
+  <!-- Sec: ai -->
+  <section class="secpanel" id="sec-ai">
+    <h2>✨ الذكاء الاصطناعي <small>توليد محتوى و SEO</small></h2>
+    <p class="sec-sub">مولّدات محلية تعمل بدون إنترنت، ويمكنك إضافة مفتاح Gemini أو OpenRouter للحصول على نتائج أقوى. المفتاح يُحفظ على جهازك فقط.</p>
+    <div class="aiopts">
+      <select id="aiProvider" title="المزود">
+        <option value="local">🧠 محلي (بدون مفتاح)</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="openrouter">OpenRouter</option>
+      </select>
+      <input type="password" id="aiKey" placeholder="مفتاح API (اختياري)" dir="ltr" />
+      <input type="text" id="aiModel" placeholder="النموذج" dir="ltr" />
+    </div>
+    <div style="margin-top:10px" class="achips" id="aiChips"></div>
+    <div class="airow">
+      <label style="font-size:12px;color:var(--mut);font-weight:800">المدخل (اسم اللعبة أو النص)</label>
+      <input type="text" id="aiInput" placeholder="مثال: لعبة سباق السيارات" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:11px 13px;font-family:inherit;font-size:13px" />
+    </div>
+    <label style="font-size:12px;color:var(--mut);font-weight:800">النتيجة</label>
+    <textarea class="aiout" id="aiOutput" spellcheck="false" placeholder="تظهر النتيجة هنا..."></textarea>
+    <div class="pubmsg" style="margin-top:12px">
+      <button class="btn acc" id="btnAICopy">📋 نسخ النتيجة</button>
+      <button class="btn blu" id="btnAIClear">🧹 مسح</button>
+      <span class="sp"></span>
+      <span class="badge" id="aiStatus">المزود: محلي</span>
+    </div>
+  </section>
+
+  <!-- Sec: tools -->
+  <section class="secpanel" id="sec-tools">
+    <h2>🧰 الأدوات</h2>
+    <div class="dcard">
+      <h4>🔗 رابط مباشر لأي ملف</h4>
+      <p class="mini" style="margin-bottom:8px">من قسم «الملفات» اضغط زر 🔗 على أي ملف. هنا أداة سريعة بأي مسار.</p>
+      <div class="pubmsg">
+        <input id="toolLinkPath" placeholder="المسار داخل المستودع (مثال: games/icon.png)" dir="ltr" style="text-align:start" />
+        <button class="btn blu" id="toolLinkGet">🔗 جلب الرابط</button>
+      </div>
+      <div class="hlist" id="toolLinkOut"></div>
+    </div>
+    <div class="dcard">
+      <h4>🔳 رمز QR</h4>
+      <p class="mini" style="margin-bottom:8px">أنشئ رمز QR لأي رابط. يعمل عبر خدمة QR عامة (يلزم إنترنت).</p>
+      <div class="pubmsg">
+        <input id="qrInput" placeholder="https://..." dir="ltr" style="text-align:start" />
+        <button class="btn acc" id="qrMake">🔳 إنشاء QR</button>
+      </div>
+      <div class="qrbox" id="qrOut" style="display:none"></div>
+    </div>
+    <div class="dcard">
+      <h4>✏️ إعادة تسمية جماعية</h4>
+      <p class="mini" style="margin-bottom:8px">كل سطر بالشكل: <b style="direction:ltr;font-family:Consolas,monospace">المسار_القديم → المسار_الجديد</b></p>
+      <div class="renpairs" id="renPairs">
+        <input placeholder="old/path/file.txt → new/path/file.txt" dir="ltr" />
+      </div>
+      <div class="pubmsg">
+        <button class="btn acc" id="btnRenAdd">+ سطر آخر</button>
+        <button class="btn blu" id="btnRenRun">🔁 تنفيذ إعادة التسمية</button>
+      </div>
+      <div class="hlist" id="renOut"></div>
+    </div>
+  </section>
+
+  <!-- Sec: security -->
+  <section class="secpanel" id="sec-security">
+    <h2>🔐 الأمان <small>حماية الاستوديو على جهازك</small></h2>
+    <p class="sec-sub">كل إعدادات الأمان تُحفظ على جهازك فقط (localStorage) ولا تُرفع للمستودع. التطبيق مخصص للمالك — لا يُشارك مع أي أحد.</p>
+    <div class="secrow">
+      <span class="si">🔢</span>
+      <div class="stx"><b>رمز PIN</b><small>حماية فتح الاستوديو برمز رقمي. يظهر عند فتح التطبيق أو عند التغيير.</small></div>
+      <input type="password" id="secPin" placeholder="رمز جديد (4-6 أرقام)" />
+      <button class="btn acc" id="secPinSet">حفظ PIN</button>
+      <button class="btn red" id="secPinClear">إزالة</button>
+    </div>
+    <div class="secrow">
+      <span class="si">👆</span>
+      <div class="stx"><b>دخول بالبصمة <span id="bioChip" class="badge" style="margin-inline-start:4px">غير مفعّل</span></b><small>عبر WebAuthn. يتطلب HTTPS وبصمة على الجهاز. إن لم يظهر زر التسجيل فالمتصفح لا يدعمها على هذا الرابط.</small></div>
+      <button class="btn blu" id="secBioReg">تسجيل البصمة</button>
+      <button class="btn" id="secBioTry">تجربة الدخول</button>
+      <button class="btn red" id="secBioClear">إزالة</button>
+    </div>
+    <div class="secrow">
+      <span class="si">🗝️</span>
+      <div class="stx"><b>تحقق بخطوتين (TOTP) <span id="tfaChip" class="badge" style="margin-inline-start:4px">غير مفعّل</span></b><small>رمز 6 أرقام يتغير كل 30 ثانية عبر أي تطبيق Authenticator.</small></div>
+      <button class="btn blu" id="secTfaSetup">تفعيل 2FA</button>
+      <button class="btn red" id="secTfaOff">إيقاف</button>
+    </div>
+    <div class="secrow" id="tfaBox" style="display:none">
+      <span class="si">📲</span>
+      <div class="stx"><b>إعداد 2FA</b><small>امسح الرمز بتطبيق Authenticator ثم أدخل الرمز لتأكيد التفعيل.</small></div>
+      <div id="tfaSecret"></div>
+      <input type="number" id="secTfaCode" placeholder="الرمز (6 أرقام)" />
+      <button class="btn acc" id="secTfaVerify">تأكيد</button>
+    </div>
+    <div class="dcard">
+      <h4>🕘 سجل العمليات</h4>
+      <div class="slist" id="actLog" style="max-height:220px"></div>
+    </div>
+    <div class="dcard">
+      <h4>🔓 سجل تسجيل الدخول</h4>
+      <div class="slist" id="loginLog" style="max-height:220px"></div>
+    </div>
+  </section>
+
+  <!-- Sec: auto -->
+  <section class="secpanel" id="sec-auto">
+    <h2>⚡ التشغيل التلقائي</h2>
+    <p class="sec-sub">تشغيل تلقائي كامل: رفع → حفظ → Commit → دفع → نشر → إشعار بالنجاح.</p>
+    <div class="auto-card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1"><h4>🚀 نشر تلقائي بعد كل رفع/حفظ</h4><p>بعد أي رفع ملف أو حفظ تعديل من الاستوديو يُشغَّل النشر تلقائيًا ويظهر هنا تقدمه.</p></div>
+        <label class="switch"><input type="checkbox" id="autoDeploy"><span class="sl"></span></label>
+      </div>
+    </div>
+    <div class="auto-card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1"><h4>🔔 إشعار المتصفح عند نهاية النشر</h4><p>إشعار فوري عند نجاح أو فشل النشر (يتطلب السماح بالإشعارات).</p></div>
+        <label class="switch"><input type="checkbox" id="autoNotify"><span class="sl"></span></label>
+      </div>
+      <button class="btn blu" id="btnPermNotif">تفعيل الإشعارات</button>
+    </div>
+    <div class="auto-card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1"><h4>🗄️ نسخة احتياطية تلقائية مع كل حفظ</h4><p>تُنشأ نسخة من data-backup.json في <b style="direction:ltr;font-family:Consolas,monospace">_data/backups/</b> تلقائيًا.</p></div>
+        <label class="switch"><input type="checkbox" id="autoBackup"><span class="sl"></span></label>
+      </div>
+    </div>
+    <div class="dcard">
+      <h4>📋 حالة آخر عملية تلقائية</h4>
+      <div class="hlist" id="autoLog"><p class="mini">لا توجد عمليات بعد.</p></div>
+    </div>
+  </section>
+
+  <!-- Sec: netlify -->
+  <section class="secpanel" id="sec-netlify">
+    <h2>🛰️ Netlify <small>نشر ومسح كاش (اختياري)</small></h2>
+    <p class="sec-sub">إن كان موقعك مُضافًا أيضًا على Netlify يمكنك إعادة النشر ومسح الكاش ومراقبة آخر Deploy من هنا. البيانات تُحفظ على جهازك فقط.</p>
+    <div class="net-card">
+      <label>Access Token</label>
+      <input type="password" id="netTok" placeholder="من حسابك في Netlify → User settings → Access tokens" />
+      <label>Site ID</label>
+      <input type="text" id="netSite" placeholder="abcdef-1234-... أو اسم الموقع" />
+      <div class="pubmsg" style="margin-top:12px">
+        <button class="btn acc" id="netSave">حفظ الاتصال</button>
+        <button class="btn blu" id="netDeploy">🛰️ إعادة النشر الآن</button>
+        <button class="btn" id="netStatus">حالة آخر Deploy</button>
+        <button class="btn" id="netPurge">🧹 مسح الكاش</button>
+      </div>
+    </div>
+    <div class="dcard" id="netOut"><p class="mini">لم تُجرَّ أي عمليات Netlify بعد.</p></div>
+  </section>
 </div>
 
 <div class="status" id="status"><span>الفرع:</span><b id="stBranch">...</b></div>
@@ -226,6 +684,28 @@ button{font-family:inherit;cursor:pointer}
     <input type="password" id="loginTok" placeholder="ghp_... أو github_pat_..." dir="ltr">
     <button class="btn acc" id="loginBtn">🔗 اتصال</button>
     <div class="hint">ماعندك رمز؟ <a href="https://github.com/settings/tokens" target="_blank">اضغط هنا لإنشائه</a><br>من صفحة التوكن: Generate new token → Mark ✅ <code>repo</code> (full control) و<code>workflow</code> إن طلب. الصلاحيات ما تحتاج تختار منها.</div>
+  </div>
+</div>
+
+<div class="mask" id="renameMask">
+  <div class="modal" style="width:520px">
+    <div class="mh"><span>✏️ إعادة تسمية / نقل الملف</span><span class="sp"></span><button class="btn sm" id="renClose">✕</button></div>
+    <div class="mb">
+      <div><label>المسار الحالي</label><input type="text" id="renOld" dir="ltr" style="text-align:start"></div>
+      <div><label>المسار الجديد</label><input type="text" id="renNew" dir="ltr" style="text-align:start"></div>
+      <div class="hint">غيّر اسم الملف أو المسار لنقله بين المجلدات. الرابط يتغير حسب المسار الجديد.</div>
+    </div>
+    <div class="mf"><button class="btn" id="renCancel">إلغاء</button><span class="sp"></span><button class="btn acc" id="renDo">💾 تنفيذ</button></div>
+  </div>
+</div>
+
+<div class="mask" id="histMask">
+  <div class="modal" style="width:600px">
+    <div class="mh"><span>🕘 سجل الملف <span id="histPathLabel" style="color:var(--acc)"></span></span><span class="sp"></span><button class="btn sm" id="histClose">✕</button></div>
+    <div class="mb">
+      <div class="hlist" id="histList" style="max-height:60vh;overflow-y:auto"></div>
+      <div class="hint" id="histHint"></div>
+    </div>
   </div>
 </div>
 
@@ -462,11 +942,15 @@ async function uploadFiles(fileList){
   var big=files.filter(function(x){ return x.size>25000000; });
   if(big.length && !confirm(big.length+" ملف أكبر من 25MB. رفعها يستغرق وقت. متابعة؟")) return;
   var total=files.length, done=0, failed=[], ok=[], up=$("uploads");
+  UP.running=true; UP.cancel=false; UP.paused=false;
+  uploadControlsRow();
   var u=document.createElement("div");
   u.innerHTML='<div class="urow"><div class="nm">رفع '+total+' ملف...</div><div class="st"><span class="sp"></span><span>0/'+total+'</span></div></div>';
   up.insertBefore(u, up.firstChild);
   var bar=$("barFill"); bar.style.width="0%";
   for(var i=0;i<files.length;i++){
+    while(UP.paused){ await sleep(150); }
+    if(UP.cancel) break;
     var f=files[i];
     var rel=f.webkitRelativePath ? f.webkitRelativePath.split("/").slice(1).join("/") : f.name;
     var tp=join(CUR, join($("targetOver")?$("targetOver").value.trim():"", rel));
@@ -485,8 +969,10 @@ async function uploadFiles(fileList){
       toast("فشل "+f.name+": "+e.message,"er");
     }
   }
-  if(done===total){ u.querySelector(".st").innerHTML='<span style="color:var(--acc)">✔ تم رفع '+total+' ملف</span>'; toast("تم رفع "+total+" ملف ✔"); }
+  if(UP.cancel){ u.querySelector(".st").innerHTML='<span style="color:var(--red)">⏹ تم الإيقاف ('+done+'/'+total+')</span>'; toast("تم إيقاف الرفع","wr"); }
+  else if(done===total){ u.querySelector(".st").innerHTML='<span style="color:var(--acc)">✔ تم رفع '+total+' ملف</span>'; toast("تم رفع "+total+" ملف ✔"); }
   else { u.querySelector(".st").innerHTML='<span style="color:var(--yel)">⚠ انتهى ('+done+'/'+total+') — فشل: '+failed.join("، ")+'</span>'; }
+  UP.running=false; UP.cancel=false; UP.paused=false;
   setTimeout(function(){ u.remove(); bar.style.width="0%"; }, 6000);
   showResults(ok);
   await loadTree(true);
@@ -631,7 +1117,1230 @@ $("cfgTest").onclick=async function(){
   btn.disabled=false; btn.textContent="🔎 فحص الاتصال";
 };
 
+/* ================= Studio: helpers ================= */
+function sleep(ms){ return new Promise(function(ok){ setTimeout(ok, ms); }); }
+function repoBase(){ return "/repos/" + CFG.owner + "/" + CFG.repo; }
+async function ghJson(path, opts){ var res = await gh(path, opts); return res.json(); }
+async function readRepoFile(path){
+  try {
+    var res = await gh(repoBase() + "/contents/" + path + "?ref=" + CFG.branch);
+    var j = await res.json();
+    if (j.size > 900000) { var r = await fetch(rawUrl(path)); if(!r.ok) throw new Error("كبير"); return { content: await r.text(), sha: j.sha, size: j.size }; }
+    if (j.encoding === "base64") return { content: unb64(j.content), sha: j.sha, size: j.size };
+    return { content: j.content || "", sha: j.sha, size: j.size };
+  } catch (e) { if (String(e.message).indexOf("404") > -1 || String(e.message).indexOf("غير موجود") > -1) return null; throw e; }
+}
+async function writeRepoFile(path, content, msg){
+  var ex = await readRepoFile(path);
+  var payload = { message: msg || "تحديث: " + path, content: b64(content), branch: CFG.branch };
+  if (ex && ex.sha) payload.sha = ex.sha;
+  await gh(repoBase() + "/contents/" + path, { method: "PUT", body: JSON.stringify(payload) });
+  await loadTree(true);
+}
+async function deleteRepoFile(path, msg){
+  var ex = await readRepoFile(path);
+  if (!ex) throw new Error("الملف غير موجود");
+  await gh(repoBase() + "/contents/" + path, { method: "DELETE", body: JSON.stringify({ message: msg || "حذف: " + path, branch: CFG.branch, sha: ex.sha }) });
+  await loadTree(true);
+}
+async function renameRepoFile(oldP, newP, msg){
+  var ex = await readRepoFile(oldP);
+  if (!ex) throw new Error("الملف غير موجود");
+  await writeRepoFile(newP, ex.content, msg || "نقل: " + oldP + " → " + newP);
+  await deleteRepoFile(oldP, msg || "حذف بعد نقل: " + oldP);
+  await loadTree(true);
+}
+function nowStamp(){ var d = new Date(); function p(n){ return (n<10?"0":"")+n; } return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()); }
+function fmtDate(ts){ if(!ts) return "—"; try { return new Date(ts).toLocaleString("ar-EG"); } catch(e){ return String(ts); } }
+function b64urlToBuf(s){ var b = atob(s.replace(/-/g,"+").replace(/_/g,"/")); var a = new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
+
+/* ================= Studio: sections ================= */
+var SECTIONS = ["publish","github","files","images","trans","games","news","db","stats","ai","tools","security","auto","netlify"];
+function switchSec(name){
+  SECTIONS.forEach(function(s){
+    var p = $("sec-" + s); if (p) p.classList.toggle("on", s === name);
+  });
+  document.querySelectorAll("#snav .sbtn").forEach(function(b){
+    b.classList.toggle("on", b.getAttribute("data-sec") === name);
+  });
+  var lbl = document.querySelector('#snav .sbtn[data-sec="' + name + '"]');
+  var tl = $("topSecLabel"); if (tl) tl.textContent = (lbl ? lbl.querySelector(".si").textContent : "🚀") + " " + (lbl ? lbl.getAttribute("data-label") : "النشر");
+  var hiddenFiles = name !== "files";
+  var side = $("side"), main = $("main");
+  if (side) side.style.display = hiddenFiles ? "none" : "";
+  if (main) main.style.display = hiddenFiles ? "none" : "";
+  localStorage.setItem("ry_sec", name);
+  if (name === "publish") renderPubStatus();
+  if (name === "github") renderGithub();
+  if (name === "images") renderImages();
+  if (name === "trans") renderTrans();
+  if (name === "games") renderGamesSec();
+  if (name === "news") renderNewsSec();
+  if (name === "db") renderDb();
+  if (name === "stats") renderStats();
+  if (name === "ai") renderAiSetup();
+  if (name === "security") renderSecLogs();
+  if (name === "auto") renderAuto();
+}
+function initSectionNav(){
+  document.querySelectorAll("#snav .sbtn").forEach(function(b){
+    b.addEventListener("click", function(){ switchSec(b.getAttribute("data-sec")); });
+  });
+  var saved = localStorage.getItem("ry_sec") || "publish";
+  if (SECTIONS.indexOf(saved) === -1) saved = "publish";
+  switchSec(saved);
+}
+
+/* ================= Activity / login / error logs ================= */
+function actList(){ var a = load2("ry_studio_act", []); return Array.isArray(a) ? a : []; }
+function logActivity(icon, text){
+  var a = actList();
+  a.unshift({ ts: Date.now(), icon: icon || "🔧", text: String(text || "") });
+  if (a.length > 120) a.length = 120;
+  save2("ry_studio_act", a);
+}
+function loginsList(){ var a = load2("ry_studio_logins", []); return Array.isArray(a) ? a : []; }
+function logLogin(name, ok){
+  var a = loginsList();
+  a.unshift({ ts: Date.now(), name: String(name || "—"), ok: !!ok });
+  if (a.length > 120) a.length = 120;
+  save2("ry_studio_logins", a);
+}
+function errList(){ var a = load2("ry_studio_errors", []); return Array.isArray(a) ? a : []; }
+function logError(text){
+  var a = errList();
+  a.unshift({ ts: Date.now(), text: String(text || "") });
+  if (a.length > 80) a.length = 80;
+  save2("ry_studio_errors", a);
+}
+window.addEventListener("error", function(e){ try { logError((e && e.message) || "خطأ غير معروف"); } catch(x){} });
+function load2(k, d){ try { var r = localStorage.getItem(k); if (r !== null) return JSON.parse(r); } catch(e){} return d; }
+function save2(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+/* ================= Notifications ================= */
+function notify(title, body, ok){
+  try {
+    if ("Notification" in window && Notification.permission === "granted") { new Notification(title, { body: body }); }
+  } catch(e){}
+  toast((ok === false ? "❌ " : "✅ ") + body, ok === false ? "er" : "");
+}
+function enableNotifs(){
+  if (!("Notification" in window)) return toast("المتصفح لا يدعم الإشعارات","wr");
+  Notification.requestPermission().then(function(p){
+    if (p === "granted") toast("تم تفعيل الإشعارات ✔");
+    else toast("لم يُسمح بالإشعارات","wr");
+  });
+}
+
+/* ================= Publish ================= */
+var DEPLOY = { runId: null, timer: null, last: null };
+var WORKFLOW_YAML = [
+  "name: Ryan Deploy",
+  "",
+  "on:",
+  "  workflow_dispatch:",
+  "    inputs:",
+  "      message:",
+  "        description: \"وصف النشر\"",
+  "        required: false",
+  "        default: \"نشر من استوديو ريان\"",
+  "",
+  "jobs:",
+  "  deploy:",
+  "    runs-on: ubuntu-latest",
+  "    permissions:",
+  "      contents: write",
+  "    steps:",
+  "      - name: Checkout",
+  "        uses: actions/checkout@v4",
+  "      - name: Bump deploy marker",
+  "        run: |",
+  "          echo \"{\\\"build\\\": $(date +%s%3N), \\\"when\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"who\\\": \\\"ryan-studio\\\", \\\"msg\\\": \\\"${{ github.event.inputs.message }}\\\"}\" > deploy-build.json",
+  "          git config user.name \"Ryan Studio\"",
+  "          git config user.email \"ryan-studio@users.noreply.github.com\"",
+  "          git add deploy-build.json",
+  "          git pull --rebase origin \"${{ github.ref_name }}\"",
+  "          git commit -m \"نشر: ${{ github.event.inputs.message }}\" --allow-empty",
+  "          git push"
+].join("\n");
+function ensureWorkflow(){
+  return TREE && TREE.some(function(x){ return x.path === ".github/workflows/deploy.yml"; });
+}
+async function setupWorkflow(){
+  try {
+    await writeRepoFile(".github/workflows/deploy.yml", WORKFLOW_YAML, "تفعيل نشر الاستوديو (workflow)");
+    toast("تم إنشاء Workflow في المستودع ✔");
+    logActivity("📦", "إنشاء Workflow النشر");
+  } catch(e){ toast("فشل إنشاء Workflow: " + e.message, "er"); }
+}
+function pubHistory(){ var a = load2("ry_pub_hist", []); return Array.isArray(a) ? a : []; }
+function addPubHist(r){
+  var a = pubHistory();
+  var i = a.findIndex(function(x){ return x.id === r.id; });
+  var item = { id: r.id, name: r.name, status: r.status, conclusion: r.conclusion || "", message: (r.head_commit && r.head_commit.message) || "", created: r.created_at, updated: r.updated_at, html: r.html_url };
+  if (i > -1) a[i] = item; else a.unshift(item);
+  if (a.length > 60) a.length = 60;
+  save2("ry_pub_hist", a);
+}
+function renderPubStatus(){
+  var runs = pubHistory();
+  var last = runs[0];
+  var line = $("pubLastLine"), badge = $("pubBadge"), btn = $("btnOpenRun");
+  if (!last) { if (line) line.textContent = "لم يُنشر بعد من الاستوديو."; if (badge) badge.textContent = "جاهز"; if (badge) badge.className = "badge"; if (btn) btn.style.display = "none"; return; }
+  if (line) line.textContent = fmtDate(last.updated || last.created) + " — " + (last.message || "نشر");
+  if (badge) {
+    badge.textContent = last.conclusion === "success" ? "✔ نجح" : last.conclusion === "failure" || last.conclusion === "cancelled" ? "✖ فشل" : (last.status === "completed" ? "اكتمل" : "جارٍ النشر...");
+    badge.className = "badge " + (last.conclusion === "success" ? "ok" : (last.conclusion === "failure" || last.conclusion === "cancelled" ? "er" : "run"));
+  }
+  if (btn) btn.style.display = last.html ? "" : "none";
+  if (btn) btn.onclick = function(){ if (last.html) window.open(last.html, "_blank"); };
+  renderPubHistory();
+}
+function renderPubHistory(){
+  var wrap = $("pubHistory");
+  if (!wrap) return;
+  var list = pubHistory();
+  if (!list.length) { wrap.innerHTML = '<p class="mini">لا يوجد سجل بعد.</p>'; return; }
+  var html = "";
+  list.slice(0, 15).forEach(function(r){
+    var state = r.conclusion === "success" ? "ok" : (r.conclusion === "failure" || r.conclusion === "cancelled" ? "er" : (r.status === "completed" ? "wr" : "run"));
+    var stxt = r.conclusion === "success" ? "✔ نجح" : r.conclusion === "failure" ? "✖ فشل" : r.conclusion === "cancelled" ? "↺ أُلغي" : (r.status === "completed" ? "اكتمل" : "⏳ قيد التنفيذ");
+    html += '<div class="hrow"><span class="hd"><span class="badge ' + state + '">' + stxt + "</span> " + esc((r.message || "نشر").slice(0, 60)) + '</span><span class="hm">' + fmtDate(r.updated || r.created) + "</span>";
+    if (r.html) html += '<span class="acts"><a class="btn sm blu" href="' + esc(r.html) + '" target="_blank">فتح</a></span>';
+    html += "</div>";
+  });
+  wrap.innerHTML = html;
+}
+async function startPublish(msg){
+  if (DEPLOY.timer) return toast("نشر جارٍ بالفعل — انتظر انتهاءه","wr");
+  if (!TOKEN) return showLogin();
+  if (!ensureWorkflow()) { toast("لا يوجد Workflow في المستودع. أنشئه أولًا بزر «إنشاء Workflow تلقائيًا».","wr"); switchSec("publish"); return; }
+  var before = Date.now();
+  try {
+    await gh(repoBase() + "/actions/workflows/deploy.yml/dispatches", { method: "POST", body: JSON.stringify({ ref: CFG.branch, inputs: { message: msg || "" } }) });
+  } catch(e){ toast("فشل إرسال النشر: " + e.message, "er"); return; }
+  logActivity("🚀", "طلب نشر: " + (msg || "بدون وصف"));
+  toast("تم إرسال طلب النشر — جارٍ المتابعة ✔");
+  await findPublishRun(before);
+}
+async function findPublishRun(before){
+  for (var i = 0; i < 12; i++) {
+    await sleep(2500);
+    try {
+      var j = await ghJson(repoBase() + "/actions/runs?event=workflow_dispatch&per_page=5");
+      var runs = (j && j.workflow_runs) || [];
+      var mine = null;
+      runs.forEach(function(r){ var t = new Date(r.created_at).getTime(); if (t >= before - 20000) mine = r; });
+      if (mine) { DEPLOY.runId = mine.id; DEPLOY.last = mine; addPubHist(mine); startPollRun(mine.id); return; }
+    } catch(e){}
+  }
+  toast("لم يتم العثور على التشغيل — تحقق من تبويب Actions","wr");
+}
+function startPollRun(id){
+  var prog = $("pubProg"), label = $("pubProgLabel"), pct = $("pubProgPct"), fill = $("pubProgFill"), steps = $("pubSteps");
+  if (prog) prog.style.display = "";
+  if (label) label.textContent = "جارٍ النشر...";
+  if (pct) pct.textContent = "0%";
+  if (fill) fill.style.width = "0%";
+  if (steps) steps.innerHTML = "";
+  var lastStatus = null;
+  DEPLOY.timer = setInterval(function(){
+    Promise.all([
+      ghJson(repoBase() + "/actions/runs/" + id),
+      ghJson(repoBase() + "/actions/runs/" + id + "/jobs")
+    ]).then(function(arr){
+      var run = arr[0], jobs = arr[1];
+      addPubHist(run);
+      var all = [], done = 0;
+      (jobs.jobs || []).forEach(function(job){
+        (job.steps || []).forEach(function(s){ all.push(s); if (s.status === "completed") done++; });
+      });
+      var total = all.length || 1;
+      var p = Math.round(done / total * 100);
+      if (pct) pct.textContent = p + "%";
+      if (fill) fill.style.width = p + "%";
+      if (label) label.textContent = run.status === "completed" ? "اكتمل النشر" : "جارٍ النشر... (التشغيل #" + run.run_number + ")";
+      if (steps) {
+        var html = "";
+        all.forEach(function(s, i){
+          var ic = s.status === "completed" ? "✅" : (s.status === "in_progress" ? "⏳" : "⬜");
+          var cls = s.status === "completed" ? "done" : (s.status === "in_progress" ? "act" : "");
+          html += '<div class="pubstep ' + cls + '"><span class="st-ic">' + ic + "</span> " + esc(s.name) + "</div>";
+        });
+        steps.innerHTML = html;
+      }
+      if (run.status === "completed" && lastStatus !== "completed") {
+        lastStatus = "completed";
+        clearInterval(DEPLOY.timer); DEPLOY.timer = null; DEPLOY.runId = null;
+        var ok = run.conclusion === "success";
+        addPubHist(run);
+        renderPubStatus();
+        logActivity(ok ? "✅" : "❌", "انتهى النشر: " + (ok ? "نجاح" : run.conclusion));
+        if (getAuto().notify) notify("نشر ريان", ok ? "تم نشر الموقع بنجاح ✔" : "فشل النشر: " + run.conclusion, ok);
+        toast(ok ? "تم نشر الموقع بنجاح ✔" : "فشل النشر: " + run.conclusion, ok ? "" : "er");
+      }
+    }).catch(function(e){ logError("poll: " + e.message); });
+  }, 3000);
+}
+
+/* ================= GitHub section ================= */
+async function renderGithub(){
+  var wrap = $("ghRepoLine"), cards = $("ghCards"), commits = $("ghCommits");
+  try {
+    var j = await ghJson(repoBase());
+    if (wrap) wrap.innerHTML = "<b>" + esc(CFG.owner) + "/" + esc(CFG.repo) + "</b> — الفرع الافتراضي: <b>" + esc(j.default_branch || CFG.branch) + "</b> · آخر تحديث: " + fmtDate(j.updated_at);
+    if (cards) cards.innerHTML =
+      '<div class="scard"><div class="sci">⭐</div><div class="scv">' + (j.stargazers_count || 0) + '</div><div class="scl">نجوم</div></div>' +
+      '<div class="scard"><div class="sci">🍴</div><div class="scv">' + (j.forks_count || 0) + '</div><div class="scl">نسخ Fork</div></div>' +
+      '<div class="scard"><div class="sci">👁️</div><div class="scv">' + (j.watchers_count || 0) + '</div><div class="scl">متابعة</div></div>' +
+      '<div class="scard"><div class="sci">🐛</div><div class="scv">' + (j.open_issues_count || 0) + '</div><div class="scl">مشاكل مفتوحة</div></div>' +
+      '<div class="scard"><div class="sci">📦</div><div class="scv">' + Math.round((j.size || 0) / 1024) + ' MB</div><div class="scl">حجم المستودع</div></div>';
+    var cj = await ghJson(repoBase() + "/commits?per_page=25");
+    if (commits) {
+      if (!cj.length) commits.innerHTML = '<p class="mini">لا توجد Commits.</p>';
+      else {
+        commits.innerHTML = "";
+        cj.forEach(function(c){
+          var row = el2("div", "hrow");
+          var sha = c.sha.slice(0, 7);
+          row.innerHTML =
+            '<span class="hd">🔨 ' + esc((c.commit.message || "").split("\n")[0].slice(0, 60)) + '</span>' +
+            '<span class="ht">' + sha + "</span>" +
+            '<span class="hm">' + fmtDate(c.commit.author.date) + "</span>" +
+            '<span class="acts"><button class="btn sm" data-cp="' + esc(c.sha) + '">📋</button>' +
+            '<button class="btn sm red" data-rb="' + esc(c.sha) + '" data-msg="' + esc((c.commit.message || "").split("\n")[0].slice(0, 40)) + '">↺ استرجاع</button></span>';
+          commits.appendChild(row);
+        });
+        commits.querySelectorAll("[data-cp]").forEach(function(b){ b.onclick = function(){ copyText(b.getAttribute("data-cp")); toast("تم نسخ SHA ✔"); }; });
+        commits.querySelectorAll("[data-rb]").forEach(function(b){
+          b.onclick = function(){
+            var sha = b.getAttribute("data-rb"), msg = b.getAttribute("data-msg");
+            if (!confirm("استرجاع الموقع إلى هذا الإصدار؟\n" + msg + "\n(" + sha + ")\n\nتحذير: كل التعديلات الأحدث من هذا الإصدار ستُهمل نهائيًا. هل أنت متأكد؟")) return;
+            if (!confirm("تأكيد أخير: إعادة الفرع " + CFG.branch + " إلى " + sha + "؟")) return;
+            gh(repoBase() + "/git/refs/heads/" + CFG.branch, { method: "PATCH", body: JSON.stringify({ sha: sha, force: true }) })
+              .then(function(){ toast("تم استرجاع الموقع إلى " + sha + " ✔"); logActivity("↺", "استرجاع إلى " + sha); loadTree(true); })
+              .catch(function(e){ toast(e.message, "er"); });
+          };
+        });
+      }
+    }
+  } catch(e){ if (wrap) wrap.innerHTML = "تعذر جلب معلومات المستودع: " + esc(e.message); logError("github: " + e.message); }
+}
+function copyText(t){
+  var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch(e){}
+  ta.remove();
+}
+async function loadFileHistory(path){
+  var wrap = $("ghHistList");
+  if (!wrap) return;
+  wrap.innerHTML = '<p class="mini">جارٍ التحميل...</p>';
+  try {
+    var j = await ghJson(repoBase() + "/commits?path=" + encodeURIComponent(path) + "&per_page=20");
+    if (!j.length) { wrap.innerHTML = '<p class="mini">لا توجد تعديلات على هذا الملف.</p>'; return; }
+    wrap.innerHTML = "";
+    j.forEach(function(c){
+      var row = el2("div", "hrow");
+      row.innerHTML =
+        '<span class="hd">🔨 ' + esc((c.commit.message || "").split("\n")[0].slice(0, 55)) + '</span>' +
+        '<span class="ht">' + c.sha.slice(0, 7) + "</span>" +
+        '<span class="hm">' + fmtDate(c.commit.author.date) + "</span>" +
+        '<span class="acts"><button class="btn sm blu" data-rest="' + esc(c.sha) + '">↺ استرجاع هذا الإصدار</button></span>';
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll("[data-rest]").forEach(function(b){
+      b.onclick = async function(){
+        var sha = b.getAttribute("data-rest");
+        if (!confirm("استرجاع إصدار " + sha.slice(0, 7) + " من الملف " + path + "؟")) return;
+        try {
+          var res = await gh(repoBase() + "/contents/" + path + "?ref=" + sha);
+          var jj = await res.json();
+          await writeRepoFile(path, jj.encoding === "base64" ? unb64(jj.content) : (jj.content || ""), "استرجاع إصدار سابق (" + sha.slice(0, 7) + ")");
+          toast("تم استرجاع الملف ✔");
+          logActivity("↺", "استرجاع الملف " + path);
+        } catch(e){ toast(e.message, "er"); }
+      };
+    });
+  } catch(e){ wrap.innerHTML = '<p class="mini">' + esc(e.message) + "</p>"; }
+}
+function el2(tag, cls){
+  var d = document.createElement(tag); if (cls) d.className = cls; return d;
+}
+
+/* ================= Images ================= */
+var IMG_EXT = ["png","jpg","jpeg","gif","webp","svg","ico"];
+function isImg(p){ var e = p.split(".").pop().toLowerCase(); return IMG_EXT.indexOf(e) > -1; }
+function imgFiles(){
+  if (!TREE) return [];
+  return TREE.filter(function(x){ return x.type !== "tree" && isImg(x.path); });
+}
+function renderImages(){
+  var grid = $("imgGrid"), sel = $("imgFolder");
+  if (!grid) return;
+  var files = imgFiles();
+  var folder = sel.value;
+  var q = ($("imgSearch").value || "").trim().toLowerCase();
+  if (folder) files = files.filter(function(x){ return x.path.indexOf(folder + "/") === 0 || dirn(x.path) === folder; });
+  if (q) files = files.filter(function(x){ return x.path.toLowerCase().indexOf(q) > -1; });
+  files = files.slice(0, 200);
+  if (!files.length) { grid.innerHTML = '<p class="mini">لا توجد صور.</p>'; return; }
+  grid.innerHTML = "";
+  files.forEach(function(x){
+    var card = el2("div", "icard");
+    card.innerHTML =
+      '<div class="ith"><img src="' + esc(rawUrl(x.path)) + '" alt="" loading="lazy" referrerpolicy="no-referrer"></div>' +
+      '<div class="ibody"><div class="inm">' + esc(base(x.path)) + '</div><div class="isz">' + sizeF(x.size) + "</div>" +
+      '<div class="acts">' +
+      '<button class="btn sm blu" data-a="link">🔗</button>' +
+      '<button class="btn sm" data-a="webp">WebP</button>' +
+      '<button class="btn sm" data-a="zip">ضغط</button>' +
+      '<button class="btn sm" data-a="thumb">مصغرة</button>' +
+      '<button class="btn sm" data-a="rep">استبدال</button>' +
+      '<button class="btn sm red" data-a="del">🗑</button>' +
+      "</div></div>";
+    card.querySelectorAll("[data-a]").forEach(function(b){
+      b.onclick = function(){
+        var a = b.getAttribute("data-a");
+        if (a === "link") copyLink(x.path);
+        else if (a === "webp") processImage(x.path, { type: "image/webp", q: 0.85, suffix: ".webp" });
+        else if (a === "zip") processImage(x.path, { type: null, q: 0.7, suffix: "-small" });
+        else if (a === "thumb") processImage(x.path, { type: null, q: 0.8, suffix: "-thumb", max: 240 });
+        else if (a === "rep") replaceImage(x.path);
+        else if (a === "del") confirmDel(x.path);
+      };
+    });
+    grid.appendChild(card);
+  });
+}
+function loadImageEl(url){
+  return new Promise(function(ok, err){
+    var im = new Image();
+    im.crossOrigin = "anonymous";
+    im.onload = function(){ ok(im); };
+    im.onerror = function(){ err(new Error("تعذر تحميل الصورة")); };
+    im.src = url;
+  });
+}
+async function processImage(path, opts){
+  var ext = path.split(".").pop().toLowerCase();
+  if (ext === "svg" || ext === "ico") return toast("لا يمكن معالجة SVG/ICO بهذه الأداة","wr");
+  var btn = null;
+  try {
+    var im = await loadImageEl(rawUrl(path));
+    var w = im.naturalWidth, h = im.naturalHeight;
+    if (opts.max) { var sc = Math.min(1, opts.max / Math.max(w, h)); w = Math.round(w * sc); h = Math.round(h * sc); }
+    var c = document.createElement("canvas"); c.width = w; c.height = h;
+    c.getContext("2d").drawImage(im, 0, 0, w, h);
+    var type = opts.type || "image/" + (ext === "jpg" ? "jpeg" : ext);
+    var blob = await new Promise(function(ok){
+      c.toBlob(function(b){ ok(b); }, type, opts.q || 0.85);
+    });
+    if (!blob) throw new Error("تعذر توليد الصورة");
+    var dataUrl = await new Promise(function(ok, err){ var r = new FileReader(); r.onload = function(){ ok(r.result); }; r.onerror = err; r.readAsDataURL(blob); });
+    var newName = opts.suffix ? path.replace(/(\.\w+)$/, function(m){ return opts.suffix === ".webp" ? ".webp" : opts.suffix + m; }) : path;
+    var payload = { message: "معالجة صورة: " + newName, content: dataUrl.slice(dataUrl.indexOf(",") + 1), branch: CFG.branch };
+    var ex = TREE.find(function(x){ return x.path === newName; });
+    if (ex) payload.sha = ex.sha;
+    await gh(repoBase() + "/contents/" + newName, { method: "PUT", body: JSON.stringify(payload) });
+    toast("تم توليد " + base(newName) + " ✔");
+    logActivity("🎨", "معالجة صورة: " + newName);
+    loadTree(true).then(renderImages);
+  } catch(e){ toast(e.message, "er"); }
+}
+function replaceImage(path){
+  var inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "image/*";
+  inp.onchange = async function(){
+    if (!inp.files[0]) return;
+    var b = await base64(inp.files[0]);
+    var ex = TREE.find(function(x){ return x.path === path; });
+    var payload = { message: "استبدال صورة: " + path, content: b, branch: CFG.branch };
+    if (ex) payload.sha = ex.sha;
+    try {
+      await gh(repoBase() + "/contents/" + path, { method: "PUT", body: JSON.stringify(payload) });
+      toast("تم استبدال الصورة بنفس الرابط ✔");
+      logActivity("🖼️", "استبدال صورة: " + path);
+      loadTree(true).then(renderImages);
+    } catch(e){ toast(e.message, "er"); }
+  };
+  inp.click();
+}
+
+/* ================= Translations ================= */
+var TRANSLATIONS = null;
+var TRANSL_PATH = "_data/translations.json";
+async function loadTranslations(force){
+  if (TRANSLATIONS && !force) return TRANSLATIONS;
+  var f = await readRepoFile(TRANSL_PATH);
+  if (!f) TRANSLATIONS = { games: {}, entries: [] };
+  else { try { TRANSLATIONS = JSON.parse(f.content) || { games: {}, entries: [] }; } catch(e){ TRANSLATIONS = { games: {}, entries: [] }; } }
+  if (!TRANSLATIONS.games) TRANSLATIONS.games = {};
+  if (!TRANSLATIONS.entries) TRANSLATIONS.entries = [];
+  return TRANSLATIONS;
+}
+async function renderTrans(){
+  try {
+    await loadTranslations();
+    var gg = await readRepoFile("data-backup.json");
+    var games = [];
+    if (gg) { try { games = (JSON.parse(gg.content).games || []); } catch(e){} }
+    var gwrap = $("transGames");
+    if (gwrap) {
+      if (!games.length) gwrap.innerHTML = '<p class="mini">لا توجد ألعاب في data-backup.json.</p>';
+      else {
+        gwrap.innerHTML = "";
+        games.forEach(function(g){
+          var title = g.ar || g.title || "لعبة";
+          var st = TRANSLATIONS.games[title] || "none";
+          var row = el2("div", "hrow");
+          row.innerHTML = '<span class="hd">🎮 ' + esc(title) + '</span><select data-tg="' + esc(title) + '">' +
+            '<option value="none"' + (st === "none" ? " selected" : "") + '>لم يبدأ</option>' +
+            '<option value="wip"' + (st === "wip" ? " selected" : "") + '>قيد الترجمة</option>' +
+            '<option value="done"' + (st === "done" ? " selected" : "") + '>مكتمل</option></select>';
+          gwrap.appendChild(row);
+        });
+        gwrap.querySelectorAll("[data-tg]").forEach(function(s){
+          s.onchange = function(){ TRANSLATIONS.games[s.getAttribute("data-tg")] = s.value; };
+        });
+      }
+    }
+    var ewrap = $("transEntries");
+    if (ewrap) {
+      ewrap.innerHTML = "";
+      if (!TRANSLATIONS.entries.length) ewrap.innerHTML = '<p class="mini">لا توجد نصوص ترجمة بعد.</p>';
+      TRANSLATIONS.entries.forEach(function(e2, i){
+        var row = el2("div", "hrow");
+        row.innerHTML = '<span class="hd">📝 ' + esc(e2.title || "") + '</span><span class="hm">' + esc(e2.text || "") + '</span><span class="badge ' + (e2.status === "done" ? "ok" : "wr") + '">' + (e2.status === "done" ? "مكتمل" : "قيد المراجعة") + '</span><span class="acts"><button class="btn sm red" data-del="' + i + '">🗑</button></span>';
+        ewrap.appendChild(row);
+      });
+      ewrap.querySelectorAll("[data-del]").forEach(function(b){
+        b.onclick = function(){ TRANSLATIONS.entries.splice(parseInt(b.getAttribute("data-del"), 10), 1); renderTrans(); };
+      });
+    }
+    var fg = $("trFileGame");
+    if (fg) {
+      var cur = fg.value;
+      fg.innerHTML = '<option value="">المجلد الرئيسي</option>';
+      games.forEach(function(g){ var t = (g.ar || g.title || "لعبة").replace(/\s+/g, "-"); fg.innerHTML += '<option value="' + esc(t) + '">' + esc(t) + "</option>"; });
+      fg.value = cur;
+    }
+  } catch(e){ logError("trans: " + e.message); }
+}
+async function saveTranslations(){
+  try {
+    await writeRepoFile(TRANSL_PATH, JSON.stringify(TRANSLATIONS, null, 2), "تحديث الترجمات");
+    toast("تم حفظ الترجمات ونشرها في المستودع ✔");
+    logActivity("🌍", "حفظ الترجمات");
+    maybeAutoPublish("تحديث الترجمات");
+  } catch(e){ toast(e.message, "er"); }
+}
+function addTranslation(){
+  var t = $("trTitle").value.trim(), x = $("trText").value.trim();
+  if (!t || !x) return toast("اكتب العنوان والنص","wr");
+  TRANSLATIONS.entries.push({ title: t, text: x, status: $("trStatus").value, ts: Date.now() });
+  $("trTitle").value = ""; $("trText").value = "";
+  renderTrans();
+  toast("تمت إضافة النص — اضغط حفظ ✔");
+}
+
+/* ================= Database ================= */
+async function readBackup(){
+  var f = await readRepoFile("data-backup.json");
+  if (!f) return { content: null, sha: null };
+  return f;
+}
+async function renderDb(){
+  var sum = $("dbSummary"), list = $("dbBackups");
+  try {
+    var f = await readBackup();
+    if (sum) {
+      if (!f.content) sum.innerHTML = "<h4>⚠️ لا يوجد data-backup.json في المستودع — أُنشئ نسخة من زر «مزامنة».</h4>";
+      else {
+        var d = JSON.parse(f.content);
+        sum.innerHTML = "<h4>🗄️ ملخص البيانات</h4><div class='mini'>الألعاب: <b>" + (d.games ? d.games.length : 0) + "</b> · الدروس: <b>" + (d.lessons ? d.lessons.length : 0) + "</b> · التحديثات: <b>" + (d.updates ? d.updates.length : 0) + "</b> · آخر تحديث: " + fmtDate(d.updatedAt) + "</div>";
+      }
+    }
+    if (list) {
+      var bs = TREE ? TREE.filter(function(x){ return x.type !== "tree" && x.path.indexOf("_data/backups/") === 0; }) : [];
+      if (!bs.length) list.innerHTML = '<p class="mini">لا توجد نسخ احتياطية بعد.</p>';
+      else {
+        list.innerHTML = "";
+        bs.forEach(function(x){
+          var row = el2("div", "hrow");
+          row.innerHTML = '<span class="hd">🗃️ ' + esc(base(x.path)) + '</span><span class="hm">' + sizeF(x.size) + '</span><span class="acts">' +
+            '<button class="btn sm blu" data-r="' + esc(x.path) + '">استرجاع</button>' +
+            '<button class="btn sm red" data-d="' + esc(x.path) + '">حذف</button></span>';
+          list.appendChild(row);
+        });
+        list.querySelectorAll("[data-r]").forEach(function(b){
+          b.onclick = async function(){
+            var p = b.getAttribute("data-r");
+            if (!confirm("استرجاع النسخة " + base(p) + " إلى data-backup.json؟")) return;
+            try { var f2 = await readRepoFile(p); await writeRepoFile("data-backup.json", f2.content, "استرجاع نسخة: " + base(p)); toast("تم الاسترجاع ✔"); logActivity("🗄️", "استرجاع " + base(p)); renderDb(); maybeAutoPublish("استرجاع نسخة"); } catch(e){ toast(e.message, "er"); }
+          };
+        });
+        list.querySelectorAll("[data-d]").forEach(function(b){
+          b.onclick = async function(){
+            var p = b.getAttribute("data-d");
+            if (!confirm("حذف النسخة " + base(p) + "؟")) return;
+            try { await deleteRepoFile(p, "حذف نسخة احتياطية"); renderDb(); } catch(e){ toast(e.message, "er"); }
+          };
+        });
+      }
+    }
+  } catch(e){ logError("db: " + e.message); }
+}
+async function dbBackupNow(silent){
+  try {
+    var f = await readBackup();
+    if (!f.content) return toast("لا توجد بيانات للنسخ بعد","wr");
+    var p = "_data/backups/backup-" + nowStamp() + ".json";
+    await writeRepoFile(p, f.content, "نسخة احتياطية: " + base(p));
+    if (!silent) toast("تم إنشاء نسخة احتياطية ✔");
+    logActivity("🗄️", "نسخة احتياطية: " + base(p));
+    renderDb();
+  } catch(e){ if (!silent) toast(e.message, "er"); }
+}
+async function dbSyncNow(){
+  try {
+    var f = await readBackup();
+    if (!f.content) throw new Error("لا توجد بيانات");
+    await writeRepoFile("data-backup.json", f.content, "مزامنة بيانات الموقع");
+    toast("تمت المزامنة إلى المستودع ✔");
+    logActivity("🔄", "مزامنة البيانات");
+    maybeAutoPublish("مزامنة البيانات");
+  } catch(e){ toast(e.message, "er"); }
+}
+function dbDownloadNow(){
+  readRepoFile("data-backup.json").then(function(f){
+    if (!f) return toast("لا توجد بيانات","wr");
+    var blob = new Blob([f.content], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "data-backup.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 3000);
+  }).catch(function(e){ toast(e.message, "er"); });
+}
+function dbRestoreFromFile(file){
+  var r = new FileReader();
+  r.onload = async function(){
+    try {
+      JSON.parse(r.result);
+      await writeRepoFile("data-backup.json", r.result, "استرجاع بيانات من ملف");
+      toast("تم استرجاع البيانات ونشرها ✔");
+      logActivity("📥", "استرجاع من ملف");
+      renderDb(); maybeAutoPublish("استرجاع بيانات");
+    } catch(e){ toast("ملف JSON غير صالح","er"); }
+  };
+  r.readAsText(file);
+}
+
+/* ================= Statistics ================= */
+async function renderStats(){
+  var cards = $("statCards"), vw = $("statViews"), pop = $("statPopular"), dl = $("statDownloads"), er = $("statErrors");
+  if (cards) cards.innerHTML = '<div class="scard"><div class="scl">جارٍ تحميل الإحصائيات...</div></div>';
+  var views = { count: 0, uniques: 0, history: [] }, clones = { count: 0, uniques: 0 }, popular = [];
+  try {
+    var v = await ghJson(repoBase() + "/traffic/views?per=week");
+    if (v) { views.count = v.count || 0; views.uniques = v.uniques || 0; views.history = v.views || []; }
+  } catch(e){ logError("stats views: " + e.message); }
+  try { var c = await ghJson(repoBase() + "/traffic/clones?per=week"); if (c) { clones.count = c.count || 0; clones.uniques = c.uniques || 0; } } catch(e){}
+  try { var p = await ghJson(repoBase() + "/traffic/popular/paths"); popular = p || []; } catch(e){}
+  if (cards) cards.innerHTML =
+    '<div class="scard"><div class="sci">👁️</div><div class="scv">' + views.count + '</div><div class="scl">مشاهدة (14 يوم)</div></div>' +
+    '<div class="scard"><div class="sci">👤</div><div class="scv">' + views.uniques + '</div><div class="scl">زائر فريد</div></div>' +
+    '<div class="scard"><div class="sci">⬇️</div><div class="scv">' + clones.count + '</div><div class="scl">استنساخ للمستودع</div></div>' +
+    '<div class="scard"><div class="sci">🔁</div><div class="scv">' + clones.uniques + '</div><div class="scl">مستنسخ فريد</div></div>';
+  if (vw) {
+    if (!views.history.length) vw.innerHTML = '<p class="mini">لا توجد بيانات مشاهدة بعد (تحتاج بعض الزيارات).</p>';
+    else {
+      vw.innerHTML = "";
+      views.history.slice().reverse().forEach(function(r){
+        var row = el2("div", "srow");
+        row.innerHTML = '<span class="nm">' + esc(r.timestamp || "") + '</span><span class="val">' + (r.count || 0) + " مشاهدة</span>";
+        vw.appendChild(row);
+      });
+    }
+  }
+  if (pop) {
+    if (!popular.length) pop.innerHTML = '<p class="mini">لا توجد بيانات بعد.</p>';
+    else {
+      pop.innerHTML = "";
+      popular.slice(0, 12).forEach(function(r){
+        var row = el2("div", "srow");
+        row.innerHTML = '<span class="nm">' + esc(r.path || "") + '</span><span class="val">' + (r.count || 0) + '</span>';
+        pop.appendChild(row);
+      });
+    }
+  }
+  if (dl) {
+    var f = await readBackup();
+    var list = [];
+    if (f && f.content) { try { list = (JSON.parse(f.content).games || []).slice().sort(function(a, b){ return (parseInt(b.downloads, 10) || 0) - (parseInt(a.downloads, 10) || 0); }); } catch(e){} }
+    if (!list.length) dl.innerHTML = '<p class="mini">لا توجد بيانات تنزيل.</p>';
+    else {
+      dl.innerHTML = "";
+      list.slice(0, 12).forEach(function(g){
+        var row = el2("div", "srow");
+        row.innerHTML = '<span class="nm">🎮 ' + esc(g.ar || g.title) + '</span><span class="val">' + (parseInt(g.downloads, 10) || 0) + " تنزيل</span>";
+        dl.appendChild(row);
+      });
+    }
+  }
+  if (er) {
+    var els = errList();
+    if (!els.length) er.innerHTML = '<p class="mini">لا توجد أخطاء مسجلة.</p>';
+    else {
+      er.innerHTML = "";
+      els.forEach(function(x){
+        var row = el2("div", "srow");
+        row.innerHTML = '<span class="nm">' + esc(x.text) + '</span><span class="val">' + fmtDate(x.ts) + "</span>";
+        er.appendChild(row);
+      });
+    }
+  }
+}
+
+/* ================= AI ================= */
+var AI_ACTIONS = [
+  ["🎮 وصف احترافي للعبة", "desc"],
+  ["✏️ تحسين النص", "improve"],
+  ["🌐 ترجمة للعربية", "tr-ar"],
+  ["🌐 ترجمة للإنجليزية", "tr-en"],
+  ["🔑 كلمات مفتاحية", "kw"],
+  ["🏷 عنوان SEO", "seo-title"],
+  ["📝 وصف SEO", "seo-desc"],
+  ["🎬 إعلان قصير", "ad"],
+  ["📋 وصف قصير", "short"]
+];
+function aiConf(){
+  return { provider: localStorage.getItem("ry_ai_provider") || "local", key: localStorage.getItem("ry_ai_key") || "", model: localStorage.getItem("ry_ai_model") || "" };
+}
+function renderAiSetup(){
+  var c = aiConf();
+  var p = $("aiProvider"); if (p) p.value = c.provider;
+  var k = $("aiKey"); if (k) k.value = c.key;
+  var m = $("aiModel"); if (m) m.value = c.model;
+  var chips = $("aiChips");
+  if (chips) {
+    chips.innerHTML = "";
+    AI_ACTIONS.forEach(function(a){
+      var b = document.createElement("button"); b.className = "achip"; b.textContent = a[0]; b.type = "button";
+      b.onclick = function(){ runAI(a[1]); };
+      chips.appendChild(b);
+    });
+  }
+  var st = $("aiStatus"); if (st) st.textContent = "المزود: " + (c.provider === "local" ? "محلي" : c.provider === "gemini" ? "Gemini" : "OpenRouter");
+}
+$("aiProvider").onchange = function(){ localStorage.setItem("ry_ai_provider", this.value); renderAiSetup(); };
+$("aiKey").onchange = function(){ localStorage.setItem("ry_ai_key", this.value); renderAiSetup(); };
+$("aiModel").onchange = function(){ localStorage.setItem("ry_ai_model", this.value); renderAiSetup(); };
+function localAI(act, input){
+  var t = String(input || "").trim();
+  var g = { desc: "", seo: "", kw: "", title: "" };
+  if (act === "desc") {
+    return "🎮 " + (t || "اللعبة") + "\n\n" +
+      "انغمس في عالم " + (t || "اللعبة") + " بتجربة عربية كاملة! تعريب شامل لقوائم اللعبة والإعدادات والحوارات بنسبة 100%، مع دعم كامل للغة العربية من اليمين إلى اليسار.\n\n" +
+      "✅ ترجمة كاملة لكل النصوص\n✅ واجهة عربية واضحة وسهلة\n✅ خط عربي مريح للقراءة\n✅ متوافق مع أحدث إصدارات اللعبة\n✅ شرح التركيب خطوة بخطوة\n\n" +
+      "استمتع بأفضل تجربة لعب باللغة العربية، حمّل تعريب " + (t || "اللعبة") + " الآن!";
+  }
+  if (act === "improve") {
+    var words = t.split(" ");
+    if (words.length < 4) return t;
+    var out = t.replace(/\.\s+/g, ".\n");
+    return "✍️ النص المحسّن:\n\n" + out;
+  }
+  if (act === "tr-ar") return "🌐 الترجمة إلى العربية:\n\n" + (t || "(أدخل النص أولًا)");
+  if (act === "tr-en") return "🌐 Translation to English:\n\n" + (t || "(enter text first)");
+  if (act === "kw") return "🔑 الكلمات المفتاحية المقترحة:\n" + ((t || "لعبة عربية").split(" ").join("، ") + "، تعريب " + (t || "اللعبة") + "، تحميل " + (t || "اللعبة") + " عربي، ترجمة " + (t || "اللعبة") + "، ألعاب عربية، شرح " + (t || "اللعبة") + "، " + (t || "اللعبة") + " بالعربية");
+  if (act === "seo-title") return "🏷 عنوان SEO مقترح:\n" + "تحميل تعريب " + (t || "اللعبة") + " كامل بالعربية — " + (t || "اللعبة") + " باللغة العربية مجانًا";
+  if (act === "seo-desc") return "📝 وصف SEO:\n" + "حمّل تعريب " + (t || "اللعبة") + " كاملًا بالعربية الآن. ترجمة شاملة لجميع القوائم والنصوص، تثبيت سهل خطوة بخطوة، وتجربة لعب سلسة باللغة العربية. " + (t || "اللعبة") + " معربة من فريق ريان.";
+  if (act === "ad") return "🎬 إعلان:\n" + "بعد انتظار طويل... لعبة " + (t || "اللعبة") + " أصبحت عربية! 🇸🇦\nترجمة كاملة وتجربة أصيلة. حمّلها الآن مجانًا من موقع ريان ألعاب 🎮";
+  if (act === "short") return "📋 وصف قصير:\n" + "تعريب كامل للعبة " + (t || "اللعبة") + " بالعربية — واجهة، قوائم، وحوارات 100% عربي.";
+  return "";
+}
+async function runAI(act){
+  var input = $("aiInput").value.trim();
+  var c = aiConf();
+  var out = "";
+  var label = "";
+  AI_ACTIONS.forEach(function(a){ if (a[1] === act) label = a[0]; });
+  if (c.provider === "local") {
+    out = localAI(act, input);
+    $("aiOutput").value = out;
+    toast("تم التوليد محليًا ✔");
+    return;
+  }
+  if (!c.key) { toast("أدخل مفتاح API أولًا (أو استخدم «محلي»)", "wr"); return; }
+  var st = $("aiStatus");
+  if (st) st.textContent = "جارٍ الاستعلام عن " + c.provider + "...";
+  var prompt = "المهمة: " + label + ".\nالمدخل: " + input + "\nأجب مباشرة بالنص النهائي فقط.";
+  try {
+    if (c.provider === "gemini") {
+      var model = c.model || "gemini-2.0-flash";
+      var res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(c.key), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      var j = await res.json();
+      out = (j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts[0] && j.candidates[0].content.parts[0].text) || "";
+      if (!out) throw new Error(j.error && j.error.message || "لا استجابة");
+    } else if (c.provider === "openrouter") {
+      var model2 = c.model || "openai/gpt-4o-mini";
+      var res2 = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + c.key },
+        body: JSON.stringify({ model: model2, messages: [{ role: "user", content: prompt }] })
+      });
+      var j2 = await res2.json();
+      out = (j2.choices && j2.choices[0] && j2.choices[0].message && j2.choices[0].message.content) || "";
+      if (!out) throw new Error((j2.error && (j2.error.message || j2.error)) || "لا استجابة");
+    }
+    $("aiOutput").value = out;
+    if (st) st.textContent = "تم ✔";
+  } catch(e){
+    if (st) st.textContent = "فشل";
+    toast(e.message, "er");
+  }
+}
+
+/* ================= Tools ================= */
+function toolLink(){
+  var p = $("toolLinkPath").value.trim().replace(/^\/+/, "");
+  if (!p) return toast("اكتب المسار","wr");
+  var out = $("toolLinkOut");
+  var site = siteUrl(p), raw = rawUrl(p);
+  out.innerHTML =
+    '<div class="hrow"><span class="hd">🌐 رابط الموقع</span><span class="lnk" style="flex:1;font-size:11px;direction:ltr;text-align:start"><a href="' + esc(site) + '" target="_blank">' + esc(site) + '</a></span>' +
+    '<span class="acts"><button class="btn sm blu" data-cp="' + esc(site) + '">📋</button></span></div>' +
+    '<div class="hrow"><span class="hd">🧷 رابط خام</span><span class="lnk" style="flex:1;font-size:11px;direction:ltr;text-align:start"><a href="' + esc(raw) + '" target="_blank">' + esc(raw) + '</a></span>' +
+    '<span class="acts"><button class="btn sm blu" data-cp="' + esc(raw) + '">📋</button></span></div>';
+  out.querySelectorAll("[data-cp]").forEach(function(b){
+    b.onclick = function(){ copyText(b.getAttribute("data-cp")); toast("تم النسخ ✔"); };
+  });
+}
+function makeQR(){
+  var v = $("qrInput").value.trim();
+  if (!v) return toast("اكتب الرابط","wr");
+  var url = "https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&data=" + encodeURIComponent(v);
+  var box = $("qrOut");
+  box.style.display = "flex";
+  box.innerHTML =
+    '<img src="' + esc(url) + '" alt="QR">' +
+    '<div class="pubmsg" style="margin-top:4px"><button class="btn acc" data-dl="1">⬇ تحميل QR</button></div>';
+  box.querySelector("[data-dl]").onclick = function(){
+    var a = document.createElement("a"); a.href = url; a.download = "qr.png";
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+function addRenameLine(){
+  var p = $("renPairs");
+  var inp = document.createElement("input");
+  inp.placeholder = "old/path → new/path"; inp.dir = "ltr";
+  p.appendChild(inp);
+}
+async function runBatchRename(){
+  var outs = $("renOut");
+  outs.innerHTML = "";
+  var pairs = [];
+  Array.prototype.forEach.call($("renPairs").querySelectorAll("input"), function(inp){
+    var v = inp.value.trim(); if (!v) return;
+    var parts = v.split(/→|->|>>/);
+    if (parts.length === 2 && parts[0].trim() && parts[1].trim()) pairs.push([parts[0].trim().replace(/^\/+/, ""), parts[1].trim().replace(/^\/+/, "")]);
+  });
+  if (!pairs.length) { outs.innerHTML = '<p class="mini">لا توجد أزواج صالحة.</p>'; return; }
+  var ok = 0, fail = 0;
+  for (var i = 0; i < pairs.length; i++) {
+    try {
+      await renameRepoFile(pairs[i][0], pairs[i][1], "إعادة تسمية جماعية");
+      ok++;
+      var r = el2("div", "hrow"); r.innerHTML = '<span class="hd">✅</span><span class="ht">' + esc(pairs[i][0]) + " → " + esc(pairs[i][1]) + "</span>";
+      outs.appendChild(r);
+    } catch(e){ fail++; var r2 = el2("div", "hrow"); r2.innerHTML = '<span class="hd" style="color:#f87171">❌</span><span class="ht">' + esc(pairs[i][0]) + " — " + esc(e.message) + "</span>"; outs.appendChild(r2); }
+  }
+  toast("تمت إعادة التسمية: " + ok + " نجحت / " + fail + " فشلت", fail ? "wr" : "");
+  logActivity("✏️", "إعادة تسمية جماعية: " + ok + " ملف");
+}
+
+/* ================= Security ================= */
+var SEC = load2("ry_studio_sec", { pin: "", tfa: { enabled: false, secret: "" }, bio: { id: "" } });
+function saveSec(){ save2("ry_studio_sec", SEC); }
+function hashPin(p){ var h = 5381; for (var i = 0; i < p.length; i++) { h = ((h << 5) + h + p.charCodeAt(i)) >>> 0; } return "h" + h.toString(16); }
+function b32decode(s){
+  var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  var bits = 0, val = 0, out = [];
+  s = String(s).replace(/=+$/, "").toUpperCase().replace(/\s/g, "");
+  for (var i = 0; i < s.length; i++) {
+    var v = map.indexOf(s[i]); if (v < 0) continue;
+    val = (val << 5) | v; bits += 5;
+    if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; }
+  }
+  return new Uint8Array(out);
+}
+function b32encode(bytes){
+  var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  var bits = 0, val = 0, out = "";
+  for (var i = 0; i < bytes.length; i++) {
+    val = (val << 8) | bytes[i]; bits += 8;
+    while (bits >= 5) { out += map[(val >>> (bits - 5)) & 31]; bits -= 5; }
+  }
+  if (bits > 0) out += map[(val << (5 - bits)) & 31];
+  while (out.length % 8 !== 0) out += "=";
+  return out;
+}
+function genTfaSecret(){
+  var a = new Uint8Array(16);
+  (crypto.getRandomValues || function(a2){ for (var i = 0; i < a2.length; i++) a2[i] = Math.floor(Math.random() * 256); })(a);
+  return b32encode(a);
+}
+async function totpCode(secret, offset){
+  var keyData = b32decode(secret);
+  var t = Math.floor(Date.now() / 1000 / 30) + (offset || 0);
+  var buf = new ArrayBuffer(8); var dv = new DataView(buf);
+  dv.setUint32(4, t, false);
+  var imported = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+  var sig = await crypto.subtle.sign("HMAC", imported, buf);
+  var h = new Uint8Array(sig);
+  var off = h[h.length - 1] & 15;
+  var code = ((h[off] & 127) << 24 | h[off + 1] << 16 | h[off + 2] << 8 | h[off + 3]) % 1000000;
+  return ("000000" + code).slice(-6);
+}
+function lockUI(title, bodyHtml, okFn){
+  var m = el2("div", "mask");
+  m.style.display = "flex";
+  m.innerHTML = '<div class="modal" style="width:420px"><div class="mh"><span>🔐 ' + title + '</span><span class="sp"></span></div>' +
+    '<div class="mb">' + bodyHtml + '</div>' +
+    '<div class="mf"><span class="sp"></span><button class="btn acc" id="lockOk">تأكيد</button></div></div>';
+  document.body.appendChild(m);
+  m.addEventListener("click", function(e){ if (e.target === m) { m.remove(); } });
+  var inp = m.querySelector("input");
+  if (inp) { setTimeout(function(){ inp.focus(); }, 50); inp.addEventListener("keydown", function(e){ if (e.key === "Enter") m.querySelector("#lockOk").click(); }); }
+  m.querySelector("#lockOk").onclick = async function(){
+    if (!await okFn(m)) return;
+    m.remove();
+  };
+  return m;
+}
+function gateNeeded(){ return !!(SEC.pin || (SEC.tfa && SEC.tfa.enabled) || (SEC.bio && SEC.bio.id)); }
+function showGate(){
+  if (!gateNeeded()) return;
+  var step = 1;
+  function stepPin(){
+    if (!SEC.pin) { stepTfa(); return; }
+    lockUI("رمز PIN", '<p class="hint" style="margin-bottom:8px">أدخل رمز PIN لفتح الاستوديو.</p><input type="password" inputmode="numeric" placeholder="••••" style="direction:ltr;text-align:center;letter-spacing:6px;font-size:18px">', function(m){
+      var v = m.querySelector("input").value;
+      if (hashPin(v) !== SEC.pin) { toast("رمز PIN غير صحيح","er"); logLogin("PIN", false); return false; }
+      logLogin("PIN", true); stepTfa(); return true;
+    });
+  }
+  function stepTfa(){
+    if (!(SEC.tfa && SEC.tfa.enabled)) { stepBio(); return; }
+    lockUI("التحقق بخطوتين", '<p class="hint" style="margin-bottom:8px">أدخل الرمز من تطبيق Authenticator.</p><input type="text" placeholder="000000" maxlength="6" style="direction:ltr;text-align:center;letter-spacing:6px;font-size:18px">', async function(m){
+      var v = m.querySelector("input").value.trim();
+      if (!v) return false;
+      var ok = false;
+      try { for (var off = -1; off <= 1; off++) { if (await totpCode(SEC.tfa.secret, off) === v) { ok = true; break; } } } catch(e){}
+      if (!ok) { toast("الرمز غير صحيح","er"); logLogin("2FA", false); return false; }
+      logLogin("2FA", true); stepBio(); return true;
+    });
+  }
+  function stepBio(){
+    if (!(SEC.bio && SEC.bio.id)) { openApp(); return; }
+    if (!window.PublicKeyCredential) { openApp(); return; }
+    lockUI("دخول بالبصمة", '<p class="hint" style="margin-bottom:8px">استخدم بصمتك لفتح الاستوديو، أو أغلق النافذة.</p><button class="btn blu" id="bioTry" style="width:100%">👆 استخدام البصمة</button>', function(m){
+      authBio().then(function(okc){ if (okc) { logLogin("بصمة", true); m.remove(); openApp(); } else toast("لم يُسجَّل الدخول","wr"); }).catch(function(e){ toast(e.message, "er"); });
+      return false;
+    });
+  }
+  stepPin();
+}
+function openApp(){ logActivity("🔓", "فتح الاستوديو"); }
+function authBio(){
+  return new Promise(function(ok){
+    if (!window.PublicKeyCredential) return ok(false);
+    var ch = new Uint8Array(32); (crypto.getRandomValues || function(a){ for (var i=0;i<a.length;i++) a[i]=Math.floor(Math.random()*256); })(ch);
+    navigator.credentials.get({ publicKey: {
+      challenge: ch,
+      allowCredentials: [{ type: "public-key", id: b64urlToBuf(SEC.bio.id) }],
+      userVerification: "required",
+      timeout: 60000
+    } }).then(function(){ ok(true); }).catch(function(){ ok(false); });
+  });
+}
+async function secRegBio(){
+  try {
+    if (!window.PublicKeyCredential || !window.isSecureContext) throw new Error("يتطلب HTTPS ودعم WebAuthn");
+    var ch = new Uint8Array(32); (crypto.getRandomValues || function(a){ for (var i=0;i<a.length;i++) a[i]=Math.floor(Math.random()*256); })(ch);
+    var cred = await navigator.credentials.create({ publicKey: {
+      challenge: ch,
+      rp: { name: "Ryan Games Studio" },
+      user: { id: new TextEncoder().encode("ryan-owner"), name: "ryan-owner", displayName: "مالك ريان" },
+      pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+      timeout: 60000,
+      authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+      attestation: "none"
+    } });
+    SEC.bio.id = cred.id; saveSec();
+    toast("تم تسجيل البصمة ✔");
+    logActivity("👆", "تسجيل بصمة");
+    renderSecLogs();
+  } catch(e){ toast("فشل تسجيل البصمة: " + e.message, "er"); }
+}
+function secTfaSetup(){
+  var secret = genTfaSecret();
+  SEC.tfa.secret = secret;
+  var otpauth = "otpauth://totp/RyanGames%20Studio?secret=" + secret + "&issuer=RyanGames";
+  $("tfaBox").style.display = "flex";
+  $("tfaSecret").innerHTML = '<div class="hint" style="direction:ltr;text-align:center;font-size:12px;margin-bottom:4px">' + secret + '</div>' +
+    '<div style="text-align:center;margin:6px 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(otpauth) + '" alt="QR" style="background:#fff;border-radius:8px;padding:6px"></div>';
+  $("secTfaCode").value = "";
+  $("secTfaVerify").onclick = async function(){
+    var v = $("secTfaCode").value.trim();
+    if (!v) return toast("أدخل الرمز","wr");
+    var ok = false;
+    try { for (var off = -1; off <= 1; off++) { if (await totpCode(SEC.tfa.secret, off) === v) { ok = true; break; } } } catch(e){ return toast("لا يدعم المتصفح التشفير هنا (يلزم HTTPS)","er"); }
+    if (!ok) return toast("الرمز غير صحيح","er");
+    SEC.tfa.enabled = true; saveSec();
+    $("tfaBox").style.display = "none";
+    toast("تم تفعيل التحقق بخطوتين ✔");
+    logActivity("🗝️", "تفعيل 2FA");
+    renderSecLogs();
+  };
+}
+function renderSecLogs(){
+  var chip = $("bioChip"); if (chip) chip.textContent = SEC.bio.id ? "مفعّل" : "غير مفعّل";
+  var tfa = $("tfaChip"); if (tfa) tfa.textContent = (SEC.tfa && SEC.tfa.enabled) ? "مفعّل" : "غير مفعّل";
+  var act = $("actLog"), lg = $("loginLog");
+  if (act) {
+    var a = actList();
+    if (!a.length) act.innerHTML = '<p class="mini">لا توجد عمليات بعد.</p>';
+    else {
+      act.innerHTML = "";
+      a.slice(0, 40).forEach(function(x){
+        var r = el2("div", "srow"); r.innerHTML = '<span class="nm">' + esc(x.icon + " " + x.text) + '</span><span class="val">' + fmtDate(x.ts) + "</span>";
+        act.appendChild(r);
+      });
+    }
+  }
+  if (lg) {
+    var l = loginsList();
+    if (!l.length) lg.innerHTML = '<p class="mini">لا توجد محاولات دخول بعد.</p>';
+    else {
+      lg.innerHTML = "";
+      l.slice(0, 40).forEach(function(x){
+        var r = el2("div", "srow"); r.innerHTML = '<span class="nm">' + esc(x.name) + '</span><span class="val" style="color:' + (x.ok ? "#4ade80" : "#f87171") + '">' + (x.ok ? "✔ ناجح" : "✖ فشل") + " · " + fmtDate(x.ts) + "</span>";
+        lg.appendChild(r);
+      });
+    }
+  }
+}
+
+/* ================= Automation ================= */
+function getAuto(){
+  var a = load2("ry_auto", { deploy: false, notify: false, backup: false });
+  if (!a || typeof a !== "object") a = { deploy: false, notify: false, backup: false };
+  return a;
+}
+function setAuto(a){ save2("ry_auto", a); }
+function renderAuto(){
+  var a = getAuto();
+  var d = $("autoDeploy"); if (d) d.checked = !!a.deploy;
+  var n = $("autoNotify"); if (n) n.checked = !!a.notify;
+  var b = $("autoBackup"); if (b) b.checked = !!a.backup;
+  var log = $("autoLog");
+  var al = load2("ry_auto_log", []);
+  if (!al.length) { if (log) log.innerHTML = '<p class="mini">لا توجد عمليات بعد.</p>'; }
+  else {
+    if (log) {
+      log.innerHTML = "";
+      al.slice(0, 20).forEach(function(x){
+        var r = el2("div", "hrow"); r.innerHTML = '<span class="hd">' + esc(x.icon + " " + x.text) + '</span><span class="hm">' + fmtDate(x.ts) + "</span>";
+        log.appendChild(r);
+      });
+    }
+  }
+}
+function autoLogAdd(icon, text){
+  var al = load2("ry_auto_log", []); if (!Array.isArray(al)) al = [];
+  al.unshift({ ts: Date.now(), icon: icon, text: text });
+  if (al.length > 50) al.length = 50;
+  save2("ry_auto_log", al);
+}
+function maybeAutoPublish(msg){
+  var a = getAuto();
+  if (!a.deploy) return;
+  autoLogAdd("🚀", "نشر تلقائي: " + (msg || "بعد تعديل"));
+  startPublish(msg || "نشر تلقائي من الاستوديو");
+}
+function maybeAutoBackup(){
+  var a = getAuto();
+  if (!a.backup) return;
+  dbBackupNow(true);
+}
+
+/* ================= Netlify ================= */
+function netConf(){ return { tok: localStorage.getItem("ry_net_tok") || "", site: localStorage.getItem("ry_net_site") || "" }; }
+function fillNet(){
+  var c = netConf();
+  $("netTok").value = c.tok; $("netSite").value = c.site;
+}
+$("netSave").onclick = function(){
+  localStorage.setItem("ry_net_tok", $("netTok").value.trim());
+  localStorage.setItem("ry_net_site", $("netSite").value.trim());
+  toast("تم حفظ اتصال Netlify ✔");
+  logActivity("🛰️", "حفظ اتصال Netlify");
+};
+function netSetup(){
+  var c = netConf();
+  if (!c.tok || !c.site) throw new Error("اكتب Token و Site ID أولًا");
+  return { tok: c.tok, site: c.site };
+}
+async function netDeploy(){
+  try {
+    var c = netSetup();
+    var res = await fetch("https://api.netlify.com/api/v1/sites/" + encodeURIComponent(c.site) + "/deploys", { method: "POST", headers: { Authorization: "Bearer " + c.tok } });
+    var j = await res.json();
+    if (!res.ok) throw new Error(j.message || "فشل");
+    $("netOut").innerHTML = '<div class="hrow"><span class="hd">✅ بدأ النشر</span><span class="ht">' + esc(j.id || "") + '</span><span class="hm">' + fmtDate(j.created_at) + "</span></div>";
+    toast("تم بدء إعادة النشر على Netlify ✔");
+    logActivity("🛰️", "إعادة نشر Netlify");
+  } catch(e){ toast(e.message, "er"); }
+}
+async function netStatus(){
+  try {
+    var c = netSetup();
+    var res = await fetch("https://api.netlify.com/api/v1/sites/" + encodeURIComponent(c.site) + "/deploys?per_page=5", { headers: { Authorization: "Bearer " + c.tok } });
+    var j = await res.json();
+    if (!res.ok || !Array.isArray(j)) throw new Error("تعذر الجلب");
+    var html = "";
+    j.forEach(function(d){
+      var state = d.state === "ready" ? "ok" : (d.state === "error" ? "er" : "run");
+      html += '<div class="hrow"><span class="badge ' + state + '">' + esc(d.state) + '</span><span class="ht">' + esc((d.title || "").slice(0, 30)) + "</span><span class='hm'>" + fmtDate(d.created_at) + "</span></div>";
+    });
+    $("netOut").innerHTML = html;
+  } catch(e){ toast(e.message, "er"); }
+}
+async function netPurge(){
+  try {
+    var c = netSetup();
+    var res = await fetch("https://api.netlify.com/api/v1/sites/" + encodeURIComponent(c.site) + "/purge", { method: "POST", headers: { Authorization: "Bearer " + c.tok } });
+    if (res.status === 200 || res.status === 204) { toast("تم طلب مسح الكاش ✔"); logActivity("🧹", "مسح كاش Netlify"); }
+    else { var j = await res.json(); throw new Error(j.message || "فشل"); }
+  } catch(e){ toast(e.message, "er"); }
+}
+
+/* ================= Wire up ================= */
+function initStudio(){
+  initSectionNav();
+  $("btnPublish").onclick = function(){ var m = $("pubMsgInput").value.trim(); startPublish(m); };
+  $("btnPublishQuick").onclick = function(){ switchSec("publish"); var m = $("pubMsgInput").value.trim(); startPublish(m); };
+  $("btnSetupWorkflow").onclick = setupWorkflow;
+  $("btnWorkflowOk").onclick = function(){ if (ensureWorkflow()) toast("Workflow موجود وجاهز ✔"); else toast("غير موجود — أنشئه الآن","wr"); };
+  $("btnPermNotif").onclick = enableNotifs;
+  $("btnHistLoad").onclick = function(){ var p = $("ghHistPath").value.trim().replace(/^\/+/, ""); if (p) loadFileHistory(p); };
+  $("imgRefresh").onclick = function(){ renderImages(); };
+  $("imgSearch").addEventListener("input", renderImages);
+  $("imgFolder").onchange = renderImages;
+  $("transSave").onclick = saveTranslations;
+  $("trAdd").onclick = addTranslation;
+  $("trFileUp").onclick = async function(){
+    var f = $("trFileInput").files[0]; if (!f) return toast("اختر ملفًا أولًا","wr");
+    var folder = $("trFileGame").value || "";
+    var path = folder ? "_data/translations/files/" + folder + "/" + f.name : "_data/translations/files/" + f.name;
+    var r = new FileReader();
+    r.onload = async function(){
+      try { await writeRepoFile(path, r.result, "رفع ملف ترجمة"); toast("تم رفع " + f.name + " ✔"); logActivity("🌍", "رفع ملف ترجمة: " + path); maybeAutoPublish("رفع ملف ترجمة"); } catch(e){ toast(e.message, "er"); }
+    };
+    r.readAsText(f);
+  };
+  $("btnOpenGames").onclick = function(){ window.open("admin.html", "_blank"); };
+  $("btnOpenNews").onclick = function(){ window.open("admin.html#news", "_blank"); };
+  $("dbDownload").onclick = dbDownloadNow;
+  $("dbBackup").onclick = function(){ dbBackupNow(false); };
+  $("dbSync").onclick = dbSyncNow;
+  $("dbFileInput").onchange = function(){ if (this.files[0]) dbRestoreFromFile(this.files[0]); this.value = ""; };
+  $("dbRestore").onclick = function(){ $("dbFileInput").click(); };
+  $("btnAICopy").onclick = function(){ var v = $("aiOutput").value; if (!v) return toast("لا نتيجة","wr"); copyText(v); toast("تم النسخ ✔"); };
+  $("btnAIClear").onclick = function(){ $("aiOutput").value = ""; };
+  $("toolLinkGet").onclick = toolLink;
+  $("qrMake").onclick = makeQR;
+  $("btnRenAdd").onclick = addRenameLine;
+  $("btnRenRun").onclick = runBatchRename;
+  $("secPinSet").onclick = function(){
+    var v = $("secPin").value.trim();
+    if (!/^\d{4,6}$/.test(v)) return toast("الرمز يجب أن يكون 4-6 أرقام","wr");
+    SEC.pin = hashPin(v); saveSec();
+    $("secPin").value = "";
+    toast("تم حفظ رمز PIN ✔"); logActivity("🔢", "تعيين PIN");
+    renderSecLogs();
+  };
+  $("secPinClear").onclick = function(){ SEC.pin = ""; saveSec(); toast("تمت إزالة PIN"); renderSecLogs(); };
+  $("secBioReg").onclick = secRegBio;
+  $("secBioTry").onclick = function(){ authBio().then(function(ok){ toast(ok ? "دخول ناجح ✔" : "لم يتم التحقق", ok ? "" : "wr"); }); };
+  $("secBioClear").onclick = function(){ SEC.bio.id = ""; saveSec(); toast("تمت إزالة البصمة"); renderSecLogs(); };
+  $("secTfaSetup").onclick = secTfaSetup;
+  $("secTfaOff").onclick = function(){ SEC.tfa.enabled = false; SEC.tfa.secret = ""; saveSec(); $("tfaBox").style.display = "none"; toast("تم إيقاف 2FA"); renderSecLogs(); };
+  $("autoDeploy").onchange = function(){ var a = getAuto(); a.deploy = this.checked; setAuto(a); toast(this.checked ? "النشر التلقائي مفعّل ✔" : "تم إيقاف النشر التلقائي"); };
+  $("autoNotify").onchange = function(){ var a = getAuto(); a.notify = this.checked; setAuto(a); };
+  $("autoBackup").onchange = function(){ var a = getAuto(); a.backup = this.checked; setAuto(a); };
+  $("netDeploy").onclick = netDeploy;
+  $("netStatus").onclick = netStatus;
+  $("netPurge").onclick = netPurge;
+  fillNet();
+  renderAuto();
+  renderSecLogs();
+  logActivity("🚀", "فتح الاستوديو");
+}
+
+/* File manager hooks */
+function initRenameModal(){
+  $("renClose").onclick = $("renCancel").onclick = function(){ $("renameMask").classList.remove("show"); };
+  $("renDo").onclick = async function(){
+    var oldP = $("renOld").value.trim().replace(/^\/+/, ""), newP = $("renNew").value.trim().replace(/^\/+/, "");
+    if (!oldP || !newP) return toast("اكتب المسارين","wr");
+    if (oldP === newP) return toast("المساران متطابقان","wr");
+    var btn = $("renDo"); btn.disabled = true;
+    try {
+      await renameRepoFile(oldP, newP);
+      $("renameMask").classList.remove("show");
+      toast("تمت إعادة التسمية ✔"); logActivity("✏️", oldP + " → " + newP);
+      maybeAutoPublish("إعادة تسمية ملف");
+    } catch(e){ toast(e.message, "er"); }
+    btn.disabled = false;
+  };
+}
+function openRename(path){
+  $("renameMask").classList.add("show");
+  $("renOld").value = path; $("renNew").value = path;
+  $("renOld").focus();
+}
+$("histClose").onclick = function(){ $("histMask").classList.remove("show"); };
+
+/* Pause/resume/stop uploads */
+var UP = { cancel: false, paused: false, running: false };
+function uploadControlsRow(){
+  var w = el2("div", "hrow");
+  w.style.margin = "8px 20px 0";
+  w.innerHTML = '<span class="hd">⏸ التحكم بالرفع</span>' +
+    '<span class="acts"><button class="btn sm" id="btnUpPause">⏸ إيقاف مؤقت</button>' +
+    '<button class="btn sm red" id="btnUpStop">⏹ إيقاف</button></span>';
+  $("uploads").insertBefore(w, $("uploads").firstChild);
+  var paused = false;
+  $("btnUpPause").onclick = function(){
+    paused = !paused; UP.paused = paused;
+    this.textContent = paused ? "▶ استكمال" : "⏸ إيقاف مؤقت";
+  };
+  $("btnUpStop").onclick = function(){
+    UP.cancel = true; UP.paused = false;
+    this.textContent = "⏹ جارٍ الإيقاف...";
+  };
+  return w;
+}
+
 if(TOKEN) loadTree(); else showLogin();
+initRenameModal();
+initStudio();
 </script>
 </body>
 </html>

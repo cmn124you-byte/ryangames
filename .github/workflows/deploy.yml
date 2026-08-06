@@ -1,0 +1,31 @@
+name: Ryan Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "وصف النشر"
+        required: false
+        default: "نشر من استوديو ريان"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bump deploy marker
+        run: |
+          echo "{\"build\": $(date +%s%3N), \"when\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"who\": \"ryan-studio\", \"msg\": \"${{ github.event.inputs.message }}\"}" > deploy-build.json
+          git config user.name "Ryan Studio"
+          git config user.email "ryan-studio@users.noreply.github.com"
+          git add deploy-build.json
+          git pull --rebase origin "${{ github.ref_name }}"
+          git commit -m "نشر: ${{ github.event.inputs.message }}" --allow-empty
+          git push
+
+      - name: Mark done
+        run: echo "Deploy finished successfully"
