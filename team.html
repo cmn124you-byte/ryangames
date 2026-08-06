@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>اطلب تعريب لعبتك المفضلة مجانًا | ريان ألعاب</title>
-  <meta name="description" content="لا تجد لعبتك المفضلة معرّبة للعربية؟ اطلب تعريبها مجانًا وسنعمل عليها في أقرب وقت." />
-  <link rel="canonical" href="request.html" />
+  <title>فريق تعريب ريان — من نحن | ريان ألعاب</title>
+  <meta name="description" content="تعرّف على فريق تعريب ريان: المترجمون والمراجعون وطرق التواصل معنا." />
+  <link rel="canonical" href="team.html" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="ريان ألعاب معرّبة" />
-  <meta property="og:title" content="اطلب تعريب لعبتك المفضلة مجانًا | ريان ألعاب" />
-  <meta property="og:description" content="اطلب تعريب لعبتك المفضلة مجانًا." />
+  <meta property="og:title" content="فريق تعريب ريان" />
+  <meta property="og:description" content="تعرف على فريق تعريب الألعاب إلى العربية." />
   <meta property="og:locale" content="ar_AR" />
   <meta name="twitter:card" content="summary" />
   <meta name="robots" content="index, follow" />
-  <meta name="keywords" content="تعريب ألعاب, طلب تعريب, ألعاب معربة, تعريب" />
   <meta name="theme-color" content="#e11d48" />
   <script>try{var t=localStorage.getItem("ry-theme")||"light";var d=t==="dark";var ua=navigator.userAgent;var p=/Android/i.test(ua)?"play":(/iPhone|iPad|iPod/i.test(ua)?"appstore":"desktop");var r=document.documentElement;if(d)r.setAttribute("data-theme","dark");r.setAttribute("data-platform",p);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",p==="appstore"?"#0a84ff":(p==="play"?"#0f9d58":(d?"#0f1117":"#e11d48")));}catch(e){}</script>
   <link rel="manifest" href="manifest.json" />
@@ -24,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body data-page="request">
+<body data-page="team">
   <div class="bismillah">
     <span class="bismillah-spark s1">✦</span>
     <span class="bismillah-spark s2">✦</span>
@@ -53,7 +52,7 @@
         <a href="minigames.html">ألعاب بلا نت</a>
         <a href="lessons.html">الدروس</a>
         <a href="download.html">حمّل التطبيق</a>
-        <a href="request.html" class="active">اطلب تعريب</a>
+        <a href="request.html">اطلب تعريب</a>
         <a href="contact.html">تواصل</a>
       </nav>
       <div class="header-actions">
@@ -64,7 +63,6 @@
     </div>
   </header>
 
-  <!-- Ad slot top -->
   <div class="ad-slot" id="adTop"></div>
 
   <main>
@@ -73,31 +71,28 @@
         <nav class="breadcrumb" aria-label="مسار التنقل">
           <a class="btn-back" href="index.html">← العودة إلى الرئيسية</a>
           <span class="bc-sep">/</span>
-          <span class="bc-cur">اطلب تعريب</span>
+          <span class="bc-cur">فريق الموقع</span>
         </nav>
-        <h1>اطلب تعريب لعبتك 🎮</h1>
-        <p>لا تجد لعبتك معرّبة؟ أرسل لنا طلبك وسنعمل على تعريبها في أقرب وقت ممكن.</p>
+        <h1>فريق تعريب ريان 👨‍💻</h1>
+        <p>نفخر بأن نقدم ألعابك المفضلة بالعربية — تعرّف على الفريق الذي يجعل ذلك ممكنًا.</p>
       </div>
     </section>
 
     <section class="section section-alt">
       <div class="container">
-        <form id="requestForm" class="request-form">
-          <input type="text" id="rqTitle" required placeholder="اسم اللعبة (مثال: Hollow Knight)" />
-          <input type="text" id="rqContact" placeholder="طريقة التواصل (تلجرام / إيميل...) — اختياري" />
-          <textarea id="rqDesc" rows="3" placeholder="تفاصيل إضافية عن الطلب (اختياري)"></textarea>
-          <button class="btn btn-primary" type="submit">إرسال الطلب ✉️</button>
-          <span class="req-status" id="rqStatus"></span>
-        </form>
+        <div class="sec-head">
+          <h2>🧑‍🤝‍🧑 أعضاء الفريق</h2>
+        </div>
+        <div class="team-grid" id="teamMembers"></div>
       </div>
     </section>
 
     <section class="section">
       <div class="container">
         <div class="sec-head">
-          <h2>🗳️ طلبات المجتمع <span class="hint">— صوّت على اللعبة التي تريد تعريبها أولًا</span></h2>
+          <h2>📬 طرق التواصل</h2>
         </div>
-        <div class="requests-vote" id="requestsVoteList"></div>
+        <div class="team-contacts" id="teamContacts"></div>
       </div>
     </section>
 

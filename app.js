@@ -8,6 +8,12 @@
   var K_SETTINGS = "ry_settings";
   var K_REQUESTS = "ry_requests";
   var K_COMMENTS = "ry_comments";
+  var K_USERS = "ry_users";
+  var K_SESSION = "ry_session";
+  var K_REPORTS = "ry_reports";
+  var K_MYRATINGS = "ry_myratings";
+  var K_MYVOTES = "ry_myvotes";
+  var K_NOTIF_SEEN = "ry_notif_seen";
   var S_ADMIN = "ry_admin_ok";
   var S_OWNER = "ry_owner_ok";
   var OWNER_EMAIL = "cmn124you@gmail.com";
@@ -20,6 +26,7 @@
     updates: [],
     settings: null,
     requests: [],
+    reports: [],
   };
 
   /* ---------- Storage helpers ---------- */
@@ -98,6 +105,8 @@
     if (!data.settings.ads || typeof data.settings.ads !== "object") data.settings.ads = Object.assign({}, DEFAULT_SETTINGS.ads);
     data.requests = load(K_REQUESTS, []);
     if (!Array.isArray(data.requests)) data.requests = [];
+    data.reports = load(K_REPORTS, []);
+    if (!Array.isArray(data.reports)) data.reports = [];
   }
 
   function normArray(stored, defaults, fix) {
@@ -785,7 +794,78 @@
   }
 
   /* ---------- Game grid + filters ---------- */
-  var state = { platform: "all", genre: "all", type: "all", search: "", editing: null };
+  var state = { platform: "all", genre: "all", type: "all", status: "all", sort: "newest", search: "", editing: null };
+
+  /* ---------- Translation status helpers ---------- */
+  var STATUS_META = {
+    complete: { label: "مكتمل", icon: "✅", cls: "st-complete" },
+    beta: { label: "قيد التطوير", icon: "🛠️", cls: "st-beta" },
+    stopped: { label: "متوقف", icon: "⏸️", cls: "st-stopped" },
+  };
+
+  function statusMeta(g) {
+    return STATUS_META[(g && g.state) || "complete"] || STATUS_META.complete;
+  }
+
+  function statusBadgeHTML(g) {
+    var m = statusMeta(g);
+    return '<span class="status-badge ' + m.cls + '" title="حالة التعريب: ' + esc(m.label) + '">' + m.icon + " " + esc(m.label) + "</span>";
+  }
+
+  function gameRating(g) {
+    var n = parseInt(g && g.ratingCount, 10) || 0;
+    var sum = parseInt(g && g.ratingSum, 10) || 0;
+    return { count: n, score: n ? Math.round((sum / n) * 10) / 10 : 0 };
+  }
+
+  function ratingStarsHTML(score) {
+    var out = "";
+    for (var i = 1; i <= 5; i++) {
+      var full = score >= i - 0.25;
+      var half = !full && score >= i - 0.75;
+      out += '<span class="star">' + (half ? "⯨" : (full ? "★" : "☆")) + "</span>";
+    }
+    return out;
+  }
+
+  /* ---------- Compatibility info (store / OS / original) ---------- */
+  var STORE_META = { steam: "Steam", epic: "Epic Games", gog: "GOG" };
+  var OS_META = {
+    windows: { icon: "🖥️", ar: "ويندوز" },
+    linux: { icon: "🐧", ar: "لينكس" },
+    mac: { icon: "🍏", ar: "ماك" },
+    deck: { icon: "🎮", ar: "Steam Deck" },
+  };
+
+  function compatHTML(g) {
+    var stores = g && Array.isArray(g.stores) ? g.stores : [];
+    var os = g && Array.isArray(g.osSupport) ? g.osSupport : [];
+    if (!stores.length && !os.length && !g.onlyOriginal) return "";
+    var parts = [];
+    if (stores.length) {
+      parts.push(
+        '<div class="compat-row"><span class="compat-label">🏪 المتاجر المدعومة:</span>' +
+        stores.map(function (s) {
+          var k = String(s).toLowerCase();
+          return '<span class="compat-chip">' + esc(STORE_META[k] || s) + "</span>";
+        }).join("") + "</div>"
+      );
+    }
+    if (os.length) {
+      parts.push(
+        '<div class="compat-row"><span class="compat-label">💿 أنظمة التشغيل:</span>' +
+        os.map(function (o) {
+          var k = String(o).toLowerCase();
+          var m = OS_META[k];
+          return '<span class="compat-chip">' + (m ? m.icon + " " + m.ar : esc(o)) + "</span>";
+        }).join("") + "</div>"
+      );
+    }
+    if (g.onlyOriginal) {
+      parts.push('<div class="compat-note">🔒 يدعم النسخ الأصلية من المتاجر الرسمية فقط (لا يدعم النسخ المقرصنة).</div>');
+    }
+    return '<div class="compat-inner"><b>🖥️ معلومات التوافق</b>' + parts.join("") + "</div>";
+  }
   var gameFormState = { cover: "", gallery: [], videoFile: null, videoLocal: false, videoHadLocal: false };
   var settingsLogo = "";
 
@@ -824,16 +904,39 @@
     typeRow.appendChild(chipEl("ar", false, "🌍 معرّبة", "type"));
     typeRow.appendChild(chipEl("free", false, "🎁 مجانية", "type"));
     wrap.appendChild(typeRow);
+
+    var statusRow = el("div", "filters-row", '<span class="filters-label">حالة التعريب:</span>');
+    statusRow.appendChild(chipEl("all", true, "الكل", "status"));
+    statusRow.appendChild(chipEl("complete", false, "✅ مكتمل", "status"));
+    statusRow.appendChild(chipEl("beta", false, "🛠️ قيد التطوير", "status"));
+    statusRow.appendChild(chipEl("stopped", false, "⏸️ متوقف", "status"));
+    wrap.appendChild(statusRow);
+
+    var sortWrap = el("div", "filters-row filters-sort", '<span class="filters-label">ترتيب:</span>');
+    var sortSel = document.createElement("select");
+    sortSel.className = "sort-select";
+    sortSel.id = "sortSelect";
+    sortSel.innerHTML =
+      '<option value="newest">الأحدث أولًا</option>' +
+      '<option value="downloads">الأكثر تحميلًا</option>' +
+      '<option value="rating">الأعلى تقييمًا</option>' +
+      '<option value="title">أبجدي (أ-ي)</option>';
+    sortSel.value = state.sort;
+    sortSel.addEventListener("change", function () { state.sort = sortSel.value; renderGrid(); });
+    sortWrap.appendChild(sortSel);
+    wrap.appendChild(sortWrap);
   }
 
   function chipEl(val, active, label, kind) {
     var chip = el("button", "chip" + (active ? " active" : ""), esc(label));
     if (kind === "pf") chip.dataset.pf = val;
     else if (kind === "type") chip.dataset.type = val;
+    else if (kind === "status") chip.dataset.status = val;
     else chip.dataset.genre = val;
     chip.addEventListener("click", function () {
       if (kind === "pf") state.platform = val;
       else if (kind === "type") state.type = val;
+      else if (kind === "status") state.status = val;
       else state.genre = val;
       setActiveChip();
       renderGrid();
@@ -847,6 +950,8 @@
         chip.classList.toggle("active", chip.dataset.pf === state.platform);
       } else if (chip.dataset.type !== undefined) {
         chip.classList.toggle("active", chip.dataset.type === state.type);
+      } else if (chip.dataset.status !== undefined) {
+        chip.classList.toggle("active", chip.dataset.status === state.status);
       } else {
         chip.classList.toggle("active", chip.dataset.genre === state.genre);
       }
@@ -858,6 +963,7 @@
       '<div class="flip-front">' +
       '<div class="game-cover">' +
       (isNew(g) ? '<span class="badge-new">جديد</span>' : "") +
+      statusBadgeHTML(g) +
       imgHTML(g, "game-cover-img") +
       "</div>" +
       '<div class="game-body">' +
@@ -870,6 +976,8 @@
       '<div class="game-meta">' +
       '<span class="game-size">' + esc(g.size || "") + "</span>" +
       '<span>⬇ ' + esc(g.downloads || "0") + "</span>" +
+      '<span>👁 ' + esc(g.views || "0") + "</span>" +
+      '<span class="game-rate">' + ratingStarsHTML(gameRating(g).score) + " " + gameRating(g).score + "</span>" +
       "</div></div>" +
       "</div>" +
       flipBackHTML(g) +
@@ -885,11 +993,19 @@
     var list = data.games.filter(function (g) {
       if (state.platform !== "all" && (g.platforms || []).map(canonPf).indexOf(state.platform) === -1) return false;
       if (state.genre !== "all" && (g.genres || []).indexOf(state.genre) === -1) return false;
+      if (state.status !== "all" && (g.state || "complete") !== state.status) return false;
       if (state.type === "app" && !g.isApp) return false;
       if (state.type === "ar" && !g.arLocal) return false;
       if (state.type === "free" && !g.free) return false;
       if (!q) return true;
-      return (g.title + " " + g.ar).toLowerCase().indexOf(q) !== -1;
+      return (g.title + " " + (g.ar || "")).toLowerCase().indexOf(q) !== -1;
+    });
+
+    list = list.slice().sort(function (a, b) {
+      if (state.sort === "downloads") return (parseInt(b.downloads, 10) || 0) - (parseInt(a.downloads, 10) || 0);
+      if (state.sort === "rating") return gameRating(b).score - gameRating(a).score;
+      if (state.sort === "title") return String(a.title).localeCompare(String(b.title), "ar");
+      return new Date(b.date || 0) - new Date(a.date || 0);
     });
 
     grid.innerHTML = "";
@@ -914,6 +1030,60 @@
       card.addEventListener("click", function () { gotoGame(g.id); });
       wireFlip(card, g.id);
       wrap.appendChild(card);
+    });
+    var empty = document.getElementById("emptyNew");
+    if (empty) empty.hidden = data.games.length !== 0;
+  }
+
+  function renderNewDev() {
+    var wrap = document.getElementById("newDevGrid");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    var dev = data.games.filter(function (g) { return (g.state === "beta" || g.state === "stopped"); });
+    if (!dev.length) {
+      wrap.innerHTML = '<p class="empty-state">لا توجد تعريبات قيد التطوير حاليًا.</p>';
+      return;
+    }
+    dev.forEach(function (g) {
+      var pct = parseInt(g.tradRate, 10) || 0;
+      var card = el("div", "dev-card");
+      card.innerHTML =
+        '<div class="dev-card-top">' +
+        '<div class="dev-thumb">' + imgHTML(g, "dev-thumb-img") + "</div>" +
+        '<div class="dev-info">' +
+        "<h3>" + esc(g.title) + "</h3>" +
+        "<p>" + esc(g.ar || "") + "</p>" +
+        statusBadgeHTML(g) +
+        "</div>" +
+        "</div>" +
+        '<div class="dev-bar"><div class="dev-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="dev-bar-meta"><span>نسبة الإنجاز: ' + pct + "%</span><span>" + (pct >= 100 ? "جاهز قريبًا 🎉" : (pct >= 60 ? "في المراحل الأخيرة 🚀" : "ما زال قيد العمل 🛠️")) + "</span></div>";
+      card.addEventListener("click", function () { gotoGame(g.id); });
+      wrap.appendChild(card);
+    });
+  }
+
+  function renderUpdatesAll() {
+    var wrap = document.getElementById("newUpdatesList");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    var arr = data.updates.slice().reverse();
+    if (!arr.length) {
+      wrap.innerHTML = '<p class="empty-state">لا توجد تحديثات بعد.</p>';
+      return;
+    }
+    arr.forEach(function (u) {
+      var item = el("div", "update-row");
+      item.innerHTML =
+        '<span class="update-icon">🔄</span>' +
+        '<div class="update-text"><strong>' + esc(u.title || "") + "</strong>" +
+        '<span class="update-sub">' + esc(u.ar || "") + " — " + esc(u.days || "") + "</span></div>";
+      if (u.link) {
+        var a = el("a", "btn btn-ghost btn-sm", "عرض");
+        a.href = u.link;
+        item.appendChild(a);
+      }
+      wrap.appendChild(item);
     });
   }
 
@@ -1013,7 +1183,7 @@
     var links = document.getElementById("footerLinks");
     if (!links) return;
     links.innerHTML = "";
-    [["new.html", "جديد التعريبات"], ["games.html", "جميع الألعاب"], ["minigames.html", "ألعاب بلا نت"], ["lessons.html", "دروس مهمة"], ["download.html", "تحميل التطبيق"], ["request.html", "اطلب تعريب"], ["contact.html", "تواصل معنا"]].forEach(function (pair) {
+    [["new.html", "جديد التعريبات"], ["games.html", "جميع الألعاب"], ["minigames.html", "ألعاب بلا نت"], ["lessons.html", "دروس مهمة"], ["download.html", "تحميل التطبيق"], ["request.html", "اطلب تعريب"], ["team.html", "فريق الموقع"], ["problems.html", "الإبلاغ عن مشكلة"], ["contact.html", "تواصل معنا"]].forEach(function (pair) {
       links.appendChild(el("li", "", '<a href="' + pair[0] + '">' + pair[1] + "</a>"));
     });
 
@@ -1135,6 +1305,27 @@
       ? '<button class="btn-dl" id="gpDlBtn" type="button">⬇ تحميل اللعبة</button>'
       : '<button class="btn-dl" id="gpNoLinkBtn" type="button">⬇ تحميل اللعبة</button>';
 
+    var rating = gameRating(g);
+    var compatBox = compatHTML(g);
+    var installSec = (g.installSteps && g.installSteps.length)
+      ? '<section class="section gp-install">' +
+        '<div class="container">' +
+        '<div class="sec-head"><h2>🛠️ طريقة التثبيت</h2></div>' +
+        '<ol class="gp-steps">' +
+        g.installSteps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") +
+        "</ol>" +
+        "</div></section>"
+      : "";
+    var changelogSec = (g.changelog && g.changelog.length)
+      ? '<section class="section section-alt gp-changelog">' +
+        '<div class="container">' +
+        '<div class="sec-head"><h2>📜 سجل التغييرات</h2></div>' +
+        '<ul class="gp-changelog-list">' +
+        g.changelog.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") +
+        "</ul>" +
+        "</div></section>"
+      : "";
+
     return (
       '<section class="gp-wrap">' +
       '<div class="container">' +
@@ -1148,6 +1339,7 @@
       '<section class="gp-hero">' +
       '<div class="gp-cover">' +
       (isNew(g) ? '<span class="badge-new">جديد</span>' : "") +
+      statusBadgeHTML(g) +
       imgHTML(g, "gp-cover-img") +
       "</div>" +
       '<div class="gp-info">' +
@@ -1161,15 +1353,28 @@
       '<div class="gp-meta">' +
       (g.size ? '<span class="meta-item">📦 ' + esc(g.size) + "</span>" : "") +
       '<span class="meta-item">⬇ ' + esc(g.downloads || "0") + "</span>" +
-      (g.tradRate ? '<span class="meta-item">🌐 ' + esc(g.tradRate) + "</span>" : "") +
+      '<span class="meta-item" data-view>👁 ' + esc(g.views || "0") + "</span>" +
+      '<span class="meta-item">👍 ' + esc(g.likes || "0") + "</span>" +
+      (g.version ? '<span class="meta-item">🎮 إصدار اللعبة: ' + esc(g.version) + "</span>" : "") +
+      (g.lastUpdate ? '<span class="meta-item">🔄 آخر تحديث: ' + esc(g.lastUpdate) + "</span>" : "") +
+      (g.tradRate ? '<span class="meta-item">🌐 الترجمة: ' + esc(g.tradRate) + "</span>" : "") +
       (g.installTime ? '<span class="meta-item">⏱ ' + esc(g.installTime) + "</span>" : "") +
       (g.compat ? '<span class="meta-item">💻 ' + esc(g.compat) + "</span>" : "") +
+      "</div>" +
+      '<div class="gp-rating" id="gpRating">' +
+      '<span class="gp-rating-label">تقييم المستخدمين</span>' +
+      '<span class="gp-rating-stars" id="gpRatingStars">' + ratingStarsHTML(rating.score) + "</span>" +
+      '<span class="gp-rating-num" id="gpRatingNum">' + rating.score + " / 5 (" + rating.count + " تقييم)</span>" +
       "</div>" +
       '<div class="gp-actions">' +
       dlBtn +
       (g.buy ? '<a class="btn-buy" href="' + esc(g.buy) + '" target="_blank" rel="noopener">🛒 شراء اللعبة</a>' : "") +
+      '<button class="btn-ghost" id="gpLikeBtn" type="button">👍 إعجاب</button>' +
+      '<button class="btn-ghost" id="gpFavBtn" type="button">☆ حفظ المفضلة</button>' +
+      '<button class="btn-ghost" id="gpReportBtn" type="button">⚠️ بلّغ عن مشكلة</button>' +
       "</div>" +
       '<div class="gp-video-sec" id="gpVideoWrap" hidden></div>' +
+      (compatBox ? '<div class="gp-compat-box">' + compatBox + "</div>" : "") +
       reqSec +
       "</div>" +
       "</section>" +
@@ -1182,6 +1387,8 @@
       '<p class="detail-desc" style="line-height:1.9;color:' + descColor(g) + '">' + esc(g.desc || "لا يوجد وصف بعد.") + "</p>" +
       "</div>" +
       "</section>" +
+      installSec +
+      changelogSec +
       '<section class="section gp-comments">' +
       '<div class="container">' +
       '<div class="sec-head"><h2>💬 التعليقات <span class="comment-count" id="commentCount"></span></h2></div>' +
@@ -1255,6 +1462,145 @@
     renderRelatedFor(g);
     renderComments(g.id);
     renderGameVideo(g);
+    countView(g.id);
+    wireRating(g);
+    wireLike(g);
+    wireFavorite(g);
+    wireReportBtn(g);
+    refreshHeaderUI();
+  }
+
+  /* ---------- Counters: views / downloads / likes ---------- */
+  function countView(id) {
+    var seen = false;
+    try { seen = sessionStorage.getItem("ry_view_" + id) === "1"; } catch (e) {}
+    if (seen) return;
+    var g = gameById(id);
+    if (!g) return;
+    g.views = (parseInt(g.views, 10) || 0) + 1;
+    store(K_GAMES, data.games);
+    try { sessionStorage.setItem("ry_view_" + id, "1"); } catch (e) {}
+    var meta = document.querySelector('.gp-meta');
+    if (meta) {
+      var v = meta.querySelector('[data-view]');
+      if (v) v.textContent = "👁 " + (g.views || 0);
+    }
+  }
+
+  function countDownload(id) {
+    var g = gameById(id);
+    if (!g) return;
+    g.downloads = String((parseInt(g.downloads, 10) || 0) + 1);
+    store(K_GAMES, data.games);
+  }
+
+  function myRating(gameId) {
+    var map = load(K_MYRATINGS, {});
+    return (map && typeof map === "object") ? (map[gameId] || 0) : 0;
+  }
+
+  function setMyRating(gameId, stars) {
+    var map = load(K_MYRATINGS, {});
+    if (!map || typeof map !== "object" || Array.isArray(map)) map = {};
+    map[gameId] = stars;
+    store(K_MYRATINGS, map);
+  }
+
+  function wireRating(g) {
+    var starsEl = document.getElementById("gpRatingStars");
+    var numEl = document.getElementById("gpRatingNum");
+    if (!starsEl) return;
+    var current = myRating(g.id);
+    function paint() {
+      var r = gameRating(g);
+      starsEl.innerHTML = ratingStarsHTML(r.score);
+      if (numEl) numEl.textContent = r.score + " / 5 (" + r.count + " تقييم)";
+    }
+    starsEl.innerHTML = "";
+    for (var i = 1; i <= 5; i++) {
+      (function (n) {
+        var s = document.createElement("button");
+        s.className = "rate-star" + (n <= current ? " lit" : "");
+        s.type = "button";
+        s.textContent = "★";
+        s.title = n + " من 5";
+        s.addEventListener("click", function () {
+          if (!currentUser()) { toast("سجّل الدخول لتقييم الألعاب."); openAccountModal(); return; }
+          var old = myRating(g.id);
+          var rs = parseInt(g.ratingSum, 10) || 0;
+          var rc = parseInt(g.ratingCount, 10) || 0;
+          if (old > 0) {
+            if (old === n) {
+              setMyRating(g.id, 0);
+              g.ratingSum = Math.max(0, rs - old);
+              g.ratingCount = Math.max(0, rc - 1);
+            } else {
+              setMyRating(g.id, n);
+              g.ratingSum = rs - old + n;
+            }
+          } else {
+            setMyRating(g.id, n);
+            g.ratingSum = rs + n;
+            g.ratingCount = rc + 1;
+          }
+          saveAll();
+          paint();
+          renderGrid();
+        });
+        starsEl.appendChild(s);
+      })(i);
+    }
+    paint();
+  }
+
+  function wireLike(g) {
+    var btn = document.getElementById("gpLikeBtn");
+    if (!btn) return;
+    function paint() {
+      var liked = userHasLike(g.id);
+      btn.textContent = (liked ? "👍 أعجبك" : "👍 إعجاب") + " (" + (parseInt(g.likes, 10) || 0) + ")";
+      btn.classList.toggle("liked", liked);
+    }
+    btn.addEventListener("click", function () {
+      if (!currentUser()) { toast("سجّل الدخول للإعجاب بالألعاب."); openAccountModal(); return; }
+      var liked = userHasLike(g.id);
+      if (liked) {
+        removeUserLike(g.id);
+        g.likes = Math.max(0, (parseInt(g.likes, 10) || 0) - 1);
+      } else {
+        addUserLike(g.id);
+        g.likes = (parseInt(g.likes, 10) || 0) + 1;
+      }
+      saveAll();
+      paint();
+    });
+    paint();
+  }
+
+  function wireFavorite(g) {
+    var btn = document.getElementById("gpFavBtn");
+    if (!btn) return;
+    function paint() {
+      var fav = userHasFav(g.id);
+      btn.textContent = fav ? "★ في المفضلة" : "☆ حفظ المفضلة";
+      btn.classList.toggle("fav", fav);
+    }
+    btn.addEventListener("click", function () {
+      if (!currentUser()) { toast("سجّل الدخول لحفظ الألعاب في المفضلة."); openAccountModal(); return; }
+      if (userHasFav(g.id)) { removeUserFav(g.id); toast("أُزيلت من المفضلة."); }
+      else { addUserFav(g.id); toast("أُضيفت إلى المفضلة ✓"); }
+      paint();
+      refreshHeaderUI();
+    });
+    paint();
+  }
+
+  function wireReportBtn(g) {
+    var btn = document.getElementById("gpReportBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      openReportModal(g);
+    });
   }
 
   function renderRelatedFor(g) {
@@ -1620,6 +1966,7 @@
         btn.textContent = "⬇ تحميل";
         btn.disabled = false;
         closeModal("dlPassModal");
+        countDownload(pendingDl);
         window.open(link, "_blank");
       }
     }
@@ -1722,6 +2069,7 @@
       desc: getF("rqDesc"),
       contact: getF("rqContact"),
       date: new Date().toLocaleDateString("ar-EG"),
+      votes: 0,
     };
     var done = function (remote) {
       setF("rqTitle", ""); setF("rqDesc", ""); setF("rqContact", "");
@@ -2200,7 +2548,7 @@
   }
 
   /* ---------- Live sync (cross-tab) ---------- */
-  var LIVE_KEYS = [K_GAMES, K_LESSONS, K_UPDATES, K_SETTINGS, K_REQUESTS, K_COMMENTS];
+  var LIVE_KEYS = [K_GAMES, K_LESSONS, K_UPDATES, K_SETTINGS, K_REQUESTS, K_COMMENTS, K_REPORTS, K_USERS];
   var syncTimer = null;
 
   function toast(msg) {
@@ -2606,7 +2954,9 @@
     renderStats();
     renderNew();
     renderNewAll();
+    renderNewDev();
     renderUpdates();
+    renderUpdatesAll();
     renderModOfDay();
     renderGrid();
     renderFilters();
@@ -2615,11 +2965,15 @@
     renderFooter();
     renderAds();
     renderGamePage();
+    renderRequests();
+    renderTeam();
+    injectExtraNav();
+    refreshHeaderUI();
   }
 
   /* ---------- Export / Import ---------- */
   function exportData() {
-    var payload = { games: data.games, lessons: data.lessons, updates: data.updates, settings: data.settings };
+    var payload = { games: data.games, lessons: data.lessons, updates: data.updates, settings: data.settings, reports: data.reports, requests: data.requests };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
@@ -2641,6 +2995,8 @@
         data.lessons = p.lessons || [];
         data.updates = p.updates || [];
         data.settings = Object.assign({}, DEFAULT_SETTINGS, p.settings || {});
+        data.reports = p.reports || [];
+        data.requests = p.requests || [];
         saveAll();
         refreshSite();
         renderAdminGames(); renderAdminSlider(); renderAdminLessons(); renderAdminUpdates(); fillSettingsForm();
@@ -2788,6 +3144,489 @@
     });
   }
 
+  /* ---------- Accounts & favorites & notifications ---------- */
+  function loadUsers() {
+    var u = load(K_USERS, []);
+    return Array.isArray(u) ? u : [];
+  }
+
+  function saveUsers(arr) {
+    store(K_USERS, arr);
+  }
+
+  function currentUser() {
+    var uid = null;
+    try { uid = localStorage.getItem(K_SESSION); } catch (e) {}
+    if (!uid) return null;
+    var arr = loadUsers();
+    for (var i = 0; i < arr.length; i++) if (arr[i].id === uid) return arr[i];
+    return null;
+  }
+
+  function setSession(id) {
+    try { localStorage.setItem(K_SESSION, id || ""); } catch (e) {}
+  }
+
+  function registerUser(name, email, pass) {
+    var arr = loadUsers();
+    var em = String(email || "").trim().toLowerCase();
+    var nm = String(name || "").trim();
+    if (nm.length < 2) return { err: "اكتب اسمك (حرفان على الأقل)." };
+    if (!em || em.indexOf("@") === -1) return { err: "اكتب بريدًا إلكترونيًا صحيحًا." };
+    for (var i = 0; i < arr.length; i++) if (arr[i].email === em) return { err: "هذا البريد مسجّل مسبقًا — سجّل الدخول بدلًا من ذلك." };
+    if (String(pass || "").length < 4) return { err: "كلمة المرور 4 أحرف على الأقل." };
+    var u = { id: "u" + Date.now(), name: nm.slice(0, 30), email: em, pass: hashPass(pass), favs: [], likes: [], createdAt: Date.now() };
+    arr.push(u);
+    saveUsers(arr);
+    setSession(u.id);
+    markNotifSeen();
+    return { ok: true, u: u };
+  }
+
+  function loginUser(email, pass) {
+    var arr = loadUsers();
+    var em = String(email || "").trim().toLowerCase();
+    var hp = hashPass(pass);
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i].email === em && arr[i].pass === hp) {
+        setSession(arr[i].id);
+        markNotifSeen();
+        return { ok: true, u: arr[i] };
+      }
+    }
+    return { err: "البريد أو كلمة المرور غير صحيحة." };
+  }
+
+  function logoutUser() {
+    setSession("");
+  }
+
+  function userRec() { return currentUser(); }
+
+  function userHasFav(id) { var u = userRec(); return !!(u && u.favs && u.favs.indexOf(String(id)) !== -1); }
+  function userHasLike(id) { var u = userRec(); return !!(u && u.likes && u.likes.indexOf(String(id)) !== -1); }
+
+  function updateUser(patch) {
+    var u = userRec();
+    if (!u) return;
+    var arr = loadUsers().map(function (x) { return x.id === u.id ? patch : x; });
+    saveUsers(arr);
+  }
+
+  function addUserFav(id) {
+    var u = userRec();
+    if (!u) return;
+    if (!u.favs) u.favs = [];
+    if (u.favs.indexOf(String(id)) === -1) u.favs.push(String(id));
+    updateUser(u);
+  }
+
+  function removeUserFav(id) {
+    var u = userRec();
+    if (!u) return;
+    u.favs = (u.favs || []).filter(function (x) { return x !== String(id); });
+    updateUser(u);
+  }
+
+  function addUserLike(id) {
+    var u = userRec();
+    if (!u) return;
+    if (!u.likes) u.likes = [];
+    if (u.likes.indexOf(String(id)) === -1) u.likes.push(String(id));
+    updateUser(u);
+  }
+
+  function removeUserLike(id) {
+    var u = userRec();
+    if (!u) return;
+    u.likes = (u.likes || []).filter(function (x) { return x !== String(id); });
+    updateUser(u);
+  }
+
+  /* ---------- Notifications ---------- */
+  function notifSeenTs() {
+    var v = load(K_NOTIF_SEEN, 0);
+    return parseInt(v, 10) || 0;
+  }
+
+  function markNotifSeen() {
+    store(K_NOTIF_SEEN, Date.now());
+  }
+
+  function buildNotifs() {
+    var arr = [];
+    var now = Date.now();
+    var NEW_DAYS = 14;
+    var favIds = [];
+    var u = currentUser();
+    if (u && u.favs) favIds = u.favs;
+    data.games.forEach(function (g) {
+      var d = new Date(g.date || 0).getTime();
+      var lu = g.lastUpdate ? new Date(g.lastUpdate).getTime() : 0;
+      if (!d && !lu) return;
+      if (now - d < NEW_DAYS * 864e5) {
+        arr.push({ icon: "🆕", text: "تعريب جديد: " + g.title, href: gamePageHref(g.id), ts: d });
+      } else if (lu && now - lu < NEW_DAYS * 864e5) {
+        arr.push({ icon: "🔄", text: "تم تحديث تعريب: " + g.title, href: gamePageHref(g.id), ts: lu });
+      }
+      if (favIds.indexOf(String(g.id)) !== -1 && lu && now - lu < 30 * 864e5) {
+        arr.push({ icon: "♥️", text: "تعريب في مفضلتك حُدّث: " + g.title, href: gamePageHref(g.id), ts: lu });
+      }
+    });
+    arr.sort(function (a, b) { return b.ts - a.ts; });
+    return arr.slice(0, 12);
+  }
+
+  function updateNotifBadge() {
+    var badge = document.getElementById("ryNotifBadge");
+    if (!badge) return;
+    var seen = notifSeenTs();
+    var unread = buildNotifs().filter(function (n) { return n.ts > seen; }).length;
+    badge.textContent = unread > 9 ? "9+" : String(unread);
+    badge.hidden = unread === 0;
+  }
+
+  function openNotifPanel() {
+    var notifs = buildNotifs();
+    markNotifSeen();
+    var body = "";
+    if (!notifs.length) {
+      body = '<p class="empty-state">لا توجد إشعارات جديدة حاليًا 🔕</p>';
+    } else {
+      body = '<div class="notif-list">' + notifs.map(function (n) {
+        return '<a class="notif-item" href="' + esc(n.href) + '"><span class="notif-icon">' + n.icon + '</span><span>' + esc(n.text) + '</span></a>';
+      }).join("") + "</div>";
+    }
+    var backdrop = mountModal(
+      '<div class="modal-head"><h3>🔔 الإشعارات</h3><button class="ry-modal-x modal-close" type="button">✕</button></div>' +
+      '<div class="notif-body">' + body + "</div>"
+    );
+    updateNotifBadge();
+    return backdrop;
+  }
+
+  /* ---------- Header user UI (injected) ---------- */
+  function refreshHeaderUI() {
+    var wrap = document.querySelector(".header-actions");
+    if (!wrap) return;
+    if (!document.getElementById("ryNotifBtn")) {
+      var bell = document.createElement("button");
+      bell.id = "ryNotifBtn";
+      bell.type = "button";
+      bell.className = "btn-theme";
+      bell.title = "الإشعارات";
+      bell.innerHTML = '🔔<span class="notif-badge" id="ryNotifBadge" hidden>0</span>';
+      bell.addEventListener("click", openNotifPanel);
+      var acc = document.createElement("button");
+      acc.id = "ryAccountBtn";
+      acc.type = "button";
+      acc.className = "btn-theme";
+      acc.title = "دخول / حساب جديد";
+      acc.innerHTML = "👤";
+      acc.addEventListener("click", openAccountModal);
+      wrap.appendChild(bell);
+      wrap.appendChild(acc);
+    }
+    updateNotifBadge();
+    var acctBtn = document.getElementById("ryAccountBtn");
+    var u = currentUser();
+    if (acctBtn) {
+      acctBtn.innerHTML = u ? "🙂" : "👤";
+      acctBtn.title = u ? "حساب " + u.name : "دخول / حساب جديد";
+    }
+  }
+
+  /* ---------- Account modal ---------- */
+  function openAccountModal() {
+    var u = currentUser();
+    var body = "";
+    if (u) {
+      var favHtml = "";
+      if (u.favs && u.favs.length) {
+        favHtml = '<div class="acct-favs">' + u.favs.map(function (id) {
+          var g = gameById(parseInt(id, 10));
+          if (!g) return "";
+          return '<a class="acct-fav" href="' + esc(gamePageHref(g.id)) + '">🎮 ' + esc(g.ar || g.title) + "</a>";
+        }).join("") + "</div>";
+      } else {
+        favHtml = '<p class="hint">لا توجد ألعاب في مفضلتك بعد — أضف ألعابًا من صفحاتها لتجدها هنا.</p>';
+      }
+      body =
+        '<div class="acct-welcome">👋 أهلاً <b>' + esc(u.name) + "</b></div>" +
+        '<div class="acct-sec"><h4>⭐ المفضلة</h4>' + favHtml + "</div>" +
+        '<button class="btn btn-ghost" id="acctLogoutBtn" type="button">تسجيل الخروج</button>';
+    } else {
+      body =
+        '<p class="hint">أنشئ حسابًا مجانيًا لحفظ المفضلة والتقييم والإعجاب والإشعارات (يُحفظ في هذا المتصفح).</p>' +
+        '<div class="acct-toggle-row">' +
+        '<button class="chip active" id="acctTabLogin" type="button">دخول</button>' +
+        '<button class="chip" id="acctTabReg" type="button">حساب جديد</button>' +
+        "</div>" +
+        '<form id="acctForm" class="admin-form" autocomplete="off">' +
+        '<input type="text" id="acctName" placeholder="اسمك" hidden />' +
+        '<input type="email" id="acctEmail" placeholder="البريد الإلكتروني" autocomplete="email" />' +
+        '<input type="password" id="acctPass" placeholder="كلمة المرور" autocomplete="current-password" />' +
+        '<button class="btn btn-primary" type="submit" id="acctSubmit">دخول</button>' +
+        '<span class="req-status" id="acctMsg"></span>' +
+        "</form>";
+    }
+    var backdrop = mountModal(
+      '<div class="modal-head"><h3>👤 حسابي</h3><button class="ry-modal-x modal-close" type="button">✕</button></div>' +
+      '<div class="acct-body">' + body + "</div>"
+    );
+    var logoutBtn = document.getElementById("acctLogoutBtn");
+    if (logoutBtn) logoutBtn.addEventListener("click", function () {
+      logoutUser();
+      backdrop.remove();
+      document.body.style.overflow = "";
+      refreshHeaderUI();
+      toast("تم تسجيل الخروج.");
+    });
+    var tabLogin = document.getElementById("acctTabLogin");
+    var tabReg = document.getElementById("acctTabReg");
+    var nameIn = document.getElementById("acctName");
+    var submitBtn = document.getElementById("acctSubmit");
+    var isReg = false;
+    function setMode(reg) {
+      isReg = reg;
+      if (tabLogin) tabLogin.classList.toggle("active", !reg);
+      if (tabReg) tabReg.classList.toggle("active", reg);
+      if (nameIn) nameIn.hidden = !reg;
+      if (submitBtn) submitBtn.textContent = reg ? "إنشاء الحساب" : "دخول";
+    }
+    if (tabLogin) tabLogin.addEventListener("click", function () { setMode(false); });
+    if (tabReg) tabReg.addEventListener("click", function () { setMode(true); });
+    var form = document.getElementById("acctForm");
+    if (form) form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("acctMsg");
+      var r;
+      if (isReg) r = registerUser(getF("acctName"), getF("acctEmail"), getF("acctPass"));
+      else r = loginUser(getF("acctEmail"), getF("acctPass"));
+      if (msg) {
+        if (r.err) { msg.textContent = r.err; msg.style.color = "#dc2626"; }
+        else {
+          msg.textContent = "تم الدخول بنجاح ✓";
+          msg.style.color = "#16a34a";
+          setTimeout(function () {
+            backdrop.remove();
+            document.body.style.overflow = "";
+            refreshHeaderUI();
+            renderGamePage();
+          }, 600);
+        }
+      }
+    });
+  }
+
+  /* ---------- Reports (bug/problem) ---------- */
+  var REPORT_TYPES = ["مشكلة في التثبيت", "خطأ في الترجمة", "اللعبة لا تعمل", "الرابط لا يعمل", "مشكلة أخرى"];
+
+  function openReportModal(g) {
+    var backdrop = mountModal(
+      '<div class="modal-head"><h3>⚠️ الإبلاغ عن مشكلة</h3><button class="ry-modal-x modal-close" type="button">✕</button></div>' +
+      '<div class="report-body">' +
+      (g ? '<p class="hint">الإبلاغ عن مشكلة في: <b>' + esc(g.ar || g.title) + "</b></p>" : "") +
+      '<form id="reportForm" class="admin-form">' +
+      '<select id="reportType">' + REPORT_TYPES.map(function (t) { return '<option>' + esc(t) + "</option>"; }).join("") + "</select>" +
+      '<input type="text" id="reportContact" placeholder="طريقة التواصل (تلجرام / إيميل...) — اختياري" autocomplete="off" />' +
+      '<textarea id="reportText" rows="3" required placeholder="اشرح المشكلة بالتفصيل..." maxlength="800"></textarea>' +
+      '<label class="report-file"><span>📎 إرفاق صورة أو ملف (اختياري)</span>' +
+      '<input type="file" id="reportFile" accept="image/*,.zip,.txt,.log" /></label>' +
+      '<div class="report-preview" id="reportPreview" hidden></div>' +
+      '<button class="btn btn-primary" type="submit">إرسال البلاغ</button>' +
+      '<span class="req-status" id="reportMsg"></span>' +
+      "</form>" +
+      "</div>"
+    );
+    var fileInput = document.getElementById("reportFile");
+    var preview = document.getElementById("reportPreview");
+    var form = document.getElementById("reportForm");
+    if (form) wireReportForm(form, fileInput, preview, g, function () {
+      backdrop.remove();
+      document.body.style.overflow = "";
+    });
+  }
+
+  function wireReportForm(form, fileInput, preview, g, onDone) {
+    var attached = "";
+    if (fileInput) fileInput.addEventListener("change", function () {
+      var f = fileInput.files[0];
+      if (!f) return;
+      if (f.size > 1.5 * 1024 * 1024) { toast("الملف كبير — الحد الأقصى 1.5 ميجا."); fileInput.value = ""; return; }
+      var reader = new FileReader();
+      reader.onload = function () {
+        attached = reader.result;
+        if (preview) {
+          var isImg = /^image\//.test(f.type);
+          preview.hidden = false;
+          preview.innerHTML = isImg
+            ? '<img src="' + attached + '" alt="" />'
+            : "📎 " + esc(f.name) + " (" + Math.round(f.size / 1024) + " كيلوبايت)";
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("reportMsg");
+      var text = getF("reportText");
+      if (!text) return;
+      var rep = {
+        id: "rep" + Date.now(),
+        game: g ? (g.ar || g.title) : getF("reportGame"),
+        gameId: g ? g.id : null,
+        type: getF("reportType") || "مشكلة أخرى",
+        text: text.slice(0, 800),
+        contact: getF("reportContact"),
+        file: attached,
+        date: new Date().toLocaleString("ar-EG"),
+      };
+      data.reports.push(rep);
+      store(K_REPORTS, data.reports);
+      if (msg) { msg.textContent = "تم إرسال البلاغ — شكرًا لك! ✓"; msg.style.color = "#16a34a"; }
+      setTimeout(function () {
+        toast("وصلنا بلاغك وسنعالجه قريبًا.");
+        if (onDone) { onDone(); }
+        else if (msg) { form.reset(); if (preview) { preview.hidden = true; preview.innerHTML = ""; } }
+      }, 900);
+    });
+  }
+
+  function initReportPage() {
+    var form = document.getElementById("reportForm");
+    if (!form) return;
+    if (form.dataset.wired) return;
+    form.dataset.wired = "1";
+    wireReportForm(form, document.getElementById("reportFile"), document.getElementById("reportPreview"), null);
+  }
+
+  /* ---------- Requests voting ---------- */
+  function renderRequests() {
+    var wrap = document.getElementById("requestsVoteList");
+    if (!wrap) return;
+    var arr = data.requests.slice().sort(function (a, b) {
+      return (parseInt(b.votes, 10) || 0) - (parseInt(a.votes, 10) || 0);
+    });
+    if (!arr.length) {
+      wrap.innerHTML = '<p class="empty-state">لا توجد طلبات بعد — كن أول من يطلب تعريبًا! 🎮</p>';
+      return;
+    }
+    wrap.innerHTML = "";
+    var myVotes = load(K_MYVOTES, {});
+    arr.forEach(function (r) {
+      var voted = myVotes[r.id] === 1;
+      var item = el("div", "vote-item");
+      item.innerHTML =
+        '<div class="vote-info">' +
+        "<strong>🎮 " + esc(r.game) + "</strong>" +
+        (r.desc ? "<p>" + esc(r.desc) + "</p>" : "") +
+        "<small>🕐 " + esc(r.date || "") + "</small>" +
+        "</div>" +
+        '<button class="vote-btn' + (voted ? " voted" : "") + '" type="button">' +
+        (voted ? "🗳️ صوّت" : "⬆️ صوت") +
+        ' <b class="vote-count">' + (parseInt(r.votes, 10) || 0) + "</b></button>";
+      item.querySelector(".vote-btn").addEventListener("click", function () {
+        voteRequest(r.id);
+      });
+      wrap.appendChild(item);
+    });
+  }
+
+  function voteRequest(id) {
+    if (!currentUser()) { toast("سجّل الدخول للتصويت على الطلبات."); openAccountModal(); return; }
+    var myVotes = load(K_MYVOTES, {});
+    if (!myVotes || typeof myVotes !== "object" || Array.isArray(myVotes)) myVotes = {};
+    if (myVotes[id] === 1) { toast("صوّت لهذا الطلب مسبقًا."); return; }
+    myVotes[id] = 1;
+    store(K_MYVOTES, myVotes);
+    for (var i = 0; i < data.requests.length; i++) {
+      if (data.requests[i].id === id) {
+        data.requests[i].votes = (parseInt(data.requests[i].votes, 10) || 0) + 1;
+        break;
+      }
+    }
+    store(K_REQUESTS, data.requests);
+    renderRequests();
+    toast("تم تسجيل صوتك ✓");
+  }
+
+  /* ---------- Team page ---------- */
+  var TEAM_MEMBERS = [
+    { icon: "👨‍💻", name: "فريق ريان", role: "المؤسس والتطوير" },
+    { icon: "🖋️", name: "المترجمون", role: "ترجمة النصوص والحوارات" },
+    { icon: "🔍", name: "المراجعون", role: "مراجعة الجودة والتدقيق اللغوي" },
+    { icon: "🎨", name: "المصممون", role: "الواجهات والخطوط والأغلفة" },
+  ];
+
+  function renderTeam() {
+    var wrap = document.getElementById("teamMembers");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    TEAM_MEMBERS.forEach(function (m) {
+      var card = el("div", "team-card");
+      card.innerHTML =
+        '<span class="team-icon">' + m.icon + "</span>" +
+        "<h3>" + esc(m.name) + "</h3>" +
+        "<p>" + esc(m.role) + "</p>";
+      wrap.appendChild(card);
+    });
+    var contacts = document.getElementById("teamContacts");
+    if (contacts) {
+      var s = data.settings.socials || {};
+      contacts.innerHTML = "";
+      Object.keys(SOCIAL_META).forEach(function (key) {
+        if (s[key]) {
+          var a = el("a", "team-contact", SOCIAL_META[key]);
+          a.href = s[key];
+          a.target = "_blank";
+          a.rel = "noopener";
+          contacts.appendChild(a);
+        }
+      });
+      if (data.settings.contactEmail) {
+        var em = el("a", "team-contact", "📧 " + data.settings.contactEmail);
+        em.href = "mailto:" + data.settings.contactEmail;
+        contacts.appendChild(em);
+      }
+      if (!contacts.children.length) {
+        contacts.appendChild(el("p", "hint", "سيُتاح التواصل مع الفريق قريبًا."));
+      }
+    }
+  }
+
+  /* ---------- Extra nav links (injected) ---------- */
+  function injectExtraNav() {
+    var nav = document.getElementById("mainNav");
+    if (!nav || document.getElementById("ryNavTeam")) return;
+    var a1 = document.createElement("a");
+    a1.id = "ryNavTeam";
+    a1.href = "team.html";
+    a1.textContent = "فريق الموقع";
+    var a2 = document.createElement("a");
+    a2.id = "ryNavReport";
+    a2.href = "problems.html";
+    a2.textContent = "الإبلاغ عن مشكلة";
+    nav.appendChild(a1);
+    nav.appendChild(a2);
+  }
+
+  /* ---------- Generic modal mount ---------- */
+  function mountModal(innerHTML) {
+    var backdrop = el("div", "modal-backdrop", "");
+    backdrop.style.display = "flex";
+    var modal = el("div", "modal", innerHTML);
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+    document.body.style.overflow = "hidden";
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop) { backdrop.remove(); document.body.style.overflow = ""; }
+    });
+    var x = modal.querySelector(".ry-modal-x");
+    if (x) x.addEventListener("click", function () { backdrop.remove(); document.body.style.overflow = ""; });
+    return backdrop;
+  }
+
   /* ---------- Init ---------- */
   function init() {
     loadAll();
@@ -2802,6 +3641,7 @@
     initImageUploaders();
     initGenreBuilder();
     setupLiveSync();
+    initReportPage();
 
     /* Search */
     var searchBtn = document.getElementById("searchBtn");
@@ -2809,6 +3649,10 @@
     if (searchBtn) searchBtn.addEventListener("click", function () { state.search = searchInput.value; renderGrid(); });
     if (searchInput) searchInput.addEventListener("keyup", function (e) {
       if (e.key === "Enter") { state.search = searchInput.value; renderGrid(); }
+    });
+    if (searchInput) searchInput.addEventListener("input", function () {
+      state.search = searchInput.value;
+      renderGrid();
     });
 
     /* Nav */

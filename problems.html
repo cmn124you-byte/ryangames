@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>اطلب تعريب لعبتك المفضلة مجانًا | ريان ألعاب</title>
-  <meta name="description" content="لا تجد لعبتك المفضلة معرّبة للعربية؟ اطلب تعريبها مجانًا وسنعمل عليها في أقرب وقت." />
-  <link rel="canonical" href="request.html" />
+  <title>الإبلاغ عن مشكلة في التعريب | ريان ألعاب</title>
+  <meta name="description" content="واجهت مشكلة في أحد التعريبات؟ أبلغنا الآن مع إمكانية إرفاق صورة أو ملف لتسريع الحل." />
+  <link rel="canonical" href="problems.html" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="ريان ألعاب معرّبة" />
-  <meta property="og:title" content="اطلب تعريب لعبتك المفضلة مجانًا | ريان ألعاب" />
-  <meta property="og:description" content="اطلب تعريب لعبتك المفضلة مجانًا." />
+  <meta property="og:title" content="الإبلاغ عن مشكلة" />
+  <meta property="og:description" content="أبلغ عن مشكلة في تعريب لعبة مع إمكانية إرفاق ملف." />
   <meta property="og:locale" content="ar_AR" />
   <meta name="twitter:card" content="summary" />
   <meta name="robots" content="index, follow" />
-  <meta name="keywords" content="تعريب ألعاب, طلب تعريب, ألعاب معربة, تعريب" />
   <meta name="theme-color" content="#e11d48" />
   <script>try{var t=localStorage.getItem("ry-theme")||"light";var d=t==="dark";var ua=navigator.userAgent;var p=/Android/i.test(ua)?"play":(/iPhone|iPad|iPod/i.test(ua)?"appstore":"desktop");var r=document.documentElement;if(d)r.setAttribute("data-theme","dark");r.setAttribute("data-platform",p);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",p==="appstore"?"#0a84ff":(p==="play"?"#0f9d58":(d?"#0f1117":"#e11d48")));}catch(e){}</script>
   <link rel="manifest" href="manifest.json" />
@@ -24,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body data-page="request">
+<body data-page="problems">
   <div class="bismillah">
     <span class="bismillah-spark s1">✦</span>
     <span class="bismillah-spark s2">✦</span>
@@ -53,7 +52,7 @@
         <a href="minigames.html">ألعاب بلا نت</a>
         <a href="lessons.html">الدروس</a>
         <a href="download.html">حمّل التطبيق</a>
-        <a href="request.html" class="active">اطلب تعريب</a>
+        <a href="request.html">اطلب تعريب</a>
         <a href="contact.html">تواصل</a>
       </nav>
       <div class="header-actions">
@@ -64,7 +63,6 @@
     </div>
   </header>
 
-  <!-- Ad slot top -->
   <div class="ad-slot" id="adTop"></div>
 
   <main>
@@ -73,31 +71,32 @@
         <nav class="breadcrumb" aria-label="مسار التنقل">
           <a class="btn-back" href="index.html">← العودة إلى الرئيسية</a>
           <span class="bc-sep">/</span>
-          <span class="bc-cur">اطلب تعريب</span>
+          <span class="bc-cur">الإبلاغ عن مشكلة</span>
         </nav>
-        <h1>اطلب تعريب لعبتك 🎮</h1>
-        <p>لا تجد لعبتك معرّبة؟ أرسل لنا طلبك وسنعمل على تعريبها في أقرب وقت ممكن.</p>
+        <h1>الإبلاغ عن مشكلة 🛠️</h1>
+        <p>واجهت مشكلة في تعريب لعبة؟ أخبرنا بالتفصيل وأرفق صورة أو ملف إن أمكن — سنعالج الأمر بأسرع وقت.</p>
       </div>
     </section>
 
     <section class="section section-alt">
       <div class="container">
-        <form id="requestForm" class="request-form">
-          <input type="text" id="rqTitle" required placeholder="اسم اللعبة (مثال: Hollow Knight)" />
-          <input type="text" id="rqContact" placeholder="طريقة التواصل (تلجرام / إيميل...) — اختياري" />
-          <textarea id="rqDesc" rows="3" placeholder="تفاصيل إضافية عن الطلب (اختياري)"></textarea>
-          <button class="btn btn-primary" type="submit">إرسال الطلب ✉️</button>
-          <span class="req-status" id="rqStatus"></span>
+        <form id="reportForm" class="report-form admin-form">
+          <select id="reportType">
+            <option>مشكلة في التثبيت</option>
+            <option>خطأ في الترجمة</option>
+            <option>اللعبة لا تعمل</option>
+            <option>الرابط لا يعمل</option>
+            <option>مشكلة أخرى</option>
+          </select>
+          <input type="text" id="reportGame" placeholder="اسم اللعبة (اختياري — إن كانت المشكلة في لعبة محددة)" autocomplete="off" />
+          <input type="text" id="reportContact" placeholder="طريقة التواصل (تلجرام / إيميل...) — اختياري" autocomplete="off" />
+          <textarea id="reportText" rows="4" required placeholder="اشرح المشكلة بالتفصيل..." maxlength="800"></textarea>
+          <label class="report-file"><span>📎 إرفاق صورة أو ملف (اختياري — حتى 1.5 ميجا)</span>
+            <input type="file" id="reportFile" accept="image/*,.zip,.txt,.log" /></label>
+          <div class="report-preview" id="reportPreview" hidden></div>
+          <button class="btn btn-primary" type="submit">إرسال البلاغ</button>
+          <span class="req-status" id="reportMsg"></span>
         </form>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <div class="sec-head">
-          <h2>🗳️ طلبات المجتمع <span class="hint">— صوّت على اللعبة التي تريد تعريبها أولًا</span></h2>
-        </div>
-        <div class="requests-vote" id="requestsVoteList"></div>
       </div>
     </section>
 

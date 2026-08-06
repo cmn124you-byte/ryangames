@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 32;
+var DATA_VERSION = 33;
 
 var DEFAULT_GAMES = [
   {
@@ -59,6 +59,27 @@ var DEFAULT_GAMES = [
     video: "",
     free: false,
     isApp: false,
+    state: "complete",
+    version: "1.0 (نسخة Steam)",
+    lastUpdate: "2026-08-04",
+    stores: ["Steam"],
+    osSupport: ["windows", "linux"],
+    onlyOriginal: false,
+    changelog: [
+      "v1.0 — الترجمة الكاملة لجميع نصوص اللعبة إلى العربية.",
+      "دعم كامل للواجهة والقوائم والحوارات.",
+      "الخط العربي واضح ومضبوط لجميع الشاشات.",
+    ],
+    installSteps: [
+      "نزّل ملف التعريب من زر التحميل أعلاه.",
+      "شغّل الملف المضغوط (ZIP) وفك الضغط في أي مجلد.",
+      "انقل الملفات إلى مجلد اللعبة كما في درس التركيب.",
+      "افتح اللعبة واستمتع بالعربية.",
+    ],
+    views: 0,
+    likes: 0,
+    ratingSum: 0,
+    ratingCount: 0,
   },
   {
     id: 2,
@@ -80,6 +101,25 @@ var DEFAULT_GAMES = [
     compat: "Windows 10/11",
     arLocal: true,
     linkAlt: "",
+    state: "complete",
+    version: "2.3",
+    lastUpdate: "2026-07-30",
+    stores: ["Steam"],
+    osSupport: ["windows"],
+    onlyOriginal: true,
+    changelog: [
+      "v2.3 — إضافة 10 أطباق جديدة.",
+      "v2.0 — تحسين الجرافيك وواجهة الطبخ.",
+    ],
+    installSteps: [
+      "حمّل التعريب وثبّت اللعبة الأصلية من Steam أولًا.",
+      "شغّل ملف التعريب واتبع المثبّت التلقائي.",
+      "اختر مجلد اللعبة إن لم يُكتشف تلقائيًا.",
+    ],
+    views: 0,
+    likes: 0,
+    ratingSum: 0,
+    ratingCount: 0,
   },
   {
     id: 3,
@@ -96,11 +136,30 @@ var DEFAULT_GAMES = [
     rec: "معالج i5، ذاكرة 8 جيجا",
     link: "",
     buy: "",
-    tradRate: "100%",
-    installTime: "5 دقائق",
+    tradRate: "80%",
+    installTime: "10 دقائق",
     compat: "Windows 10/11",
     arLocal: true,
     linkAlt: "",
+    state: "beta",
+    version: "0.9 (تجريبي)",
+    lastUpdate: "2026-07-22",
+    stores: ["Epic"],
+    osSupport: ["windows"],
+    onlyOriginal: true,
+    changelog: [
+      "v0.9 — ترجمة الواجهة والقوائم الأساسية.",
+      "الترجمة الكاملة قيد الإنجاز.",
+    ],
+    installSteps: [
+      "ثبّت اللعبة الأصلية من Epic Games أولًا.",
+      "انقل ملفات التعريب إلى مجلد اللعبة.",
+      "ستلاحظ أن جزءًا من النصوص ما زال إنجليزيًا.",
+    ],
+    views: 0,
+    likes: 0,
+    ratingSum: 0,
+    ratingCount: 0,
   },
   {
     id: 4,
@@ -117,11 +176,30 @@ var DEFAULT_GAMES = [
     rec: "معالج i5، ذاكرة 8 جيجا",
     link: "",
     buy: "",
-    tradRate: "100%",
-    installTime: "5 دقائق",
+    tradRate: "60%",
+    installTime: "15 دقيقة",
     compat: "Windows 10/11",
     arLocal: true,
     linkAlt: "",
+    state: "beta",
+    version: "0.6 (تجريبي)",
+    lastUpdate: "2026-07-15",
+    stores: ["GOG"],
+    osSupport: ["windows", "deck"],
+    onlyOriginal: true,
+    changelog: [
+      "v0.6 — ترجمة الحوارات الرئيسية.",
+      "الإعداد الكامل قيد التطوير.",
+    ],
+    installSteps: [
+      "نزّل اللعبة من GOG وأنشئ نسخة احتياطية.",
+      "ضع ملفات التعريب في مسار تثبيت اللعبة.",
+      "جرّب على Windows أو Steam Deck (Proton).",
+    ],
+    views: 0,
+    likes: 0,
+    ratingSum: 0,
+    ratingCount: 0,
   },
 ];
 
