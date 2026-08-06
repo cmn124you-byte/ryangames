@@ -4792,3 +4792,58 @@ img {
   .vote-btn { align-self: center; }
   .gp-steps li { padding-right: 3rem; }
 }
+
+/* ---------- SEO & UX (v7) ---------- */
+
+/* Back to top */
+#toTopBtn {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 1.2rem;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.15rem;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px);
+  transition: opacity .25s, transform .25s, visibility .25s;
+  z-index: 900;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+#toTopBtn.show { opacity: 1; visibility: visible; transform: translateY(0); }
+#toTopBtn:hover { filter: brightness(1.1); }
+
+/* Skeleton loading */
+.skeleton-card { pointer-events: none; }
+.skeleton {
+  background: linear-gradient(100deg, var(--surface) 40%, var(--border) 50%, var(--surface) 60%);
+  background-size: 200% 100%;
+  animation: skeletonShine 1.1s linear infinite;
+  border-radius: 8px;
+}
+.skeleton-cover { height: 170px; width: 100%; border-radius: 14px 14px 0 0; }
+.skeleton-body { padding: 1rem; display: grid; gap: .6rem; }
+.skeleton-line { height: 14px; }
+.skeleton-line.w60 { width: 60%; }
+.skeleton-line.w80 { width: 80%; }
+.skeleton-line.w40 { width: 40%; }
+@keyframes skeletonShine {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+/* New filter rows (language / year) */
+.filters-row select { max-width: 100%; }
+
+/* 404 page */
+.notfound-page { text-align: center; padding: 5rem 1rem 6rem; }
+.notfound-code { font-size: clamp(4rem, 14vw, 7rem); font-weight: 900; line-height: 1; background: linear-gradient(135deg, var(--accent), #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.notfound-actions { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; margin-top: 1.4rem; }

@@ -513,7 +513,7 @@
 
   function imgHTML(g, cls) {
     if (g && g.cover) {
-      return '<img src="' + esc(g.cover) + '" alt="' + esc(g.title) + '" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;' + cls + ' cover-fallback&quot; style=&quot;background:' + fallbackGradient(g) + '&quot;>' + esc((g.ar || g.title).charAt(0)) + '</div>\'" />';
+      return '<img src="' + esc(g.cover) + '" alt="' + esc(g.title) + '" loading="lazy" decoding="async" onerror="this.outerHTML=\'<div class=&quot;' + cls + ' cover-fallback&quot; style=&quot;background:' + fallbackGradient(g) + '&quot;>' + esc((g.ar || g.title).charAt(0)) + '</div>\'" />';
     }
     return '<div class="' + cls + ' cover-fallback" style="background:' + fallbackGradient(g) + '">' + esc((g && g.ar || g && g.title || "؟").charAt(0)) + "</div>";
   }
@@ -794,7 +794,7 @@
   }
 
   /* ---------- Game grid + filters ---------- */
-  var state = { platform: "all", genre: "all", type: "all", status: "all", sort: "newest", search: "", editing: null };
+  var state = { platform: "all", genre: "all", type: "all", status: "all", lang: "all", year: "all", minRating: "all", sort: "newest", search: "", editing: null, gridLoaded: false };
 
   /* ---------- Translation status helpers ---------- */
   var STATUS_META = {
@@ -912,6 +912,42 @@
     statusRow.appendChild(chipEl("stopped", false, "⏸️ متوقف", "status"));
     wrap.appendChild(statusRow);
 
+    var langSet = {};
+    data.games.forEach(function (g) {
+      (g.langs || []).forEach(function (l) { langSet[l] = true; });
+    });
+    var langKeys = Object.keys(langSet).sort();
+    if (langKeys.length) {
+      var langRow = el("div", "filters-row", '<span class="filters-label">اللغة:</span>');
+      langRow.appendChild(chipEl("all", true, "الكل", "lang"));
+      langKeys.forEach(function (l) { langRow.appendChild(chipEl(l, false, l, "lang")); });
+      wrap.appendChild(langRow);
+    }
+
+    var yearSet = {};
+    data.games.forEach(function (g) { if (g.year) yearSet[g.year] = true; });
+    var yearKeys = Object.keys(yearSet).sort().reverse();
+    if (yearKeys.length) {
+      var yearRow = el("div", "filters-row", '<span class="filters-label">سنة الإصدار:</span>');
+      yearRow.appendChild(chipEl("all", true, "الكل", "year"));
+      yearKeys.forEach(function (y) { yearRow.appendChild(chipEl(y, false, y, "year")); });
+      wrap.appendChild(yearRow);
+    }
+
+    var ratingRow = el("div", "filters-row", '<span class="filters-label">التقييم:</span>');
+    var ratingSel = document.createElement("select");
+    ratingSel.className = "sort-select";
+    ratingSel.id = "ratingFilterSelect";
+    ratingSel.innerHTML =
+      '<option value="all">الكل</option>' +
+      '<option value="3">⭐ 3 فما فوق</option>' +
+      '<option value="4">⭐ 4 فما فوق</option>' +
+      '<option value="4.5">⭐⭐ 4.5 وما فوق</option>';
+    ratingSel.value = state.minRating;
+    ratingSel.addEventListener("change", function () { state.minRating = ratingSel.value; renderGrid(); });
+    ratingRow.appendChild(ratingSel);
+    wrap.appendChild(ratingRow);
+
     var sortWrap = el("div", "filters-row filters-sort", '<span class="filters-label">ترتيب:</span>');
     var sortSel = document.createElement("select");
     sortSel.className = "sort-select";
@@ -932,11 +968,15 @@
     if (kind === "pf") chip.dataset.pf = val;
     else if (kind === "type") chip.dataset.type = val;
     else if (kind === "status") chip.dataset.status = val;
+    else if (kind === "lang") chip.dataset.lang = val;
+    else if (kind === "year") chip.dataset.year = val;
     else chip.dataset.genre = val;
     chip.addEventListener("click", function () {
       if (kind === "pf") state.platform = val;
       else if (kind === "type") state.type = val;
       else if (kind === "status") state.status = val;
+      else if (kind === "lang") state.lang = val;
+      else if (kind === "year") state.year = val;
       else state.genre = val;
       setActiveChip();
       renderGrid();
@@ -952,6 +992,10 @@
         chip.classList.toggle("active", chip.dataset.type === state.type);
       } else if (chip.dataset.status !== undefined) {
         chip.classList.toggle("active", chip.dataset.status === state.status);
+      } else if (chip.dataset.lang !== undefined) {
+        chip.classList.toggle("active", chip.dataset.lang === state.lang);
+      } else if (chip.dataset.year !== undefined) {
+        chip.classList.toggle("active", chip.dataset.year === state.year);
       } else {
         chip.classList.toggle("active", chip.dataset.genre === state.genre);
       }
@@ -994,6 +1038,9 @@
       if (state.platform !== "all" && (g.platforms || []).map(canonPf).indexOf(state.platform) === -1) return false;
       if (state.genre !== "all" && (g.genres || []).indexOf(state.genre) === -1) return false;
       if (state.status !== "all" && (g.state || "complete") !== state.status) return false;
+      if (state.lang !== "all" && (g.langs || []).indexOf(state.lang) === -1) return false;
+      if (state.year !== "all" && (g.year || "") !== state.year) return false;
+      if (state.minRating !== "all" && gameRating(g).score < parseFloat(state.minRating)) return false;
       if (state.type === "app" && !g.isApp) return false;
       if (state.type === "ar" && !g.arLocal) return false;
       if (state.type === "free" && !g.free) return false;
@@ -1010,6 +1057,19 @@
 
     grid.innerHTML = "";
     empty.hidden = list.length !== 0;
+
+    if (list.length && !state.gridLoaded && !grid.querySelector(".skeleton-card")) {
+      for (var s = 0; s < 6; s++) {
+        grid.appendChild(el("div", "game-card skeleton-card",
+          '<div class="skeleton skeleton-cover"></div>' +
+          '<div class="skeleton-body"><div class="skeleton skeleton-line w60"></div>' +
+          '<div class="skeleton skeleton-line w80"></div>' +
+          '<div class="skeleton skeleton-line w40"></div></div>'));
+      }
+      setTimeout(function () { state.gridLoaded = true; renderGrid(); }, 260);
+      return;
+    }
+    state.gridLoaded = true;
 
     list.forEach(function (g) {
       var card = el("div", "game-card flip-card");
@@ -1443,6 +1503,7 @@
     setOg("og:title", g.browserTitle || g.title);
     setOg("og:description", String(g.desc || "").slice(0, 200));
     setOg("og:image", g.cover || "");
+    addJSONLD("ld-videogame", videoGameLD(g));
 
     wrap.innerHTML = gamePageHTML(g);
     }
@@ -3628,6 +3689,88 @@
   }
 
   /* ---------- Init ---------- */
+  function addJSONLD(id, obj) {
+    var existing = document.getElementById(id);
+    if (existing) existing.parentNode.removeChild(existing);
+    var s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.id = id;
+    s.textContent = JSON.stringify(obj);
+    document.head.appendChild(s);
+  }
+
+  function siteURL(path) {
+    return "https://cmn124you-byte.github.io/ryangames/" + (path || "");
+  }
+
+  function videoGameLD(g) {
+    var rating = gameRating(g);
+    var ld = {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": g.title,
+      "alternateName": g.ar || undefined,
+      "url": siteURL("game.html?id=" + g.id),
+      "image": g.cover || siteURL("icons/icon-512.png"),
+      "description": String(g.desc || "").slice(0, 500),
+      "genre": g.genres || [],
+      "inLanguage": "ar",
+      "datePublished": g.date || undefined,
+      "dateModified": g.lastUpdate || g.date || undefined,
+      "operatingSystem": g.compat || "Windows",
+      "gamePlatform": g.platforms || [],
+      "author": { "@type": "Organization", "name": "فريق ريان" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": siteURL("game.html?id=" + g.id) }
+    };
+    if (rating.count > 0) {
+      ld.aggregateRating = { "@type": "AggregateRating", "ratingValue": rating.score.toFixed(2), "ratingCount": rating.count, "bestRating": 5, "worstRating": 0 };
+    }
+    return ld;
+  }
+
+  function injectPageStructuredData() {
+    if (!document.body) return;
+    var page = document.body.dataset.page;
+    if (page === "game") {
+      var wrap = document.getElementById("gameDetailPage");
+      if (!wrap) return;
+      var p = queryParams();
+      var g = null;
+      if (p.id !== undefined) g = gameById(parseInt(p.id, 10));
+      else if (p.slug) g = data.games.filter(function (x) { return slugify(x.title) === p.slug; })[0];
+      else if (wrap.dataset.staticId) g = gameById(parseInt(wrap.dataset.staticId, 10));
+      if (g) addJSONLD("ld-videogame", videoGameLD(g));
+    } else if (document.getElementById("gameGrid")) {
+      addJSONLD("ld-games", {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "جميع الألعاب المعرّبة",
+        "numberOfItems": data.games.length,
+        "itemListElement": data.games.map(function (g, i) {
+          return { "@type": "ListItem", "position": i + 1, "url": siteURL("game.html?id=" + g.id), "name": g.ar || g.title };
+        })
+      });
+    }
+  }
+
+  function setupToTop() {
+    var btn = document.createElement("button");
+    btn.id = "toTopBtn";
+    btn.type = "button";
+    btn.title = "العودة للأعلى";
+    btn.setAttribute("aria-label", "العودة للأعلى");
+    btn.textContent = "⬆";
+    document.body.appendChild(btn);
+    function onScroll() {
+      btn.classList.toggle("show", (window.scrollY || document.documentElement.scrollTop) > 480);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    btn.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
   function init() {
     loadAll();
     refreshSite();
@@ -3642,6 +3785,8 @@
     initGenreBuilder();
     setupLiveSync();
     initReportPage();
+    setupToTop();
+    injectPageStructuredData();
 
     /* Search */
     var searchBtn = document.getElementById("searchBtn");

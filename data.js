@@ -32,7 +32,7 @@ function svgBanner(emoji, title, c1, c2, tag) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-var DATA_VERSION = 33;
+var DATA_VERSION = 34;
 
 var DEFAULT_GAMES = [
   {
@@ -62,6 +62,8 @@ var DEFAULT_GAMES = [
     state: "complete",
     version: "1.0 (نسخة Steam)",
     lastUpdate: "2026-08-04",
+    year: "2026",
+    langs: ["العربية", "الإنجليزية"],
     stores: ["Steam"],
     osSupport: ["windows", "linux"],
     onlyOriginal: false,
@@ -104,6 +106,8 @@ var DEFAULT_GAMES = [
     state: "complete",
     version: "2.3",
     lastUpdate: "2026-07-30",
+    year: "2026",
+    langs: ["العربية"],
     stores: ["Steam"],
     osSupport: ["windows"],
     onlyOriginal: true,
@@ -144,6 +148,8 @@ var DEFAULT_GAMES = [
     state: "beta",
     version: "0.9 (تجريبي)",
     lastUpdate: "2026-07-22",
+    year: "2026",
+    langs: ["العربية", "الإنجليزية"],
     stores: ["Epic"],
     osSupport: ["windows"],
     onlyOriginal: true,
@@ -184,6 +190,8 @@ var DEFAULT_GAMES = [
     state: "beta",
     version: "0.6 (تجريبي)",
     lastUpdate: "2026-07-15",
+    year: "2026",
+    langs: ["العربية"],
     stores: ["GOG"],
     osSupport: ["windows", "deck"],
     onlyOriginal: true,

@@ -1,10 +1,10 @@
-var CACHE = "ry-cache-v33";
+var CACHE = "ry-cache-v34";
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
     caches.open(CACHE)
       .then(function (c) {
-        return c.addAll(["./", "./index.html", "./admin.html", "./game.html", "./style.css", "./data.js", "./app.js", "./minigames.html", "./minigames.js", "./manifest.json"]);
+        return c.addAll(["./", "./index.html", "./admin.html", "./game.html", "./404.html", "./style.css", "./data.js", "./app.js", "./minigames.html", "./minigames.js", "./manifest.json", "./team.html", "./problems.html", "./favicon.ico", "./icons/icon-192.png", "./icons/icon-512.png"]);
       })
       .then(function () { return self.skipWaiting(); })
   );
