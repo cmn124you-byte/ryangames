@@ -297,6 +297,8 @@
         <button class="tab" data-tab="lessons">الدروس</button>
         <button class="tab" data-tab="updates">التحديثات</button>
         <button class="tab" data-tab="requests">طلبات التعريب</button>
+        <button class="tab" data-tab="news">الأخبار</button>
+        <button class="tab" data-tab="pages">الصفحات</button>
         <button class="tab" data-tab="settings" hidden>الإعدادات والإعلانات</button>
       </div>
 
@@ -348,6 +350,77 @@
         </div>
         <ul class="admin-list" id="adminRequestsList"></ul>
         <p class="hint">تُرسل طلبات الزوار إلى خادم الموقع مباشرة وتصل إليك هنا في هذه اللوحة. إن تعذّر الوصول للخادم (بدون إنترنت) تُحفظ في متصفحك مؤقتًا.</p>
+      </div>
+
+      <!-- Tab: news -->
+      <div class="tab-panel" id="tab-news" hidden>
+        <div class="admin-bar">
+          <h4>إدارة الأخبار</h4>
+          <button class="btn btn-primary btn-sm" id="addNewsBtn" type="button">+ إضافة خبر</button>
+        </div>
+        <p class="hint">تظهر الأخبار المنشورة في صفحة «الأخبار» وتُضاف تلقائيًا في القائمة والفوتر.</p>
+        <ul class="admin-list" id="adminNewsList"></ul>
+        <form id="newsForm" class="admin-form" hidden>
+          <h4 class="group-title" id="newsFormTitle">خبر جديد</h4>
+          <input type="hidden" id="nId" />
+          <div class="form-row">
+            <label>العنوان
+              <input type="text" id="nTitle" maxlength="120" />
+            </label>
+            <label>صورة الخبر (رابط)
+              <input type="text" id="nImage" placeholder="https://..." />
+            </label>
+          </div>
+          <label>الوصف (يظهر في البطاقة)
+            <textarea id="nDesc" rows="3"></textarea>
+          </label>
+          <label>المحتوى الكامل (HTML — يظهر عند فتح الخبر)
+            <textarea id="nBody" rows="8"></textarea>
+          </label>
+          <div class="form-row">
+            <label class="pf-opt"><input type="checkbox" id="nPinned" /> 📌 تثبيت الخبر أعلى القائمة</label>
+            <label class="pf-opt"><input type="checkbox" id="nPublished" checked /> نشر الخبر</label>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">💾 حفظ الخبر</button>
+            <button class="btn btn-ghost" type="button" id="newsFormCancel">إلغاء</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tab: pages -->
+      <div class="tab-panel" id="tab-pages" hidden>
+        <div class="admin-bar">
+          <h4>إدارة الصفحات</h4>
+          <button class="btn btn-primary btn-sm" id="addPageBtn" type="button">+ إضافة صفحة</button>
+        </div>
+        <p class="hint">الصفحات المنشورة تُضاف للفوتر وتظهر برابطها الخاص.</p>
+        <ul class="admin-list" id="adminPagesList"></ul>
+        <form id="pageForm" class="admin-form" hidden>
+          <h4 class="group-title" id="pageFormTitle">صفحة جديدة</h4>
+          <input type="hidden" id="pId" />
+          <div class="form-row">
+            <label>العنوان
+              <input type="text" id="pTitle" maxlength="120" />
+            </label>
+            <label>المعرّف (slug — أحرف إنجليزية صغيرة وشرطات فقط)
+              <input type="text" id="pSlug" placeholder="عن-الموقع" dir="ltr" />
+            </label>
+          </div>
+          <label>المحتوى (HTML كامل)
+            <textarea id="pBody" rows="10"></textarea>
+          </label>
+          <div class="form-row">
+            <label>الترتيب في الفوتر
+              <input type="number" id="pOrder" value="10" />
+            </label>
+            <label class="pf-opt"><input type="checkbox" id="pPublished" checked /> نشر الصفحة</label>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">💾 حفظ الصفحة</button>
+            <button class="btn btn-ghost" type="button" id="pageFormCancel">إلغاء</button>
+          </div>
+        </form>
       </div>
 
       <!-- Tab: settings -->
