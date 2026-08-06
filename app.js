@@ -78,14 +78,14 @@
       var def = mergeDefaults(u, DEFAULT_UPDATES);
       return Object.assign({}, def, u);
     });
-    if (load("ry_games_v", 0) < 1) {
+    if (load("ry_games_v", 0) < 2) {
       var haveG = {};
       data.games.forEach(function (g) { haveG[g.id] = true; });
       DEFAULT_GAMES.forEach(function (d) { if (!haveG[d.id]) data.games.push(Object.assign({}, d)); });
       var haveU = {};
       data.updates.forEach(function (u) { haveU[u.id] = true; });
       DEFAULT_UPDATES.forEach(function (d) { if (!haveU[d.id]) data.updates.push(Object.assign({}, d)); });
-      store("ry_games_v", 1);
+      store("ry_games_v", 2);
       store(K_GAMES, data.games);
       store(K_UPDATES, data.updates);
     }
@@ -113,8 +113,75 @@
     ok = store(K_UPDATES, data.updates) && ok;
     ok = store(K_SETTINGS, data.settings) && ok;
     if (!ok) alert("تعذّر الحفظ! مساحة التخزين في المتصفح ممتلئة.\nالحل: قلّل حجم الصور أو احذف بعض العناصر ثم جرّب مجددًا.");
-    if (ok) pushRemote();
+    if (ok) { pushRemote(); pushGithubBackup(); }
     return ok;
+  }
+
+  /* ---------- GitHub auto-backup (حفظ تلقائي مع كل حفظ) ---------- */
+  var GH_BACKUP_PATH = "data-backup.json";
+  var GH_BACKUP_MIN_INTERVAL = 20000;
+  var GH_BACKUP_LAST = 0;
+  var GH_BACKUP_SHA = null;
+  var GH_BACKUP_RUNNING = false;
+
+  function ghB64(str) {
+    try {
+      if (typeof btoa === "function" && typeof unescape === "function") return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {}
+    return str;
+  }
+
+  function pushGithubBackup() {
+    var tok = "";
+    try { tok = localStorage.getItem("ry_gh_tok") || ""; } catch (e) {}
+    if (!tok || GH_BACKUP_RUNNING) return;
+    var now = Date.now();
+    if (now - GH_BACKUP_LAST < GH_BACKUP_MIN_INTERVAL) return;
+    GH_BACKUP_LAST = now;
+    GH_BACKUP_RUNNING = true;
+    var owner = "cmn124you-byte", repo = "ryangames", branch = "main";
+    try {
+      if (localStorage.getItem("ry_gh_owner")) owner = localStorage.getItem("ry_gh_owner");
+      if (localStorage.getItem("ry_gh_repo")) repo = localStorage.getItem("ry_gh_repo");
+      if (localStorage.getItem("ry_gh_br")) branch = localStorage.getItem("ry_gh_br");
+    } catch (e) {}
+    var backup = {
+      games: data.games || [],
+      lessons: data.lessons || [],
+      updates: data.updates || [],
+      settings: Object.assign({}, data.settings || {}),
+      updatedAt: Date.now(),
+    };
+    try {
+      delete backup.settings.adminPass;
+      delete backup.settings.publishKey;
+    } catch (e) {}
+    var content = JSON.stringify(backup, null, 2);
+    var apiBase = "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + GH_BACKUP_PATH;
+    var headers = {
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      Authorization: "Bearer " + tok,
+      "Content-Type": "application/json",
+    };
+    fetch(apiBase + "?ref=" + branch, { headers: headers })
+      .then(function (res) {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error("gh_read_" + res.status);
+        return res.json();
+      })
+      .then(function (meta) {
+        var payload = { message: "نسخة احتياطية تلقائية للبيانات", content: ghB64(content), branch: branch };
+        if (meta && meta.sha) payload.sha = meta.sha;
+        return fetch(apiBase, { method: "PUT", headers: headers, body: JSON.stringify(payload) });
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error("gh_write_" + res.status);
+        return res.json();
+      })
+      .then(function (j) { if (j && j.content) GH_BACKUP_SHA = j.content.sha; })
+      .catch(function () { GH_BACKUP_LAST = 0; })
+      .then(function () { GH_BACKUP_RUNNING = false; });
   }
 
   /* ---------- Remote sync (Netlify) ---------- */
