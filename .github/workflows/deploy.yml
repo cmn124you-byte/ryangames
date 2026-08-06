@@ -22,10 +22,17 @@ jobs:
           echo "{\"build\": $(date +%s%3N), \"when\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"who\": \"ryan-studio\", \"msg\": \"${{ github.event.inputs.message }}\"}" > deploy-build.json
           git config user.name "Ryan Studio"
           git config user.email "ryan-studio@users.noreply.github.com"
+
+      - name: Commit
+        run: |
           git add deploy-build.json
           git commit -m "نشر: ${{ github.event.inputs.message }}" --allow-empty
-          git pull --rebase origin "${{ github.ref_name }}"
-          git push
+
+      - name: Pull rebase
+        run: git pull --rebase origin "${{ github.ref_name }}"
+
+      - name: Push
+        run: git push
 
       - name: Mark done
         run: echo "Deploy finished successfully"

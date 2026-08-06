@@ -162,6 +162,22 @@ button{font-family:inherit;cursor:pointer}
 .pubstage.er{color:#f87171;border-color:rgba(248,113,113,.4)}
 @keyframes pspulse{50%{box-shadow:0 0 0 3px rgba(99,102,241,.15)}}
 .pubsteps{margin-top:10px;display:grid;gap:6px}
+.pubwarn{display:flex;align-items:center;gap:10px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:var(--yel);border-radius:11px;padding:10px 14px;font-size:13px;font-weight:700;margin-bottom:14px}
+.pubwarn .pw-ic{font-size:16px}
+.pubresult{border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--line)}
+.pubresult.ok{background:rgba(74,222,128,.09);border-color:rgba(74,222,128,.45)}
+.pubresult.er{background:rgba(248,113,113,.09);border-color:rgba(248,113,113,.45)}
+.pubresult.wr{background:rgba(251,191,36,.09);border-color:rgba(251,191,36,.4)}
+.pubresult h4{margin:0 0 10px;display:flex;align-items:center;gap:8px;font-size:14px}
+.pubresult .plinks{display:grid;gap:7px;margin-bottom:10px}
+.pubresult .plink{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:7px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;color:var(--txt);text-decoration:none;word-break:break-all}
+.pubresult .plink:hover{border-color:var(--acc)}
+.pubresult .pfail{background:#24161a;border:1px solid rgba(248,113,113,.35);border-radius:9px;padding:9px 11px;font-size:12.5px;color:#fca5a5;margin-bottom:10px;font-family:Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:110px;overflow-y:auto}
+.rollwrap{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.4);border-radius:11px;padding:12px 14px;margin-bottom:14px}
+.rollwrap .pl{margin:0 0 8px}
+.sha{font-family:Consolas,monospace;font-size:11px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--acc);white-space:nowrap}
+.htime{font-size:11px;color:var(--mut);white-space:nowrap}
+.hrow .hact{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .pubstep{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:var(--mut)}
 .pubstep .st-ic{font-size:13px;width:20px;text-align:center}
 .pubstep.done{color:#4ade80}
@@ -348,17 +364,24 @@ button{font-family:inherit;cursor:pointer}
     <div class="pubmsg">
       <input id="pubMsgInput" placeholder="وصف النشر (اختياري)" maxlength="120" />
       <button class="btn acc" id="btnPublish">🚀 نشر الموقع الآن</button>
+      <button class="btn blu" id="btnRollback" title="الرجوع إلى آخر إصدار ناجح">↩️ تراجع</button>
       <button class="btn" id="btnWorkflowOk">📦 تأكد من جاهزية Workflow</button>
       <button class="btn" id="btnSetupWorkflow">⚙️ إنشاء Workflow تلقائيًا</button>
     </div>
+    <div class="pubwarn" id="pubWarn" style="display:none"><span class="pw-ic">ℹ️</span><span id="pubWarnTxt"></span></div>
     <div class="progwrap" id="pubProg" style="display:none">
       <div class="pl"><span id="pubProgLabel">جارٍ النشر...</span><span class="pc" id="pubProgPct">0%</span></div>
       <div class="bar"><i id="pubProgFill"></i></div>
       <div class="pubstages" id="pubStages"></div>
       <div class="pubsteps" id="pubSteps"></div>
     </div>
+    <div class="rollwrap" id="rollProg" style="display:none">
+      <div class="pl"><span id="rollLabel">جارٍ التراجع...</span><span class="pc" id="rollPct">0%</span></div>
+      <div class="bar"><i id="rollFill"></i></div>
+    </div>
+    <div class="pubresult" id="pubResult" style="display:none"></div>
     <div class="dcard">
-      <h4>🕘 سجل عمليات النشر</h4>
+      <h4>🕘 سجل عمليات النشر <small>(آخر 20)</small></h4>
       <div class="hlist" id="pubHistory"><p class="mini">لا يوجد سجل بعد.</p></div>
     </div>
   </section>
@@ -757,12 +780,30 @@ async function gh(path, opts){
   opts.headers["X-GitHub-Api-Version"] = "2022-11-28";
   if (TOKEN) opts.headers.Authorization = "Bearer " + TOKEN;
   if (opts.body) opts.headers["Content-Type"] = "application/json";
-  var res = await fetch("https://api.github.com"+path, opts);
-  if (res.status===401) throw new Error("الرمز غير صالح (401)");
-  if (res.status===403) { try { var j=await res.json(); throw new Error("تم تجاوز الحد: "+j.message); }catch(e){ throw new Error("تم تجاوز حد GitHub (403)"); } }
-  if (res.status===404) throw new Error("غير موجود (404)");
-  if (!res.ok) { var t=""; try{ t=JSON.stringify(await res.json()).slice(0,200); }catch(e){} throw new Error("خطأ "+res.status+" "+t); }
-  return res;
+  var method = (opts.method || "GET").toUpperCase();
+  var read = method === "GET";
+  var attempts = 0, maxA = read ? 3 : 2;
+  while (true) {
+    attempts++;
+    var res;
+    try { res = await fetch("https://api.github.com"+path, opts); }
+    catch(e){
+      if (attempts < maxA) { await sleep(900 * Math.pow(2, attempts - 1)); continue; }
+      throw new Error("تعذر الاتصال بـ GitHub: " + e.message);
+    }
+    if (res.status === 401) throw new Error("الرمز غير صالح (401)");
+    if (res.status === 403) {
+      var rl = (res.headers && res.headers.get) ? res.headers.get("x-ratelimit-remaining") : null;
+      var msg = "تم تجاوز حد GitHub (403)";
+      try { var j3 = await res.json(); if (j3 && j3.message) msg = "تم تجاوز الحد: " + j3.message; } catch(e){}
+      if (rl === "0" && attempts < maxA) { await sleep(1500 * attempts); continue; }
+      throw new Error(msg);
+    }
+    if (res.status === 404) throw new Error("غير موجود (404)");
+    if ((res.status === 429 || res.status >= 500) && attempts < maxA) { await sleep(900 * Math.pow(2, attempts - 1)); continue; }
+    if (!res.ok) { var t=""; try{ t=JSON.stringify(await res.json()).slice(0,200); }catch(e){} throw new Error("خطأ "+res.status+" "+t); }
+    return res;
+  }
 }
 
 async function loadTree(silent){
@@ -1178,7 +1219,7 @@ function switchSec(name){
   if (side) side.style.display = hiddenFiles ? "none" : "";
   if (main) main.style.display = hiddenFiles ? "none" : "";
   localStorage.setItem("ry_sec", name);
-  if (name === "publish") renderPubStatus();
+  if (name === "publish") { renderPubStatus(); refreshPublishState(); }
   if (name === "github") renderGithub();
   if (name === "images") renderImages();
   if (name === "trans") renderTrans();
@@ -1266,10 +1307,14 @@ var WORKFLOW_YAML = [
   "          echo \"{\\\"build\\\": $(date +%s%3N), \\\"when\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"who\\\": \\\"ryan-studio\\\", \\\"msg\\\": \\\"${{ github.event.inputs.message }}\\\"}\" > deploy-build.json",
   "          git config user.name \"Ryan Studio\"",
   "          git config user.email \"ryan-studio@users.noreply.github.com\"",
+  "      - name: Commit",
+  "        run: |",
   "          git add deploy-build.json",
   "          git commit -m \"نشر: ${{ github.event.inputs.message }}\" --allow-empty",
-  "          git pull --rebase origin \"${{ github.ref_name }}\"",
-  "          git push"
+  "      - name: Pull rebase",
+  "        run: git pull --rebase origin \"${{ github.ref_name }}\"",
+  "      - name: Push",
+  "        run: git push"
 ].join("\n");
 function ensureWorkflow(){
   return TREE && TREE.some(function(x){ return x.path === ".github/workflows/deploy.yml"; });
@@ -1282,24 +1327,41 @@ async function setupWorkflow(){
   } catch(e){ toast("فشل إنشاء Workflow: " + e.message, "er"); }
 }
 function pubHistory(){ var a = load2("ry_pub_hist", []); return Array.isArray(a) ? a : []; }
+function runDur(created, updated){
+  try {
+    var c = new Date(created).getTime(), u = new Date(updated).getTime();
+    if (!isFinite(c) || !isFinite(u) || u < c) return "";
+    var s = Math.round((u - c) / 1000);
+    if (s < 60) return s + " ث";
+    var m = Math.floor(s / 60), r = s % 60;
+    return m + " د " + (r ? r + " ث" : "");
+  } catch(e){ return ""; }
+}
 function addPubHist(r){
   var a = pubHistory();
   var i = a.findIndex(function(x){ return x.id === r.id; });
-  var item = { id: r.id, name: r.name, status: r.status, conclusion: r.conclusion || "", message: (r.head_commit && r.head_commit.message) || "", created: r.created_at, updated: r.updated_at, html: r.html_url };
+  var item = { id: r.id, name: r.name, run_number: r.run_number, status: r.status, conclusion: r.conclusion || "", message: (r.head_commit && r.head_commit.message) || "", head_sha: r.head_sha || "", created: r.created_at, updated: r.updated_at, html: r.html_url, dur: runDur(r.created_at, r.updated_at) };
   if (i > -1) a[i] = item; else a.unshift(item);
-  if (a.length > 60) a.length = 60;
+  if (a.length > 20) a.length = 20;
   save2("ry_pub_hist", a);
+}
+function pubState(r){
+  if (r.conclusion === "success") return { cls: "ok", t: "✅ نجح" };
+  if (r.conclusion === "failure") return { cls: "er", t: "❌ فشل" };
+  if (r.conclusion === "cancelled") return { cls: "wr", t: "⚠️ أُلغي" };
+  if (r.status === "in_progress") return { cls: "run", t: "⏳ جاري التنفيذ" };
+  if (r.status === "queued") return { cls: "run", t: "⏳ في الانتظار" };
+  if (r.status === "completed") return { cls: "wr", t: "ℹ️ مكتمل" };
+  return { cls: "wr", t: "ℹ️ غير معروف" };
 }
 function renderPubStatus(){
   var runs = pubHistory();
   var last = runs[0];
   var line = $("pubLastLine"), badge = $("pubBadge"), btn = $("btnOpenRun");
-  if (!last) { if (line) line.textContent = "لم يُنشر بعد من الاستوديو."; if (badge) badge.textContent = "جاهز"; if (badge) badge.className = "badge"; if (btn) btn.style.display = "none"; return; }
-  if (line) line.textContent = fmtDate(last.updated || last.created) + " — " + (last.message || "نشر");
-  if (badge) {
-    badge.textContent = last.conclusion === "success" ? "✔ نجح" : last.conclusion === "failure" || last.conclusion === "cancelled" ? "✖ فشل" : (last.status === "completed" ? "اكتمل" : "جارٍ النشر...");
-    badge.className = "badge " + (last.conclusion === "success" ? "ok" : (last.conclusion === "failure" || last.conclusion === "cancelled" ? "er" : "run"));
-  }
+  if (!last) { if (line) line.textContent = "لم يُنشر بعد من الاستوديو."; if (badge) badge.textContent = "جاهز"; if (badge) badge.className = "badge"; if (btn) btn.style.display = "none"; renderPubHistory(); return; }
+  var st = pubState(last);
+  if (line) line.textContent = fmtDate(last.updated || last.created) + " — " + (last.message || "نشر") + (last.dur ? " · ⏱ " + last.dur : "");
+  if (badge) { badge.textContent = st.t; badge.className = "badge " + st.cls; }
   if (btn) btn.style.display = last.html ? "" : "none";
   if (btn) btn.onclick = function(){ if (last.html) window.open(last.html, "_blank"); };
   renderPubHistory();
@@ -1310,23 +1372,161 @@ function renderPubHistory(){
   var list = pubHistory();
   if (!list.length) { wrap.innerHTML = '<p class="mini">لا يوجد سجل بعد.</p>'; return; }
   var html = "";
-  list.slice(0, 15).forEach(function(r){
-    var state = r.conclusion === "success" ? "ok" : (r.conclusion === "failure" || r.conclusion === "cancelled" ? "er" : (r.status === "completed" ? "wr" : "run"));
-    var stxt = r.conclusion === "success" ? "✔ نجح" : r.conclusion === "failure" ? "✖ فشل" : r.conclusion === "cancelled" ? "↺ أُلغي" : (r.status === "completed" ? "اكتمل" : "⏳ قيد التنفيذ");
-    html += '<div class="hrow"><span class="hd"><span class="badge ' + state + '">' + stxt + "</span> " + esc((r.message || "نشر").slice(0, 60)) + '</span><span class="hm">' + fmtDate(r.updated || r.created) + "</span>";
-    if (r.html) html += '<span class="acts"><a class="btn sm blu" href="' + esc(r.html) + '" target="_blank">فتح</a></span>';
-    html += "</div>";
+  list.slice(0, 20).forEach(function(r){
+    var st = pubState(r);
+    var sha = r.head_sha ? '<span class="sha">' + esc(r.head_sha.slice(0, 7)) + '</span>' : "";
+    var dur = r.dur ? '<span class="htime">⏱ ' + esc(r.dur) + "</span>" : "";
+    var t = '<span class="htime">' + fmtDate(r.created || r.updated) + "</span>";
+    html += '<div class="hrow"><span class="hd"><span class="badge ' + st.cls + '">' + st.t + '</span> ' + esc((r.message || "نشر").slice(0, 60)) + "</span>" +
+      '<span class="hact">' + t + dur + sha + "</span>" +
+      '<span class="acts">' +
+      (r.head_sha ? '<a class="btn sm" href="https://github.com/' + encodeURIComponent(CFG.owner) + "/" + encodeURIComponent(CFG.repo) + "/commit/" + esc(r.head_sha) + '" target="_blank" title="رابط الـCommit">🔗</a>' : "") +
+      (r.html ? '<a class="btn sm blu" href="' + esc(r.html) + '" target="_blank" title="فتح التشغيل في Actions">👀</a>' : "") +
+      "</span></div>";
   });
   wrap.innerHTML = html;
 }
+function updatePublishUI(state){
+  DEPLOY.busy = state === "running";
+  var b = $("btnPublish"), q = $("btnPublishQuick"), rb = $("btnRollback"), w = $("pubWarn"), wt = $("pubWarnTxt");
+  if (state === "running") {
+    if (b) { b.disabled = true; b.textContent = "⏳ جاري التنفيذ..."; }
+    if (q) q.disabled = true;
+    if (rb) rb.disabled = true;
+    if (w && wt) { w.style.display = "flex"; wt.textContent = "توجد عملية نشر قيد التنفيذ، يرجى الانتظار حتى تنتهي."; }
+  } else {
+    if (b) { b.disabled = false; b.textContent = "🚀 نشر الموقع الآن"; }
+    if (q) q.disabled = false;
+    if (rb) rb.disabled = false;
+    if (w) w.style.display = "none";
+  }
+}
+function showPubResult(kind, title, rows){
+  var box = $("pubResult");
+  if (!box) return;
+  var cls = kind === "success" ? "ok" : kind === "fail" ? "er" : "wr";
+  var ic = kind === "success" ? "🎉" : kind === "fail" ? "❌" : "⚠️";
+  var h = "<h4>" + ic + " " + esc(title) + "</h4>";
+  if (rows && rows.length) {
+    h += '<div class="plinks">';
+    rows.forEach(function(r){
+      if (r.href) h += '<a class="plink" href="' + esc(r.href) + '" target="_blank">' + esc((r.ic ? r.ic + " " : "") + r.label) + "</a>";
+      else h += '<div class="plink">' + esc((r.ic ? r.ic + " " : "") + r.label) + "</div>";
+    });
+    h += "</div>";
+  }
+  box.innerHTML = h;
+  box.className = "pubresult " + cls;
+  box.style.display = "";
+  try { box.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+}
+function showPubSuccess(run){
+  var dur = runDur(run.created_at, run.updated_at);
+  var rows = [
+    { ic: "🌐", label: "الموقع المنشور: " + siteUrl(""), href: siteUrl("") },
+    { ic: "🚀", label: "التشغيل في GitHub Actions #" + (run.run_number || run.id), href: run.html_url || ("https://github.com/" + encodeURIComponent(CFG.owner) + "/" + encodeURIComponent(CFG.repo) + "/actions/runs/" + run.id) },
+    { ic: "📝", label: "الـCommit المنشور: " + ((run.head_sha || "").slice(0, 12)), href: run.head_sha ? ("https://github.com/" + encodeURIComponent(CFG.owner) + "/" + encodeURIComponent(CFG.repo) + "/commit/" + run.head_sha) : "" },
+    { ic: "⏱", label: "وقت انتهاء النشر: " + fmtDate(run.updated_at) + (dur ? " · المدة: " + dur : ""), href: "" }
+  ];
+  showPubResult("success", "تم نشر الموقع بنجاح", rows);
+}
+function showPubFail(reason, runHtml){
+  var box = $("pubResult");
+  if (!box) return;
+  var h = "<h4>❌ فشل النشر</h4>" + (reason ? '<div class="pfail">' + esc(reason) + "</div>" : "");
+  if (runHtml) h += '<div class="plinks"><a class="plink" href="' + esc(runHtml) + '" target="_blank">📜 عرض السجل الكامل (Logs)</a></div>';
+  box.innerHTML = h;
+  box.className = "pubresult er";
+  box.style.display = "";
+  try { box.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+}
+async function fetchFailReason(runId){
+  try {
+    var jobs = await ghJson(repoBase() + "/actions/runs/" + runId + "/jobs");
+    var bad = null;
+    (jobs.jobs || []).forEach(function(j){ if (!bad && j.conclusion && j.conclusion !== "success") bad = j; });
+    if (!bad) return "فشل التشغيل — بدون تحديد الخطوة المسببة.";
+    var badStep = null;
+    (bad.steps || []).forEach(function(s){ if (!badStep && s.conclusion && s.conclusion !== "success") badStep = s; });
+    var res = await gh("/actions/jobs/" + bad.id + "/logs");
+    var txt = await res.text();
+    var lines = txt.split(/\r?\n/).map(function(l){ return l.replace(/^[^\s]+\s+/, ""); });
+    var errs = lines.filter(function(l){ return l.indexOf("##[error]") > -1 || /(fatal:|error:|Cannot |denied |No such |exit code)/i.test(l); });
+    var pick = errs.length ? errs[errs.length - 1] : null;
+    if (!pick) {
+      var arr = lines.filter(function(l){ return /(Bump deploy marker|Commit|Pull rebase|Push)/.test(l); });
+      pick = arr.length ? arr[arr.length - 1] : lines[lines.length - 1];
+    }
+    pick = String(pick || "").replace(/##\[error\]/g, "").replace(/\u001b\[[0-9;]*m/g, "").trim().slice(0, 300);
+    if (badStep && badStep.name) pick = "الخطوة الفاشلة: " + badStep.name + "\n" + pick;
+    return pick || ("فشل الخطوة: " + (badStep && badStep.name || "غير معروف"));
+  } catch(e){ return "تعذر جلب سبب الفشل: " + e.message; }
+}
+async function checkAnyRunning(){
+  try {
+    var j = await ghJson(repoBase() + "/actions/workflows/deploy.yml/runs?status=in_progress&per_page=1");
+    var runs = (j && j.workflow_runs) || [];
+    return runs.length ? runs[0] : null;
+  } catch(e){ return null; }
+}
+async function refreshPublishState(){
+  if (DEPLOY.timer || DEPLOY.busy) return;
+  if (!TOKEN) return;
+  try {
+    var running = await checkAnyRunning();
+    updatePublishUI(running ? "running" : "idle");
+  } catch(e){}
+}
+async function preflightCheck(){
+  var out = [];
+  function add(ok, txt){ out.push({ ok: ok, txt: txt }); }
+  try {
+    var res1 = await gh(repoBase());
+    add(res1.status === 200, "✅ الرمز صالح والاتصال بالمستودع يعمل");
+  } catch(e){ add(false, "❌ فشل التحقق من الرمز: " + e.message); return out; }
+  try {
+    var resB = await gh(repoBase() + "/branches/" + encodeURIComponent(CFG.branch));
+    add(resB.status === 200, "✅ الفرع «" + CFG.branch + "» موجود");
+  } catch(e){ add(false, "❌ الفرع «" + CFG.branch + "» غير موجود"); }
+  try {
+    var resW = await gh(repoBase() + "/contents/.github/workflows/deploy.yml");
+    add(resW.status === 200, "✅ ملف Workflow موجود (صلاحية Contents ✔)");
+  } catch(e){ add(false, "❌ ملف Workflow غير موجود — أنشئه بزر «إنشاء Workflow تلقائيًا»"); }
+  try {
+    var resA = await gh(repoBase() + "/actions/workflows/deploy.yml");
+    add(resA.status === 200, "✅ GitHub Actions يقرأ الـ Workflow (صلاحية Actions ✔)");
+  } catch(e){ add(false, "⚠️ تعذّرت قراءة الـ Workflow عبر Actions — تحقق من صلاحية Actions"); }
+  add(true, "ℹ️ صلاحية Workflows: تثبت تلقائيًا عند أول تشغيل ناجح");
+  return out;
+}
+function renderPreflight(list){
+  var box = $("pubResult");
+  if (!box) return;
+  var h = '<h4>🔍 فحص ما قبل النشر</h4><div class="plinks">';
+  list.forEach(function(c){ h += '<div class="plink">' + esc(c.txt) + "</div>"; });
+  h += "</div>";
+  box.innerHTML = h;
+  box.className = "pubresult wr";
+  box.style.display = "";
+}
 async function startPublish(msg){
-  if (DEPLOY.timer) return toast("نشر جارٍ بالفعل — انتظر انتهاءه","wr");
+  if (DEPLOY.timer || DEPLOY.busy) { updatePublishUI("running"); return toast("توجد عملية نشر قيد التنفيذ، يرجى الانتظار حتى تنتهي.","wr"); }
   if (!TOKEN) return showLogin();
   if (!ensureWorkflow()) { toast("لا يوجد Workflow في المستودع. أنشئه أولًا بزر «إنشاء Workflow تلقائيًا».","wr"); switchSec("publish"); return; }
+  DEPLOY.busy = true;
+  updatePublishUI("running");
+  try {
+    var running = await checkAnyRunning();
+    if (running) { updatePublishUI("idle"); return toast("توجد عملية نشر قيد التنفيذ، يرجى الانتظار حتى تنتهي.","wr"); }
+  } catch(e){}
+  var pf = await preflightCheck();
+  renderPreflight(pf);
+  var hardFail = pf.some(function(c){ return c.txt.indexOf("❌") === 0; });
+  if (hardFail) { updatePublishUI("idle"); return toast("فشل فحص ما قبل النشر — لا يمكن النشر الآن","er"); }
   var before = Date.now();
   try {
     await gh(repoBase() + "/actions/workflows/deploy.yml/dispatches", { method: "POST", body: JSON.stringify({ ref: CFG.branch, inputs: { message: msg || "" } }) });
-  } catch(e){ toast("فشل إرسال النشر: " + e.message, "er"); return; }
+  } catch(e){ updatePublishUI("idle"); return toast("فشل إرسال النشر: " + e.message, "er"); }
   logActivity("🚀", "طلب نشر: " + (msg || "بدون وصف"));
   toast("تم إرسال طلب النشر — جارٍ المتابعة ✔");
   await findPublishRun(before);
@@ -1342,15 +1542,19 @@ async function findPublishRun(before){
       if (mine) { DEPLOY.runId = mine.id; DEPLOY.last = mine; addPubHist(mine); startPollRun(mine.id); return; }
     } catch(e){}
   }
+  updatePublishUI("idle");
   toast("لم يتم العثور على التشغيل — تحقق من تبويب Actions","wr");
 }
 var PUB_STAGES = [
   { k: "check", t: "التحقق من البيانات", ic: "🔍" },
-  { k: "upload", t: "رفع الملفات", ic: "⬆️" },
   { k: "commit", t: "إنشاء Commit", ic: "📝" },
+  { k: "pull", t: "git pull --rebase", ic: "🔀" },
+  { k: "push", t: "git push", ic: "⬆️" },
   { k: "run", t: "تشغيل Workflow", ic: "🚀" },
-  { k: "wait", t: "انتظار النشر", ic: "⏳" },
-  { k: "done", t: "اكتمل النشر", ic: "🎉" }
+  { k: "wait", t: "انتظار GitHub Actions", ic: "⏳" },
+  { k: "pages", t: "انتظار GitHub Pages", ic: "🌐" },
+  { k: "http", t: "التحقق من استجابة الموقع", ic: "🔎" },
+  { k: "done", t: "اكتمال النشر", ic: "🎉" }
 ];
 function pubStagesHTML(state){
   return PUB_STAGES.map(function(s){
@@ -1387,13 +1591,15 @@ function startPollRun(id){
       if (label) label.textContent = run.status === "completed" ? "اكتمل النشر" : "جارٍ النشر... (التشغيل #" + run.run_number + ")";
       var stepStat = {};
       all.forEach(function(s){ stepStat[s.name] = s.status; });
-      var state = { check: "ok", upload: "", commit: "", run: "", wait: "", done: "" };
-      if (stepStat["Checkout"] === "in_progress") state.upload = "act";
-      if (stepStat["Checkout"] === "completed") state.upload = "ok";
-      if (stepStat["Bump deploy marker"] === "in_progress") state.commit = "act";
-      if (stepStat["Bump deploy marker"] === "completed") state.commit = "ok";
-      if (run.status === "queued" || run.status === "in_progress") state.run = "act";
-      if (run.status === "completed") { state.run = "ok"; state.wait = "act"; }
+      var state = { check: "ok", commit: "", pull: "", push: "", run: "", wait: "", pages: "", http: "", done: "" };
+      if (stepStat["Commit"] === "in_progress") state.commit = "act";
+      if (stepStat["Commit"] === "completed") state.commit = "ok";
+      if (stepStat["Pull rebase"] === "in_progress") state.pull = "act";
+      if (stepStat["Pull rebase"] === "completed") state.pull = "ok";
+      if (stepStat["Push"] === "in_progress") state.push = "act";
+      if (stepStat["Push"] === "completed") state.push = "ok";
+      if (run.status === "queued" || run.status === "in_progress") { state.run = "act"; state.wait = "act"; }
+      if (run.status === "completed") { state.run = "ok"; state.wait = "ok"; }
       if (st) st.innerHTML = pubStagesHTML(state);
       if (steps) {
         var html = "";
@@ -1411,58 +1617,120 @@ function startPollRun(id){
         addPubHist(run);
         renderPubStatus();
         logActivity(ok ? "✅" : "❌", "انتهى النشر: " + (ok ? "نجاح" : run.conclusion));
-        if (ok) startPagesWatch();
-        else {
-          if (st) st.innerHTML = pubStagesHTML({ check: "ok", upload: "ok", commit: "ok", run: "ok", wait: "er", done: "er" });
+        if (ok) {
+          startPagesWatch(run);
+        } else {
+          if (st) st.innerHTML = pubStagesHTML({ check: "ok", commit: "ok", pull: "ok", push: "ok", run: "ok", wait: "er", pages: "er", http: "er", done: "er" });
+          showPubFail("جارٍ تحليل سبب الفشل...", run.html_url);
+          fetchFailReason(run.id).then(function(reason){ showPubFail(reason, run.html_url); });
           toast("فشل النشر: " + run.conclusion, "er");
+          updatePublishUI("idle");
         }
         if (getAuto().notify) notify("نشر ريان", ok ? "تم نشر الموقع بنجاح ✔" : "فشل النشر: " + run.conclusion, ok);
       }
     }).catch(function(e){ logError("poll: " + e.message); });
   }, 3000);
 }
-async function startPagesWatch(){
+async function startPagesWatch(run){
   var st = $("pubStages"), label = $("pubProgLabel"), pct = $("pubProgPct"), fill = $("pubProgFill");
-  var state = { check: "ok", upload: "ok", commit: "ok", run: "ok", wait: "act", done: "" };
+  var state = { check: "ok", commit: "ok", pull: "ok", push: "ok", run: "ok", wait: "ok", pages: "act", http: "", done: "" };
   if (label) label.textContent = "انتظار بناء الموقع على GitHub Pages...";
   if (pct) pct.textContent = "—";
-  if (fill) fill.style.width = "99%";
+  if (fill) fill.style.width = "96%";
   if (st) st.innerHTML = pubStagesHTML(state);
-  for (var i = 0; i < 30; i++) {
+  var built = false, reason = "";
+  for (var i = 0; i < 36; i++) {
     await sleep(5000);
     try {
       var res = await gh(repoBase() + "/pages/builds/latest");
       var b = await res.json();
       if (!res.ok) throw new Error((b && b.message) || "غير متاح");
-      if (b.status === "built") {
-        state.wait = "ok"; state.done = "ok";
-        if (st) st.innerHTML = pubStagesHTML(state);
-        if (label) label.textContent = "تم نشر الموقع بنجاح 🎉";
-        if (pct) pct.textContent = "100%";
-        if (fill) fill.style.width = "100%";
-        logActivity("🎉", "اكتمل نشر الموقع");
-        if (getAuto().notify) notify("نشر ريان", "تم نشر الموقع بنجاح ✔");
-        toast("تم نشر الموقع بنجاح ✔");
-        return;
-      }
-      if (b.status === "errored") {
-        state.wait = "er"; state.done = "er";
-        if (st) st.innerHTML = pubStagesHTML(state);
-        toast("تعذر بناء الموقع: " + ((b.error && b.error.message) || "خطأ في البناء"), "er");
-        return;
-      }
-    } catch(e) {
-      logError("pages watch: " + e.message);
-      state.wait = "ok"; state.done = "ok";
-      if (st) st.innerHTML = pubStagesHTML(state);
-      if (label) label.textContent = "اكتمل النشر — الموقع يُبنى خلال 1–2 دقيقة 🎉";
-      toast("اكتمل النشر — الموقع يُبنى خلال دقيقة أو دقيقتين ✔");
-      return;
-    }
+      if (b.status === "built") { built = true; break; }
+      if (b.status === "errored") { reason = (b.error && b.error.message) || "خطأ في البناء"; break; }
+    } catch(e) { reason = e.message; break; }
   }
-  state.wait = "ok"; state.done = "ok";
-  if (st) st.innerHTML = pubStagesHTML(state);
-  toast("اكتمل النشر — يُبنى الموقع حاليًا ✔");
+  if (built) {
+    state.pages = "ok"; state.http = "act";
+    if (st) st.innerHTML = pubStagesHTML(state);
+    if (label) label.textContent = "فحص استجابة الموقع (HTTP)...";
+    var httpOk = false;
+    try {
+      var hr = await fetch(siteUrl(""), { cache: "no-store" });
+      httpOk = hr.status === 200;
+    } catch(e){ httpOk = false; }
+    if (!httpOk) {
+      try { await fetch(siteUrl(""), { mode: "no-cors", cache: "no-store" }); httpOk = true; } catch(e2){ httpOk = false; }
+    }
+    if (httpOk) {
+      state.http = "ok"; state.done = "ok";
+      if (st) st.innerHTML = pubStagesHTML(state);
+      if (label) label.textContent = "تم نشر الموقع بنجاح 🎉";
+      if (pct) pct.textContent = "100%";
+      if (fill) fill.style.width = "100%";
+      logActivity("🎉", "اكتمل نشر الموقع");
+      showPubSuccess(run);
+      if (getAuto().notify) notify("نشر ريان", "تم نشر الموقع بنجاح ✔");
+      toast("تم نشر الموقع بنجاح ✔");
+    } else {
+      state.http = "er";
+      if (st) st.innerHTML = pubStagesHTML(state);
+      showPubResult("success", "تم النشر — الموقع لم يستجب للفحص بعد", [{ ic: "ℹ️", label: "البناء اكتمل، لكن يبدو أن الموقع لم يصل للاستجابة بعد (جرّب فتحه خلال دقيقة).", href: "" }]);
+      toast("تم النشر — الموقع يظهر خلال دقيقة أو دقيقتين ✔");
+    }
+    updatePublishUI("idle");
+    renderPubStatus();
+    return;
+  }
+  if (reason) {
+    state.pages = "er"; state.http = "er"; state.done = "er";
+    if (st) st.innerHTML = pubStagesHTML(state);
+    showPubFail("تعذر بناء الموقع: " + reason, run.html_url);
+    if (label) label.textContent = "تعذر اكتمال البناء";
+    toast("تعذر بناء الموقع: " + reason, "er");
+  } else {
+    state.pages = "ok"; state.http = "ok"; state.done = "ok";
+    if (st) st.innerHTML = pubStagesHTML(state);
+    if (label) label.textContent = "اكتمل النشر — يُبنى الموقع حاليًا 🎉";
+    showPubSuccess(run);
+    toast("اكتمل النشر — يُبنى الموقع حاليًا ✔");
+  }
+  updatePublishUI("idle");
+  renderPubStatus();
+}
+async function doRollback(){
+  if (DEPLOY.timer || DEPLOY.busy) return toast("انتظر حتى تنتهي العملية الحالية أولًا","wr");
+  if (!TOKEN) return showLogin();
+  var hist = pubHistory();
+  var lastOk = null;
+  hist.forEach(function(r){ if (!lastOk && r.conclusion === "success") lastOk = r; });
+  if (!lastOk || !lastOk.head_sha) return toast("لا يوجد إصدار ناجح سابق للتراجع إليه","wr");
+  var sha = lastOk.head_sha;
+  if (!confirm("الرجوع إلى آخر إصدار ناجح؟\n\nالـCommit: " + sha.slice(0, 12) + "\n" + (lastOk.message || "") + "\n" + fmtDate(lastOk.created) + "\n\nسيُعاد الفرع «" + CFG.branch + "» إلى هذا الإصدار (force). كل التعديلات الأحدث ستُهمل.\n\nمتابعة؟")) return;
+  if (!confirm("تأكيد أخير: إعادة الفرع «" + CFG.branch + "» إلى " + sha.slice(0, 12) + "؟")) return;
+  updatePublishUI("running");
+  var rp = $("rollProg"), rl = $("rollLabel"), rpct = $("rollPct"), rf = $("rollFill");
+  if (rp) rp.style.display = "";
+  if (rl) rl.textContent = "جارٍ تحضير الإصدار الناجح...";
+  if (rpct) rpct.textContent = "20%";
+  if (rf) rf.style.width = "20%";
+  try {
+    if (rl) rl.textContent = "إعادة الفرع «" + CFG.branch + "» إلى " + sha.slice(0, 12) + "...";
+    if (rpct) rpct.textContent = "60%";
+    if (rf) rf.style.width = "60%";
+    await gh(repoBase() + "/git/refs/heads/" + CFG.branch, { method: "PATCH", body: JSON.stringify({ sha: sha, force: true }) });
+    if (rl) rl.textContent = "تم التراجع — إعادة تحميل الملفات...";
+    if (rpct) rpct.textContent = "90%";
+    if (rf) rf.style.width = "90%";
+    await loadTree(true);
+    if (rl) rl.textContent = "✔ تم التراجع إلى " + sha.slice(0, 12);
+    if (rpct) rpct.textContent = "100%";
+    if (rf) rf.style.width = "100%";
+    logActivity("↩️", "تراجع إلى " + sha.slice(0, 12));
+    toast("تم التراجع إلى الإصدار الناجح " + sha.slice(0, 12) + " ✔");
+    maybeAutoPublish("تراجع إلى " + sha.slice(0, 12));
+  } catch(e){ toast("فشل التراجع: " + e.message, "er"); logError("rollback: " + e.message); }
+  updatePublishUI("idle");
+  setTimeout(function(){ if (rp) rp.style.display = "none"; }, 4000);
 }
 
 /* ================= GitHub section ================= */
@@ -2317,6 +2585,7 @@ function initStudio(){
   initSectionNav();
   $("btnPublish").onclick = function(){ var m = $("pubMsgInput").value.trim(); startPublish(m); };
   $("btnPublishQuick").onclick = function(){ switchSec("publish"); var m = $("pubMsgInput").value.trim(); startPublish(m); };
+  $("btnRollback").onclick = doRollback;
   $("btnSetupWorkflow").onclick = setupWorkflow;
   $("btnWorkflowOk").onclick = function(){ if (ensureWorkflow()) toast("Workflow موجود وجاهز ✔"); else toast("غير موجود — أنشئه الآن","wr"); };
   $("btnPermNotif").onclick = enableNotifs;
