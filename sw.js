@@ -7,9 +7,11 @@ self.addEventListener("install", function (e) {
         return c.addAll([
           "./", "./index.html", "./admin.html", "./games.html", "./new.html",
           "./game.html", "./game-the-supper.html", "./lessons.html", "./download.html",
-          "./request.html", "./contact.html", "./minigames.html",
+          "./request.html", "./contact.html", "./minigames.html", "./404.html",
+          "./team.html", "./problems.html",
           "./style.css", "./ry-config.js", "./ry-api.js", "./data.js", "./app.js",
-          "./home.js", "./minigames.js", "./manifest.json"
+          "./home.js", "./minigames.js", "./manifest.json",
+          "./favicon.ico", "./icons/icon-192.png", "./icons/icon-512.png"
         ]);
       })
       .then(function () { return self.skipWaiting(); })

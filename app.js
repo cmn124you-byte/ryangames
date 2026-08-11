@@ -9,6 +9,15 @@
   var K_SETTINGS = "ry_settings";
   var K_REQUESTS = "ry_requests";
   var K_COMMENTS = "ry_comments";
+  var K_USERS = "ry_users";
+  var K_SESSION = "ry_session";
+  var K_REPORTS = "ry_reports";
+  var K_MYRATINGS = "ry_myratings";
+  var K_MYVOTES = "ry_myvotes";
+  var K_NOTIF_SEEN = "ry_notif_seen";
+var K_CONTROL = "ry_control";
+var K_VISITS = "ry_visits";
+var K_DLLOG = "ry_dllog";
   var S_ADMIN = "ry_admin_ok";
   var S_OWNER = "ry_owner_ok";
   var OWNER_EMAIL = "cmn124you@gmail.com";
@@ -22,7 +31,24 @@
     news: [],
     settings: null,
     requests: [],
+    reports: [],
+    control: null,
   };
+
+  function defaultControl() {
+    return {
+      news: [],
+      pages: [],
+      activity: [],
+      loginlog: [],
+      notifOutbox: [],
+      banlist: [],
+      backups: [],
+      security: { pin: "", twofa: false, twofaSecret: "", logoutBadge: 0 },
+      uploads: [],
+      dllog: [],
+    };
+  }
 
   /* ---------- Storage helpers ---------- */
   function store(key, value) {
@@ -80,14 +106,14 @@
       var def = mergeDefaults(u, DEFAULT_UPDATES);
       return Object.assign({}, def, u);
     });
-    if (load("ry_games_v", 0) < 1) {
+    if (load("ry_games_v", 0) < 2) {
       var haveG = {};
       data.games.forEach(function (g) { haveG[g.id] = true; });
       DEFAULT_GAMES.forEach(function (d) { if (!haveG[d.id]) data.games.push(Object.assign({}, d)); });
       var haveU = {};
       data.updates.forEach(function (u) { haveU[u.id] = true; });
       DEFAULT_UPDATES.forEach(function (d) { if (!haveU[d.id]) data.updates.push(Object.assign({}, d)); });
-      store("ry_games_v", 1);
+      store("ry_games_v", 2);
       store(K_GAMES, data.games);
       store(K_UPDATES, data.updates);
     }
@@ -102,6 +128,53 @@
     if (!Array.isArray(data.requests)) data.requests = [];
     data.news = load(K_NEWS, []);
     if (!Array.isArray(data.news)) data.news = [];
+    data.reports = load(K_REPORTS, []);
+    if (!Array.isArray(data.reports)) data.reports = [];
+    var c = load(K_CONTROL, {});
+    if (!c || typeof c !== "object" || Array.isArray(c)) c = {};
+    data.control = Object.assign(defaultControl(), c);
+    var cKeys = ["news", "pages", "activity", "loginlog", "notifOutbox", "banlist", "backups", "uploads", "dllog"];
+    cKeys.forEach(function (k) { if (!Array.isArray(data.control[k])) data.control[k] = defaultControl()[k]; });
+    if (!data.control.security || typeof data.control.security !== "object") data.control.security = defaultControl().security;
+    data.control.security = Object.assign(defaultControl().security, data.control.security);
+    if (!data.control.news.length && Array.isArray(data.news) && data.news.length) {
+      data.control.news = data.news.map(function (n) {
+        return {
+          id: n.id || n.slug || "n" + Date.now(),
+          slug: n.slug || slugify(n.title) || "news-" + (n.id || Date.now()),
+          title: n.title || "",
+          image: n.image || "",
+          desc: n.desc || "",
+          body: n.content || "",
+          pinned: !!n.pinned,
+          published: n.status !== "draft",
+          date: n.date || Date.now(),
+        };
+      });
+    }
+    data.news = data.control.news;
+  }
+
+  function saveControl() {
+    return store(K_CONTROL, data.control);
+  }
+
+  function logActivity(icon, text) {
+    data.control.activity.unshift({ ts: Date.now(), icon: icon || "🔧", text: String(text || "") });
+    if (data.control.activity.length > 300) data.control.activity.length = 300;
+    saveControl();
+  }
+
+  function logLogin(name, ok) {
+    data.control.loginlog.unshift({ ts: Date.now(), name: String(name || "—"), ok: !!ok });
+    if (data.control.loginlog.length > 200) data.control.loginlog.length = 200;
+    saveControl();
+  }
+
+  function logDownload(gameId, user) {
+    data.control.dllog.unshift({ ts: Date.now(), gameId: gameId, user: String(user || "") });
+    if (data.control.dllog.length > 200) data.control.dllog.length = 200;
+    saveControl();
   }
 
   function normArray(stored, defaults, fix) {
@@ -115,11 +188,79 @@
     var ok = store(K_GAMES, data.games);
     ok = store(K_LESSONS, data.lessons) && ok;
     ok = store(K_UPDATES, data.updates) && ok;
-    ok = store(K_NEWS, data.news) && ok;
+    ok = store(K_NEWS, (data.control && data.control.news) ? data.control.news : data.news) && ok;
     ok = store(K_SETTINGS, data.settings) && ok;
+    ok = saveControl() && ok;
     if (!ok) alert("تعذّر الحفظ! مساحة التخزين في المتصفح ممتلئة.\nالحل: قلّل حجم الصور أو احذف بعض العناصر ثم جرّب مجددًا.");
-    if (ok) pushRemote();
+    if (ok) { pushRemote(); pushGithubBackup(); }
     return ok;
+  }
+
+  /* ---------- GitHub auto-backup (حفظ تلقائي مع كل حفظ) ---------- */
+  var GH_BACKUP_PATH = "data-backup.json";
+  var GH_BACKUP_MIN_INTERVAL = 20000;
+  var GH_BACKUP_LAST = 0;
+  var GH_BACKUP_SHA = null;
+  var GH_BACKUP_RUNNING = false;
+
+  function ghB64(str) {
+    try {
+      if (typeof btoa === "function" && typeof unescape === "function") return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {}
+    return str;
+  }
+
+  function pushGithubBackup() {
+    var tok = "";
+    try { tok = localStorage.getItem("ry_gh_tok") || ""; } catch (e) {}
+    if (!tok || GH_BACKUP_RUNNING) return;
+    var now = Date.now();
+    if (now - GH_BACKUP_LAST < GH_BACKUP_MIN_INTERVAL) return;
+    GH_BACKUP_LAST = now;
+    GH_BACKUP_RUNNING = true;
+    var owner = "cmn124you-byte", repo = "ryangames", branch = "main";
+    try {
+      if (localStorage.getItem("ry_gh_owner")) owner = localStorage.getItem("ry_gh_owner");
+      if (localStorage.getItem("ry_gh_repo")) repo = localStorage.getItem("ry_gh_repo");
+      if (localStorage.getItem("ry_gh_br")) branch = localStorage.getItem("ry_gh_br");
+    } catch (e) {}
+    var backup = {
+      games: data.games || [],
+      lessons: data.lessons || [],
+      updates: data.updates || [],
+      settings: Object.assign({}, data.settings || {}),
+      updatedAt: Date.now(),
+    };
+    try {
+      delete backup.settings.adminPass;
+      delete backup.settings.publishKey;
+    } catch (e) {}
+    var content = JSON.stringify(backup, null, 2);
+    var apiBase = "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + GH_BACKUP_PATH;
+    var headers = {
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      Authorization: "Bearer " + tok,
+      "Content-Type": "application/json",
+    };
+    fetch(apiBase + "?ref=" + branch, { headers: headers })
+      .then(function (res) {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error("gh_read_" + res.status);
+        return res.json();
+      })
+      .then(function (meta) {
+        var payload = { message: "نسخة احتياطية تلقائية للبيانات", content: ghB64(content), branch: branch };
+        if (meta && meta.sha) payload.sha = meta.sha;
+        return fetch(apiBase, { method: "PUT", headers: headers, body: JSON.stringify(payload) });
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error("gh_write_" + res.status);
+        return res.json();
+      })
+      .then(function (j) { if (j && j.content) GH_BACKUP_SHA = j.content.sha; })
+      .catch(function () { GH_BACKUP_LAST = 0; })
+      .then(function () { GH_BACKUP_RUNNING = false; });
   }
 
   /* ---------- Remote sync (Netlify) ---------- */
@@ -141,7 +282,24 @@
         if (Array.isArray(doc.games) && doc.games.length) { data.games = doc.games.slice(); applied = true; }
         if (Array.isArray(doc.lessons) && doc.lessons.length) { data.lessons = doc.lessons.slice(); applied = true; }
         if (Array.isArray(doc.updates) && doc.updates.length) { data.updates = doc.updates.slice(); applied = true; }
-        if (Array.isArray(doc.news) && doc.news.length) { data.news = doc.news.slice(); applied = true; }
+        if (Array.isArray(doc.news) && doc.news.length) {
+          if (!data.control) data.control = Object.assign(defaultControl(), {});
+          data.control.news = doc.news.slice().map(function (n) {
+            return {
+              id: n.id || n.slug || "n" + Date.now(),
+              slug: n.slug || slugify(n.title) || "news-" + (n.id || Date.now()),
+              title: n.title || "",
+              image: n.image || "",
+              desc: n.desc || "",
+              body: n.content || "",
+              pinned: !!n.pinned,
+              published: n.status !== "draft",
+              date: n.date ? Date.parse(n.date) : (n.created_at ? Date.parse(n.created_at) : Date.now()),
+            };
+          });
+          data.news = data.control.news;
+          applied = true;
+        }
         if (doc.settings && typeof doc.settings === "object") {
           data.settings = Object.assign({}, DEFAULT_SETTINGS, data.settings || {}, doc.settings);
           applied = true;
@@ -150,7 +308,7 @@
           store(K_GAMES, data.games);
           store(K_LESSONS, data.lessons);
           store(K_UPDATES, data.updates);
-          store(K_NEWS, data.news);
+          store(K_NEWS, data.control.news);
           store(K_SETTINGS, data.settings);
           var ts = (typeof doc.updatedAt === "number" && doc.updatedAt > 0) ? doc.updatedAt : Date.now();
           store("ry_remote_ts", ts);
@@ -195,7 +353,7 @@
       games: data.games,
       lessons: data.lessons,
       updates: data.updates,
-      news: data.news,
+      news: (data.control && data.control.news) ? data.control.news : data.news,
       settings: data.settings,
     };
     var body = JSON.stringify(payload);
@@ -481,7 +639,7 @@
 
   function imgHTML(g, cls) {
     if (g && g.cover) {
-      return '<img src="' + esc(g.cover) + '" alt="' + esc(g.title) + '" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;' + cls + ' cover-fallback&quot; style=&quot;background:' + fallbackGradient(g) + '&quot;>' + esc((g.ar || g.title).charAt(0)) + '</div>\'" />';
+      return '<img src="' + esc(g.cover) + '" alt="' + esc(g.title) + '" loading="lazy" decoding="async" onerror="this.outerHTML=\'<div class=&quot;' + cls + ' cover-fallback&quot; style=&quot;background:' + fallbackGradient(g) + '&quot;>' + esc((g.ar || g.title).charAt(0)) + '</div>\'" />';
     }
     return '<div class="' + cls + ' cover-fallback" style="background:' + fallbackGradient(g) + '">' + esc((g && g.ar || g && g.title || "؟").charAt(0)) + "</div>";
   }
@@ -762,7 +920,78 @@
   }
 
   /* ---------- Game grid + filters ---------- */
-  var state = { platform: "all", genre: "all", type: "all", search: "", editing: null };
+  var state = { platform: "all", genre: "all", type: "all", status: "all", lang: "all", year: "all", minRating: "all", sort: "newest", search: "", editing: null, gridLoaded: false };
+
+  /* ---------- Translation status helpers ---------- */
+  var STATUS_META = {
+    complete: { label: "مكتمل", icon: "✅", cls: "st-complete" },
+    beta: { label: "قيد التطوير", icon: "🛠️", cls: "st-beta" },
+    stopped: { label: "متوقف", icon: "⏸️", cls: "st-stopped" },
+  };
+
+  function statusMeta(g) {
+    return STATUS_META[(g && g.state) || "complete"] || STATUS_META.complete;
+  }
+
+  function statusBadgeHTML(g) {
+    var m = statusMeta(g);
+    return '<span class="status-badge ' + m.cls + '" title="حالة التعريب: ' + esc(m.label) + '">' + m.icon + " " + esc(m.label) + "</span>";
+  }
+
+  function gameRating(g) {
+    var n = parseInt(g && g.ratingCount, 10) || 0;
+    var sum = parseInt(g && g.ratingSum, 10) || 0;
+    return { count: n, score: n ? Math.round((sum / n) * 10) / 10 : 0 };
+  }
+
+  function ratingStarsHTML(score) {
+    var out = "";
+    for (var i = 1; i <= 5; i++) {
+      var full = score >= i - 0.25;
+      var half = !full && score >= i - 0.75;
+      out += '<span class="star">' + (half ? "⯨" : (full ? "★" : "☆")) + "</span>";
+    }
+    return out;
+  }
+
+  /* ---------- Compatibility info (store / OS / original) ---------- */
+  var STORE_META = { steam: "Steam", epic: "Epic Games", gog: "GOG" };
+  var OS_META = {
+    windows: { icon: "🖥️", ar: "ويندوز" },
+    linux: { icon: "🐧", ar: "لينكس" },
+    mac: { icon: "🍏", ar: "ماك" },
+    deck: { icon: "🎮", ar: "Steam Deck" },
+  };
+
+  function compatHTML(g) {
+    var stores = g && Array.isArray(g.stores) ? g.stores : [];
+    var os = g && Array.isArray(g.osSupport) ? g.osSupport : [];
+    if (!stores.length && !os.length && !g.onlyOriginal) return "";
+    var parts = [];
+    if (stores.length) {
+      parts.push(
+        '<div class="compat-row"><span class="compat-label">🏪 المتاجر المدعومة:</span>' +
+        stores.map(function (s) {
+          var k = String(s).toLowerCase();
+          return '<span class="compat-chip">' + esc(STORE_META[k] || s) + "</span>";
+        }).join("") + "</div>"
+      );
+    }
+    if (os.length) {
+      parts.push(
+        '<div class="compat-row"><span class="compat-label">💿 أنظمة التشغيل:</span>' +
+        os.map(function (o) {
+          var k = String(o).toLowerCase();
+          var m = OS_META[k];
+          return '<span class="compat-chip">' + (m ? m.icon + " " + m.ar : esc(o)) + "</span>";
+        }).join("") + "</div>"
+      );
+    }
+    if (g.onlyOriginal) {
+      parts.push('<div class="compat-note">🔒 يدعم النسخ الأصلية من المتاجر الرسمية فقط (لا يدعم النسخ المقرصنة).</div>');
+    }
+    return '<div class="compat-inner"><b>🖥️ معلومات التوافق</b>' + parts.join("") + "</div>";
+  }
   var gameFormState = { cover: "", gallery: [], videoFile: null, videoLocal: false, videoHadLocal: false };
   var settingsLogo = "";
 
@@ -801,16 +1030,79 @@
     typeRow.appendChild(chipEl("ar", false, "🌍 معرّبة", "type"));
     typeRow.appendChild(chipEl("free", false, "🎁 مجانية", "type"));
     wrap.appendChild(typeRow);
+
+    var statusRow = el("div", "filters-row", '<span class="filters-label">حالة التعريب:</span>');
+    statusRow.appendChild(chipEl("all", true, "الكل", "status"));
+    statusRow.appendChild(chipEl("complete", false, "✅ مكتمل", "status"));
+    statusRow.appendChild(chipEl("beta", false, "🛠️ قيد التطوير", "status"));
+    statusRow.appendChild(chipEl("stopped", false, "⏸️ متوقف", "status"));
+    wrap.appendChild(statusRow);
+
+    var langSet = {};
+    data.games.forEach(function (g) {
+      (g.langs || []).forEach(function (l) { langSet[l] = true; });
+    });
+    var langKeys = Object.keys(langSet).sort();
+    if (langKeys.length) {
+      var langRow = el("div", "filters-row", '<span class="filters-label">اللغة:</span>');
+      langRow.appendChild(chipEl("all", true, "الكل", "lang"));
+      langKeys.forEach(function (l) { langRow.appendChild(chipEl(l, false, l, "lang")); });
+      wrap.appendChild(langRow);
+    }
+
+    var yearSet = {};
+    data.games.forEach(function (g) { if (g.year) yearSet[g.year] = true; });
+    var yearKeys = Object.keys(yearSet).sort().reverse();
+    if (yearKeys.length) {
+      var yearRow = el("div", "filters-row", '<span class="filters-label">سنة الإصدار:</span>');
+      yearRow.appendChild(chipEl("all", true, "الكل", "year"));
+      yearKeys.forEach(function (y) { yearRow.appendChild(chipEl(y, false, y, "year")); });
+      wrap.appendChild(yearRow);
+    }
+
+    var ratingRow = el("div", "filters-row", '<span class="filters-label">التقييم:</span>');
+    var ratingSel = document.createElement("select");
+    ratingSel.className = "sort-select";
+    ratingSel.id = "ratingFilterSelect";
+    ratingSel.innerHTML =
+      '<option value="all">الكل</option>' +
+      '<option value="3">⭐ 3 فما فوق</option>' +
+      '<option value="4">⭐ 4 فما فوق</option>' +
+      '<option value="4.5">⭐⭐ 4.5 وما فوق</option>';
+    ratingSel.value = state.minRating;
+    ratingSel.addEventListener("change", function () { state.minRating = ratingSel.value; renderGrid(); });
+    ratingRow.appendChild(ratingSel);
+    wrap.appendChild(ratingRow);
+
+    var sortWrap = el("div", "filters-row filters-sort", '<span class="filters-label">ترتيب:</span>');
+    var sortSel = document.createElement("select");
+    sortSel.className = "sort-select";
+    sortSel.id = "sortSelect";
+    sortSel.innerHTML =
+      '<option value="newest">الأحدث أولًا</option>' +
+      '<option value="downloads">الأكثر تحميلًا</option>' +
+      '<option value="rating">الأعلى تقييمًا</option>' +
+      '<option value="title">أبجدي (أ-ي)</option>';
+    sortSel.value = state.sort;
+    sortSel.addEventListener("change", function () { state.sort = sortSel.value; renderGrid(); });
+    sortWrap.appendChild(sortSel);
+    wrap.appendChild(sortWrap);
   }
 
   function chipEl(val, active, label, kind) {
     var chip = el("button", "chip" + (active ? " active" : ""), esc(label));
     if (kind === "pf") chip.dataset.pf = val;
     else if (kind === "type") chip.dataset.type = val;
+    else if (kind === "status") chip.dataset.status = val;
+    else if (kind === "lang") chip.dataset.lang = val;
+    else if (kind === "year") chip.dataset.year = val;
     else chip.dataset.genre = val;
     chip.addEventListener("click", function () {
       if (kind === "pf") state.platform = val;
       else if (kind === "type") state.type = val;
+      else if (kind === "status") state.status = val;
+      else if (kind === "lang") state.lang = val;
+      else if (kind === "year") state.year = val;
       else state.genre = val;
       setActiveChip();
       renderGrid();
@@ -824,6 +1116,12 @@
         chip.classList.toggle("active", chip.dataset.pf === state.platform);
       } else if (chip.dataset.type !== undefined) {
         chip.classList.toggle("active", chip.dataset.type === state.type);
+      } else if (chip.dataset.status !== undefined) {
+        chip.classList.toggle("active", chip.dataset.status === state.status);
+      } else if (chip.dataset.lang !== undefined) {
+        chip.classList.toggle("active", chip.dataset.lang === state.lang);
+      } else if (chip.dataset.year !== undefined) {
+        chip.classList.toggle("active", chip.dataset.year === state.year);
       } else {
         chip.classList.toggle("active", chip.dataset.genre === state.genre);
       }
@@ -835,6 +1133,7 @@
       '<div class="flip-front">' +
       '<div class="game-cover">' +
       (isNew(g) ? '<span class="badge-new">جديد</span>' : "") +
+      statusBadgeHTML(g) +
       imgHTML(g, "game-cover-img") +
       "</div>" +
       '<div class="game-body">' +
@@ -847,6 +1146,8 @@
       '<div class="game-meta">' +
       '<span class="game-size">' + esc(g.size || "") + "</span>" +
       '<span>⬇ ' + esc(g.downloads || "0") + "</span>" +
+      '<span>👁 ' + esc(g.views || "0") + "</span>" +
+      '<span class="game-rate">' + ratingStarsHTML(gameRating(g).score) + " " + gameRating(g).score + "</span>" +
       "</div></div>" +
       "</div>" +
       flipBackHTML(g) +
@@ -862,15 +1163,39 @@
     var list = data.games.filter(function (g) {
       if (state.platform !== "all" && (g.platforms || []).map(canonPf).indexOf(state.platform) === -1) return false;
       if (state.genre !== "all" && (g.genres || []).indexOf(state.genre) === -1) return false;
+      if (state.status !== "all" && (g.state || "complete") !== state.status) return false;
+      if (state.lang !== "all" && (g.langs || []).indexOf(state.lang) === -1) return false;
+      if (state.year !== "all" && (g.year || "") !== state.year) return false;
+      if (state.minRating !== "all" && gameRating(g).score < parseFloat(state.minRating)) return false;
       if (state.type === "app" && !g.isApp) return false;
       if (state.type === "ar" && !g.arLocal) return false;
       if (state.type === "free" && !g.free) return false;
       if (!q) return true;
-      return (g.title + " " + g.ar).toLowerCase().indexOf(q) !== -1;
+      return (g.title + " " + (g.ar || "")).toLowerCase().indexOf(q) !== -1;
+    });
+
+    list = list.slice().sort(function (a, b) {
+      if (state.sort === "downloads") return (parseInt(b.downloads, 10) || 0) - (parseInt(a.downloads, 10) || 0);
+      if (state.sort === "rating") return gameRating(b).score - gameRating(a).score;
+      if (state.sort === "title") return String(a.title).localeCompare(String(b.title), "ar");
+      return new Date(b.date || 0) - new Date(a.date || 0);
     });
 
     grid.innerHTML = "";
     empty.hidden = list.length !== 0;
+
+    if (list.length && !state.gridLoaded && !grid.querySelector(".skeleton-card")) {
+      for (var s = 0; s < 6; s++) {
+        grid.appendChild(el("div", "game-card skeleton-card",
+          '<div class="skeleton skeleton-cover"></div>' +
+          '<div class="skeleton-body"><div class="skeleton skeleton-line w60"></div>' +
+          '<div class="skeleton skeleton-line w80"></div>' +
+          '<div class="skeleton skeleton-line w40"></div></div>'));
+      }
+      setTimeout(function () { state.gridLoaded = true; renderGrid(); }, 260);
+      return;
+    }
+    state.gridLoaded = true;
 
     list.forEach(function (g) {
       var card = el("div", "game-card flip-card");
@@ -891,6 +1216,60 @@
       card.addEventListener("click", function () { gotoGame(g.id); });
       wireFlip(card, g.id);
       wrap.appendChild(card);
+    });
+    var empty = document.getElementById("emptyNew");
+    if (empty) empty.hidden = data.games.length !== 0;
+  }
+
+  function renderNewDev() {
+    var wrap = document.getElementById("newDevGrid");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    var dev = data.games.filter(function (g) { return (g.state === "beta" || g.state === "stopped"); });
+    if (!dev.length) {
+      wrap.innerHTML = '<p class="empty-state">لا توجد تعريبات قيد التطوير حاليًا.</p>';
+      return;
+    }
+    dev.forEach(function (g) {
+      var pct = parseInt(g.tradRate, 10) || 0;
+      var card = el("div", "dev-card");
+      card.innerHTML =
+        '<div class="dev-card-top">' +
+        '<div class="dev-thumb">' + imgHTML(g, "dev-thumb-img") + "</div>" +
+        '<div class="dev-info">' +
+        "<h3>" + esc(g.title) + "</h3>" +
+        "<p>" + esc(g.ar || "") + "</p>" +
+        statusBadgeHTML(g) +
+        "</div>" +
+        "</div>" +
+        '<div class="dev-bar"><div class="dev-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="dev-bar-meta"><span>نسبة الإنجاز: ' + pct + "%</span><span>" + (pct >= 100 ? "جاهز قريبًا 🎉" : (pct >= 60 ? "في المراحل الأخيرة 🚀" : "ما زال قيد العمل 🛠️")) + "</span></div>";
+      card.addEventListener("click", function () { gotoGame(g.id); });
+      wrap.appendChild(card);
+    });
+  }
+
+  function renderUpdatesAll() {
+    var wrap = document.getElementById("newUpdatesList");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    var arr = data.updates.slice().reverse();
+    if (!arr.length) {
+      wrap.innerHTML = '<p class="empty-state">لا توجد تحديثات بعد.</p>';
+      return;
+    }
+    arr.forEach(function (u) {
+      var item = el("div", "update-row");
+      item.innerHTML =
+        '<span class="update-icon">🔄</span>' +
+        '<div class="update-text"><strong>' + esc(u.title || "") + "</strong>" +
+        '<span class="update-sub">' + esc(u.ar || "") + " — " + esc(u.days || "") + "</span></div>";
+      if (u.link) {
+        var a = el("a", "btn btn-ghost btn-sm", "عرض");
+        a.href = u.link;
+        item.appendChild(a);
+      }
+      wrap.appendChild(item);
     });
   }
 
@@ -963,12 +1342,14 @@
   var PAGE_TITLES = {
     index: "ألعاب معرّبة",
     new: "جديد التعريبات",
+    news: "الأخبار",
     games: "جميع الألعاب",
     minigames: "ألعاب بلا نت",
     lessons: "دروس مهمة",
     download: "حمّل التطبيق",
     request: "اطلب تعريب",
     contact: "تواصل معنا",
+    page: "صفحة",
   };
 
   function renderFooter() {
@@ -990,8 +1371,11 @@
     var links = document.getElementById("footerLinks");
     if (!links) return;
     links.innerHTML = "";
-    [["new.html", "جديد التعريبات"], ["games.html", "جميع الألعاب"], ["minigames.html", "ألعاب بلا نت"], ["lessons.html", "دروس مهمة"], ["download.html", "تحميل التطبيق"], ["request.html", "اطلب تعريب"], ["contact.html", "تواصل معنا"]].forEach(function (pair) {
+    [["new.html", "جديد التعريبات"], ["news.html", "الأخبار"], ["games.html", "جميع الألعاب"], ["minigames.html", "ألعاب بلا نت"], ["lessons.html", "دروس مهمة"], ["download.html", "تحميل التطبيق"], ["request.html", "اطلب تعريب"], ["team.html", "فريق الموقع"], ["problems.html", "الإبلاغ عن مشكلة"], ["contact.html", "تواصل معنا"]].forEach(function (pair) {
       links.appendChild(el("li", "", '<a href="' + pair[0] + '">' + pair[1] + "</a>"));
+    });
+    (data.control.pages || []).filter(function (pg) { return pg.published; }).slice().sort(function (a, b) { return (a.order || 0) - (b.order || 0); }).forEach(function (pg) {
+      links.appendChild(el("li", "", '<a href="page.html?slug=' + esc(pg.slug) + '">' + esc(pg.title) + "</a>"));
     });
 
     var recs = document.getElementById("footerRecs");
@@ -1112,6 +1496,27 @@
       ? '<button class="btn-dl" id="gpDlBtn" type="button">⬇ تحميل اللعبة</button>'
       : '<button class="btn-dl" id="gpNoLinkBtn" type="button">⬇ تحميل اللعبة</button>';
 
+    var rating = gameRating(g);
+    var compatBox = compatHTML(g);
+    var installSec = (g.installSteps && g.installSteps.length)
+      ? '<section class="section gp-install">' +
+        '<div class="container">' +
+        '<div class="sec-head"><h2>🛠️ طريقة التثبيت</h2></div>' +
+        '<ol class="gp-steps">' +
+        g.installSteps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") +
+        "</ol>" +
+        "</div></section>"
+      : "";
+    var changelogSec = (g.changelog && g.changelog.length)
+      ? '<section class="section section-alt gp-changelog">' +
+        '<div class="container">' +
+        '<div class="sec-head"><h2>📜 سجل التغييرات</h2></div>' +
+        '<ul class="gp-changelog-list">' +
+        g.changelog.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") +
+        "</ul>" +
+        "</div></section>"
+      : "";
+
     return (
       '<section class="gp-wrap">' +
       '<div class="container">' +
@@ -1125,6 +1530,7 @@
       '<section class="gp-hero">' +
       '<div class="gp-cover">' +
       (isNew(g) ? '<span class="badge-new">جديد</span>' : "") +
+      statusBadgeHTML(g) +
       imgHTML(g, "gp-cover-img") +
       "</div>" +
       '<div class="gp-info">' +
@@ -1138,15 +1544,28 @@
       '<div class="gp-meta">' +
       (g.size ? '<span class="meta-item">📦 ' + esc(g.size) + "</span>" : "") +
       '<span class="meta-item">⬇ ' + esc(g.downloads || "0") + "</span>" +
-      (g.tradRate ? '<span class="meta-item">🌐 ' + esc(g.tradRate) + "</span>" : "") +
+      '<span class="meta-item" data-view>👁 ' + esc(g.views || "0") + "</span>" +
+      '<span class="meta-item">👍 ' + esc(g.likes || "0") + "</span>" +
+      (g.version ? '<span class="meta-item">🎮 إصدار اللعبة: ' + esc(g.version) + "</span>" : "") +
+      (g.lastUpdate ? '<span class="meta-item">🔄 آخر تحديث: ' + esc(g.lastUpdate) + "</span>" : "") +
+      (g.tradRate ? '<span class="meta-item">🌐 الترجمة: ' + esc(g.tradRate) + "</span>" : "") +
       (g.installTime ? '<span class="meta-item">⏱ ' + esc(g.installTime) + "</span>" : "") +
       (g.compat ? '<span class="meta-item">💻 ' + esc(g.compat) + "</span>" : "") +
+      "</div>" +
+      '<div class="gp-rating" id="gpRating">' +
+      '<span class="gp-rating-label">تقييم المستخدمين</span>' +
+      '<span class="gp-rating-stars" id="gpRatingStars">' + ratingStarsHTML(rating.score) + "</span>" +
+      '<span class="gp-rating-num" id="gpRatingNum">' + rating.score + " / 5 (" + rating.count + " تقييم)</span>" +
       "</div>" +
       '<div class="gp-actions">' +
       dlBtn +
       (g.buy ? '<a class="btn-buy" href="' + esc(g.buy) + '" target="_blank" rel="noopener">🛒 شراء اللعبة</a>' : "") +
+      '<button class="btn-ghost" id="gpLikeBtn" type="button">👍 إعجاب</button>' +
+      '<button class="btn-ghost" id="gpFavBtn" type="button">☆ حفظ المفضلة</button>' +
+      '<button class="btn-ghost" id="gpReportBtn" type="button">⚠️ بلّغ عن مشكلة</button>' +
       "</div>" +
       '<div class="gp-video-sec" id="gpVideoWrap" hidden></div>' +
+      (compatBox ? '<div class="gp-compat-box">' + compatBox + "</div>" : "") +
       reqSec +
       "</div>" +
       "</section>" +
@@ -1159,6 +1578,8 @@
       '<p class="detail-desc" style="line-height:1.9;color:' + descColor(g) + '">' + esc(g.desc || "لا يوجد وصف بعد.") + "</p>" +
       "</div>" +
       "</section>" +
+      installSec +
+      changelogSec +
       '<section class="section gp-comments">' +
       '<div class="container">' +
       '<div class="sec-head"><h2>💬 التعليقات <span class="comment-count" id="commentCount"></span></h2></div>' +
@@ -1215,6 +1636,7 @@
     setOg("og:title", g.browserTitle || g.title);
     setOg("og:description", String(g.desc || "").slice(0, 200));
     setOg("og:image", g.cover || "");
+    addJSONLD("ld-videogame", videoGameLD(g));
 
     wrap.innerHTML = gamePageHTML(g);
     }
@@ -1234,6 +1656,148 @@
     renderRelatedFor(g);
     renderComments(g.id);
     renderGameVideo(g);
+    countView(g.id);
+    wireRating(g);
+    wireLike(g);
+    wireFavorite(g);
+    wireReportBtn(g);
+    refreshHeaderUI();
+  }
+
+  /* ---------- Counters: views / downloads / likes ---------- */
+  function countView(id) {
+    var seen = false;
+    try { seen = sessionStorage.getItem("ry_view_" + id) === "1"; } catch (e) {}
+    if (seen) return;
+    var g = gameById(id);
+    if (!g) return;
+    g.views = (parseInt(g.views, 10) || 0) + 1;
+    store(K_GAMES, data.games);
+    try { sessionStorage.setItem("ry_view_" + id, "1"); } catch (e) {}
+    var meta = document.querySelector('.gp-meta');
+    if (meta) {
+      var v = meta.querySelector('[data-view]');
+      if (v) v.textContent = "👁 " + (g.views || 0);
+    }
+  }
+
+  function countDownload(id) {
+    var g = gameById(id);
+    if (!g) return;
+    g.downloads = String((parseInt(g.downloads, 10) || 0) + 1);
+    store(K_GAMES, data.games);
+    var u = null;
+    try { u = currentUser(); } catch (e) {}
+    logDownload(id, u ? u.name : "");
+  }
+
+  function myRating(gameId) {
+    var map = load(K_MYRATINGS, {});
+    return (map && typeof map === "object") ? (map[gameId] || 0) : 0;
+  }
+
+  function setMyRating(gameId, stars) {
+    var map = load(K_MYRATINGS, {});
+    if (!map || typeof map !== "object" || Array.isArray(map)) map = {};
+    map[gameId] = stars;
+    store(K_MYRATINGS, map);
+  }
+
+  function wireRating(g) {
+    var starsEl = document.getElementById("gpRatingStars");
+    var numEl = document.getElementById("gpRatingNum");
+    if (!starsEl) return;
+    var current = myRating(g.id);
+    function paint() {
+      var r = gameRating(g);
+      starsEl.innerHTML = ratingStarsHTML(r.score);
+      if (numEl) numEl.textContent = r.score + " / 5 (" + r.count + " تقييم)";
+    }
+    starsEl.innerHTML = "";
+    for (var i = 1; i <= 5; i++) {
+      (function (n) {
+        var s = document.createElement("button");
+        s.className = "rate-star" + (n <= current ? " lit" : "");
+        s.type = "button";
+        s.textContent = "★";
+        s.title = n + " من 5";
+        s.addEventListener("click", function () {
+          if (!currentUser()) { toast("سجّل الدخول لتقييم الألعاب."); openAccountModal(); return; }
+          var old = myRating(g.id);
+          var rs = parseInt(g.ratingSum, 10) || 0;
+          var rc = parseInt(g.ratingCount, 10) || 0;
+          if (old > 0) {
+            if (old === n) {
+              setMyRating(g.id, 0);
+              g.ratingSum = Math.max(0, rs - old);
+              g.ratingCount = Math.max(0, rc - 1);
+            } else {
+              setMyRating(g.id, n);
+              g.ratingSum = rs - old + n;
+            }
+          } else {
+            setMyRating(g.id, n);
+            g.ratingSum = rs + n;
+            g.ratingCount = rc + 1;
+          }
+          saveAll();
+          paint();
+          renderGrid();
+        });
+        starsEl.appendChild(s);
+      })(i);
+    }
+    paint();
+  }
+
+  function wireLike(g) {
+    var btn = document.getElementById("gpLikeBtn");
+    if (!btn) return;
+    function paint() {
+      var liked = userHasLike(g.id);
+      btn.textContent = (liked ? "👍 أعجبك" : "👍 إعجاب") + " (" + (parseInt(g.likes, 10) || 0) + ")";
+      btn.classList.toggle("liked", liked);
+    }
+    btn.addEventListener("click", function () {
+      if (!currentUser()) { toast("سجّل الدخول للإعجاب بالألعاب."); openAccountModal(); return; }
+      var liked = userHasLike(g.id);
+      if (liked) {
+        removeUserLike(g.id);
+        g.likes = Math.max(0, (parseInt(g.likes, 10) || 0) - 1);
+      } else {
+        addUserLike(g.id);
+        g.likes = (parseInt(g.likes, 10) || 0) + 1;
+      }
+      saveAll();
+      paint();
+    });
+    paint();
+  }
+
+  function wireFavorite(g) {
+    var btn = document.getElementById("gpFavBtn");
+    if (!btn) return;
+    function paint() {
+      var fav = userHasFav(g.id);
+      btn.textContent = fav ? "★ في المفضلة" : "☆ حفظ المفضلة";
+      btn.classList.toggle("fav", fav);
+    }
+    btn.addEventListener("click", function () {
+      if (!currentUser()) { toast("سجّل الدخول لحفظ الألعاب في المفضلة."); openAccountModal(); return; }
+      if (userHasFav(g.id)) { removeUserFav(g.id); toast("أُزيلت من المفضلة."); }
+      else { addUserFav(g.id); toast("أُضيفت إلى المفضلة ✓"); }
+      paint();
+      refreshHeaderUI();
+    });
+    paint();
+  }
+
+  function wireReportBtn(g) {
+    var btn = document.getElementById("gpReportBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      openReportModal(g);
+    });
   }
 
   function renderRelatedFor(g) {
@@ -1280,8 +1844,10 @@
     var count = document.getElementById("commentCount");
     var form = document.getElementById("commentForm");
     if (!list || !form) return;
-    var arr = loadComments(gameId).slice().reverse();
-    if (count) count.textContent = "(" + arr.length + ")";
+    var all = loadComments(gameId).slice().reverse();
+    var showAll = isLoggedIn();
+    var arr = showAll ? all : all.filter(function (c) { return c.approved; });
+    if (count) count.textContent = "(" + all.length + ")";
 
     if (!arr.length) {
       list.innerHTML = '<p class="empty-state">لا توجد تعليقات بعد — كن أول من يعلّق! 💬</p>';
@@ -1318,13 +1884,18 @@
         avatar: commentAvatar(name),
         text: text.slice(0, 500),
         date: new Date().toLocaleString("ar-EG", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }),
+        approved: isLoggedIn(),
+        replies: [],
       };
       var arr2 = loadComments(gameId);
       arr2.push(comment);
       saveComments(gameId, arr2);
       setF("commentText", "");
       setF("commentName", "");
-      if (msg) { msg.textContent = "تم نشر تعليقك ✓"; msg.style.color = "#16a34a"; }
+      if (msg) {
+        msg.textContent = comment.approved ? "تم نشر تعليقك ✓" : "تم إرسال تعليقك، بانتظار موافقة الإدارة ✓";
+        msg.style.color = "#16a34a";
+      }
       renderComments(gameId);
     };
   }
@@ -1599,6 +2170,7 @@
         btn.textContent = "⬇ تحميل";
         btn.disabled = false;
         closeModal("dlPassModal");
+        countDownload(pendingDl);
         window.open(link, "_blank");
       }
     }
@@ -1611,8 +2183,9 @@
       window.location.href = "admin.html";
       return;
     }
-    renderAdminGames(); renderAdminSlider(); renderAdminLessons(); renderAdminUpdates(); fillSettingsForm(); renderAdminRequests();
+    renderAdminGames(); renderAdminSlider(); renderAdminLessons(); renderAdminUpdates(); fillSettingsForm(); renderAdminRequests(); renderAdminNews(); renderAdminPages();
     applyOwnerLock();
+    if (typeof window.renderAdminHome === "function") window.renderAdminHome();
     openModal("adminModal");
   }
 
@@ -1700,6 +2273,7 @@
       desc: getF("rqDesc"),
       contact: getF("rqContact"),
       date: new Date().toLocaleDateString("ar-EG"),
+      votes: 0,
     };
     var done = function (remote) {
       setF("rqTitle", ""); setF("rqDesc", ""); setF("rqContact", "");
@@ -1777,6 +2351,156 @@
     } catch (err) { fallback(); }
   }
 
+  /* ---------- Admin: news ---------- */
+  function renderAdminNews() {
+    var list = document.getElementById("adminNewsList");
+    if (!list) return;
+    list.innerHTML = "";
+    var arr = (data.control.news || []).slice().sort(function (a, b) { return (b.date || 0) - (a.date || 0); });
+    if (!arr.length) {
+      list.innerHTML = '<li class="hint" style="padding:.5rem">لا توجد أخبار بعد.</li>';
+      return;
+    }
+    arr.forEach(function (n) {
+      list.appendChild(adminItem(n.title || "بدون عنوان", (n.published ? "منشور" : "مسودة") + (n.pinned ? " · مثبّت" : "") + (n.date ? " · " + new Date(n.date).toLocaleDateString("ar-EG") : ""), n, [
+        { cls: "edit", label: "تعديل", fn: function () { openNewsForm(n); } },
+        { cls: "publish", label: n.published ? "إخفاء" : "نشر", fn: function () {
+          n.published = !n.published;
+          saveControl(); refreshSite(); renderAdminNews();
+        } },
+        { cls: "del", label: "حذف", fn: function () {
+          if (confirm("حذف هذا الخبر؟")) {
+            data.control.news = data.control.news.filter(function (x) { return x.id !== n.id; });
+            saveControl(); refreshSite(); renderAdminNews();
+          }
+        } },
+      ]));
+    });
+  }
+
+  function openNewsForm(n) {
+    var form = document.getElementById("newsForm");
+    if (!form) return;
+    form.hidden = false;
+    var t = document.getElementById("newsFormTitle");
+    if (t) t.textContent = n ? "تعديل الخبر" : "خبر جديد";
+    setF("nId", n ? n.id : "");
+    setF("nTitle", n ? n.title : "");
+    setF("nImage", n ? (n.image || "") : "");
+    setF("nDesc", n ? (n.desc || "") : "");
+    setF("nBody", n ? (n.body || "") : "");
+    var pin = document.getElementById("nPinned");
+    if (pin) pin.checked = !!(n && n.pinned);
+    var pub = document.getElementById("nPublished");
+    if (pub) pub.checked = n ? n.published : true;
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function handleNewsSubmit(e) {
+    e.preventDefault();
+    var title = getF("nTitle");
+    if (!title) { alert("اكتب عنوان الخبر أولًا."); return; }
+    var id = getF("nId") || "n" + Date.now();
+    var now = Date.now();
+    var existing = null;
+    for (var i = 0; i < data.control.news.length; i++) if (String(data.control.news[i].id) === String(id)) { existing = data.control.news[i]; break; }
+    var obj = {
+      id: id,
+      title: title,
+      image: getF("nImage"),
+      desc: getF("nDesc"),
+      body: getF("nBody"),
+      pinned: !!document.getElementById("nPinned").checked,
+      published: !!document.getElementById("nPublished").checked,
+      date: existing ? existing.date : now,
+      updated: now,
+    };
+    if (existing) {
+      for (var k in obj) existing[k] = obj[k];
+    } else {
+      data.control.news.push(obj);
+    }
+    saveControl(); refreshSite(); renderAdminNews();
+    document.getElementById("newsForm").hidden = true;
+    toast("تم حفظ الخبر ✓");
+  }
+
+  /* ---------- Admin: pages ---------- */
+  function pageSlugify(str) {
+    return String(str || "").toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  }
+
+  function renderAdminPages() {
+    var list = document.getElementById("adminPagesList");
+    if (!list) return;
+    list.innerHTML = "";
+    var arr = (data.control.pages || []).slice().sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+    if (!arr.length) {
+      list.innerHTML = '<li class="hint" style="padding:.5rem">لا توجد صفحات بعد.</li>';
+      return;
+    }
+    arr.forEach(function (p) {
+      list.appendChild(adminItem(p.title || "بدون عنوان", (p.published ? "منشور" : "مسودة") + " · /" + esc(p.slug || ""), p, [
+        { cls: "edit", label: "تعديل", fn: function () { openPageForm(p); } },
+        { cls: "view", label: "عرض", fn: function () { window.open("page.html?slug=" + encodeURIComponent(p.slug), "_blank"); } },
+        { cls: "publish", label: p.published ? "إخفاء" : "نشر", fn: function () {
+          p.published = !p.published;
+          saveControl(); refreshSite(); renderAdminPages();
+        } },
+        { cls: "del", label: "حذف", fn: function () {
+          if (confirm("حذف هذه الصفحة؟")) {
+            data.control.pages = data.control.pages.filter(function (x) { return x.id !== p.id; });
+            saveControl(); refreshSite(); renderAdminPages();
+          }
+        } },
+      ]));
+    });
+  }
+
+  function openPageForm(p) {
+    var form = document.getElementById("pageForm");
+    if (!form) return;
+    form.hidden = false;
+    var t = document.getElementById("pageFormTitle");
+    if (t) t.textContent = p ? "تعديل الصفحة" : "صفحة جديدة";
+    setF("pId", p ? p.id : "");
+    setF("pTitle", p ? p.title : "");
+    setF("pSlug", p ? p.slug : "");
+    setF("pBody", p ? p.content : "");
+    setF("pOrder", p ? (p.order || 10) : 10);
+    var pub = document.getElementById("pPublished");
+    if (pub) pub.checked = p ? p.published : true;
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function handlePageSubmit(e) {
+    e.preventDefault();
+    var title = getF("pTitle");
+    if (!title) { alert("اكتب عنوان الصفحة أولًا."); return; }
+    var slug = getF("pSlug") || pageSlugify(title);
+    if (!/^[a-z0-9\u0600-\u06FF-]+$/.test(slug)) { alert("المعرّف يجب أن يحتوي على أحرف صغيرة وشرطات فقط."); return; }
+    var id = getF("pId") || "p" + Date.now();
+    var existing = null;
+    for (var i = 0; i < data.control.pages.length; i++) if (String(data.control.pages[i].id) === String(id)) { existing = data.control.pages[i]; break; }
+    var obj = {
+      id: id,
+      title: title,
+      slug: slug,
+      content: getF("pBody"),
+      order: parseInt(getF("pOrder"), 10) || 10,
+      published: !!document.getElementById("pPublished").checked,
+      updated: Date.now(),
+    };
+    if (existing) {
+      for (var k in obj) existing[k] = obj[k];
+    } else {
+      data.control.pages.push(obj);
+    }
+    saveControl(); refreshSite(); renderAdminPages();
+    document.getElementById("pageForm").hidden = true;
+    toast("تم حفظ الصفحة ✓");
+  }
+
   function handlePasswordChange() {
     var msg = document.getElementById("pwMsg");
     if (!msg) return;
@@ -1810,12 +2534,14 @@
         document.querySelectorAll("#adminTabs .tab").forEach(function (t) { t.classList.remove("active"); });
         tab.classList.add("active");
         var name = tab.dataset.tab;
-        ["games", "slider", "lessons", "updates", "news", "requests", "settings"].forEach(function (n) {
+        ["home", "games", "slider", "lessons", "updates", "requests", "news", "pages", "settings"].forEach(function (n) {
           var panel = document.getElementById("tab-" + n);
           if (panel) panel.hidden = n !== name;
         });
+        if (name === "home" && typeof window.renderAdminHome === "function") window.renderAdminHome();
         if (name === "requests") renderAdminRequests();
         if (name === "news") renderAdminNews();
+        if (name === "pages") renderAdminPages();
         if (name === "settings") fillSettingsForm();
       });
     });
@@ -2019,16 +2745,6 @@
     e.preventDefault();
     try {
       var kind = getF("lfKind");
-      if (kind === "news") {
-        handleNewsSubmit({
-          id: getF("lfId") ? parseInt(getF("lfId"), 10) : null,
-          title: getF("lfTitle"),
-          content: getF("lfDesc"),
-          link: getF("lfLink"),
-        });
-        closeModal("lessonModal");
-        return;
-      }
       var id = getF("lfId") ? parseInt(getF("lfId"), 10) : Date.now();
       var item = {
         id: id,
@@ -2079,60 +2795,6 @@
         } },
       ]));
     });
-  }
-
-  /* ---------- Admin: news ---------- */
-  function renderAdminNews() {
-    var list = document.getElementById("adminNewsList");
-    if (!list) return;
-    list.innerHTML = "";
-    if (!data.news.length) {
-      list.innerHTML = '<p class="empty-state">لا توجد أخبار بعد — أضف أول خبر.</p>';
-      return;
-    }
-    data.news.slice().reverse().forEach(function (n) {
-      list.appendChild(adminItem(n.title || "خبر", n.date || "", n, [
-        { cls: "edit", label: "تعديل", fn: function () { openNewsForm(n); } },
-        { cls: "del", label: "حذف", fn: function () {
-          data.news = data.news.filter(function (x) { return x.id !== n.id; });
-          saveAll(); refreshSite(); renderAdminNews();
-        } },
-      ]));
-    });
-  }
-
-  function openNewsForm(n) {
-    setF("lfKind", "news");
-    setF("lfId", n ? n.id : "");
-    setF("lfIcon", "");
-    setF("lfTitle", n ? n.title : "");
-    setF("lfDesc", n ? n.content : "");
-    setF("lfLink", n ? n.link || n.image : "");
-    var el = document.getElementById("lessonModalTitle");
-    if (el) el.textContent = n ? "تعديل خبر" : "إضافة خبر جديد";
-    var iconWrap = document.getElementById("lfIcon");
-    if (iconWrap) iconWrap.parentElement.parentElement.style.display = "none";
-    openModal("lessonModal");
-  }
-
-  function handleNewsSubmit(item) {
-    var id = item.id || Date.now();
-    var n = {
-      id: id,
-      slug: item.slug || slugify(item.title) || "news-" + id,
-      title: item.title,
-      content: item.content || "",
-      image: item.image || "",
-      link: item.link || "",
-      date: item.date || new Date().toISOString().slice(0, 10),
-      status: "published",
-    };
-    var idx = data.news.findIndex(function (x) { return x.id === id; });
-    if (idx !== -1) data.news[idx] = Object.assign({}, data.news[idx], n);
-    else data.news.push(n);
-    saveAll();
-    refreshSite();
-    renderAdminNews();
   }
 
   /* ---------- Admin: settings ---------- */
@@ -2246,7 +2908,7 @@
   }
 
   /* ---------- Live sync (cross-tab) ---------- */
-  var LIVE_KEYS = [K_GAMES, K_LESSONS, K_UPDATES, K_SETTINGS, K_REQUESTS, K_COMMENTS];
+  var LIVE_KEYS = [K_GAMES, K_LESSONS, K_UPDATES, K_SETTINGS, K_REQUESTS, K_COMMENTS, K_REPORTS, K_USERS, K_CONTROL];
   var syncTimer = null;
 
   function toast(msg) {
@@ -2652,7 +3314,9 @@
     renderStats();
     renderNew();
     renderNewAll();
+    renderNewDev();
     renderUpdates();
+    renderUpdatesAll();
     renderModOfDay();
     renderGrid();
     renderFilters();
@@ -2661,11 +3325,189 @@
     renderFooter();
     renderAds();
     renderGamePage();
+    renderRequests();
+    renderTeam();
+    injectExtraNav();
+    refreshHeaderUI();
+    renderNews();
+    renderCustomPage();
+    applyAlertBanner();
+    applyMaintenance();
+  }
+
+  /* ---------- Site analytics / visits ---------- */
+  function setupVisitLog() {
+    if (document.body.dataset.page === "404") return;
+    try {
+      if (sessionStorage.getItem("ry_visit_logged")) return;
+      sessionStorage.setItem("ry_visit_logged", "1");
+    } catch (e) {}
+    var ua = navigator.userAgent || "";
+    var device = "desktop";
+    if (/Android/i.test(ua)) device = "android";
+    else if (/iPhone|iPad|iPod/i.test(ua)) device = "ios";
+    else if (/Windows/i.test(ua)) device = "windows";
+    else if (/Linux/i.test(ua)) device = "linux";
+    else if (/Mac/i.test(ua)) device = "mac";
+    var browser = "أخرى";
+    if (/Edg\//i.test(ua)) browser = "Edge";
+    else if (/Chrome\//i.test(ua)) browser = "Chrome";
+    else if (/Firefox\//i.test(ua)) browser = "Firefox";
+    else if (/Safari\//i.test(ua)) browser = "Safari";
+    else if (/Opera|OPR\//i.test(ua)) browser = "Opera";
+    var country = "غير معروف";
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      if (/Africa\/Cairo/.test(tz)) country = "مصر";
+      else if (/Asia\/Riyadh/.test(tz)) country = "السعودية";
+      else if (/Asia\/Baghdad/.test(tz)) country = "العراق";
+      else if (/Africa\/Algiers/.test(tz)) country = "الجزائر";
+      else if (/Africa\/Casablanca/.test(tz)) country = "المغرب";
+      else if (/Africa\/Tunis/.test(tz)) country = "تونس";
+      else if (/Africa\/Tripoli/.test(tz)) country = "ليبيا";
+      else if (/Africa\/Khartoum/.test(tz)) country = "السودان";
+      else if (/Asia\/Amman/.test(tz)) country = "الأردن";
+      else if (/Asia\/Damascus/.test(tz)) country = "سوريا";
+      else if (/Asia\/Beirut/.test(tz)) country = "لبنان";
+      else if (/Asia\/Kuwait/.test(tz)) country = "الكويت";
+      else if (/Asia\/Qatar/.test(tz)) country = "قطر";
+      else if (/Asia\/Muscat/.test(tz)) country = "عُمان";
+      else if (/Asia\/Aden/.test(tz)) country = "اليمن";
+      else if (/Asia\/Dubai/.test(tz)) country = "الإمارات";
+      else if (/Asia\/Bahrain/.test(tz)) country = "البحرين";
+      else if (/^America\/|^Europe\/|^Asia\/Tokyo|^Australia\//.test(tz)) country = "دول أخرى";
+    } catch (e) {}
+    var ref = "مباشر";
+    try {
+      if (document.referrer) {
+        var h = document.referrer;
+        if (/google\./.test(h)) ref = "Google";
+        else if (/facebook\./.test(h)) ref = "Facebook";
+        else if (/twitter\.|x\.com/.test(h)) ref = "X (تويتر)";
+        else if (/t\.me|telegram/.test(h)) ref = "Telegram";
+        else if (/discord\./.test(h)) ref = "Discord";
+        else if (/youtube\./.test(h)) ref = "YouTube";
+        else if (/instagram\./.test(h)) ref = "Instagram";
+        else ref = "رابط خارجي";
+      }
+    } catch (e) {}
+    var visits = load(K_VISITS, []);
+    if (!Array.isArray(visits)) visits = [];
+    visits.push({ ts: Date.now(), page: document.body.dataset.page || "other", device: device, browser: browser, country: country, ref: ref });
+    if (visits.length > 6000) visits = visits.slice(-6000);
+    store(K_VISITS, visits);
+  }
+
+  /* ---------- Maintenance mode + alert banner ---------- */
+  function applyMaintenance() {
+    var m = data.settings && data.settings.maintenance;
+    var on = m && m.on;
+    var isAdminPage = !!document.getElementById("adminModal");
+    var overlay = document.getElementById("ryMaintenance");
+    if (on && !isLoggedIn() && !isAdminPage) {
+      if (!overlay) {
+        overlay = el("div", "ry-maintenance-overlay", "");
+        overlay.id = "ryMaintenance";
+        document.body.appendChild(overlay);
+      }
+      overlay.style.display = "flex";
+      overlay.innerHTML =
+        '<div class="ry-maintenance-box">' +
+        '<div class="ry-maintenance-icon">🛠️</div>' +
+        "<h2>الموقع تحت الصيانة</h2>" +
+        "<p>" + esc((m.msg || "نعمل حاليًا على تحسين الموقع، نعود قريبًا جدًا.")) + "</p>" +
+        "</div>";
+    } else if (overlay) {
+      overlay.style.display = "none";
+    }
+  }
+
+  function applyAlertBanner() {
+    var a = data.settings && data.settings.alert;
+    var show = a && a.on && a.text;
+    var banner = document.getElementById("ryAlertBanner");
+    if (show) {
+      if (!banner) {
+        banner = el("div", "ry-alert-banner", "");
+        banner.id = "ryAlertBanner";
+        document.body.insertBefore(banner, document.body.firstChild);
+      }
+      banner.style.display = "block";
+      banner.innerHTML = '<div class="container">📢 ' + esc(a.text) + "</div>";
+    } else if (banner) {
+      banner.style.display = "none";
+    }
+  }
+
+  /* ---------- News (site) ---------- */
+  function renderNews() {
+    var wrap = document.getElementById("newsGrid");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    var list = data.control.news.filter(function (n) { return n.published && (!n.scheduledAt || n.scheduledAt <= Date.now()); });
+    list.sort(function (a, b) { return ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) || ((b.date || 0) - (a.date || 0)); });
+    if (!list.length) {
+      wrap.innerHTML = '<p class="empty-state">لا توجد أخبار بعد.</p>';
+      return;
+    }
+    list.forEach(function (n) {
+      var card = el("article", "news-card");
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", "فتح الخبر: " + n.title);
+      card.innerHTML =
+        (n.image
+          ? '<div class="news-img"><img src="' + esc(n.image) + '" alt="' + esc(n.title) + '" loading="lazy"></div>'
+          : '<div class="news-img news-img-empty">📰</div>') +
+        '<div class="news-body">' +
+        (n.pinned ? '<span class="badge-pin">📌 مثبّت</span>' : "") +
+        "<h3>" + esc(n.title) + "</h3>" +
+        "<p>" + esc(n.desc || "") + "</p>" +
+        '<span class="news-date">' + new Date(n.date || Date.now()).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" }) + "</span>" +
+        "</div>";
+      var open = function () { openNewsModal(n); };
+      card.addEventListener("click", open);
+      card.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+      wrap.appendChild(card);
+    });
+  }
+
+  function openNewsModal(n) {
+    mountModal(
+      '<button class="ry-modal-x modal-close" type="button" aria-label="إغلاق">✕</button>' +
+      '<div class="news-modal">' +
+      (n.image ? '<img class="news-modal-img" src="' + esc(n.image) + '" alt="' + esc(n.title) + '" />' : "") +
+      (n.pinned ? '<span class="badge-pin">📌 مثبّت</span>' : "") +
+      "<h2>" + esc(n.title) + "</h2>" +
+      '<div class="news-modal-date">' + new Date(n.date || Date.now()).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" }) + "</div>" +
+      '<div class="page-content">' + (n.body || "<p>" + esc(n.desc || "") + "</p>") + "</div>" +
+      "</div>"
+    );
+  }
+
+  /* ---------- Custom pages (site) ---------- */
+  function renderCustomPage() {
+    var wrap = document.getElementById("customPageWrap");
+    if (!wrap) return;
+    var p = queryParams();
+    var page = data.control.pages.filter(function (x) { return x.slug === p.slug && x.published; })[0];
+    if (!page) {
+      document.title = "الصفحة غير موجودة — " + data.settings.site.name;
+      wrap.innerHTML =
+        '<section class="section"><div class="container" style="text-align:center;padding:4rem 1rem">' +
+        "<h1>الصفحة غير موجودة</h1>" +
+        '<p class="hint">قد تكون الصفحة مسودة أو أُزيلت.</p>' +
+        '<p><a class="btn btn-primary" href="index.html">العودة للرئيسية</a></p>' +
+        "</div></section>";
+      return;
+    }
+    document.title = esc(page.title) + " — " + data.settings.site.name;
+    wrap.innerHTML = '<section class="section"><div class="container"><h1 class="section-title">' + esc(page.title) + "</h1><div class='page-content'>" + page.content + "</div></div></section>";
   }
 
   /* ---------- Export / Import ---------- */
   function exportData() {
-    var payload = { games: data.games, lessons: data.lessons, updates: data.updates, settings: data.settings };
+    var payload = { games: data.games, lessons: data.lessons, updates: data.updates, settings: data.settings, reports: data.reports, requests: data.requests };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
@@ -2687,6 +3529,8 @@
         data.lessons = p.lessons || [];
         data.updates = p.updates || [];
         data.settings = Object.assign({}, DEFAULT_SETTINGS, p.settings || {});
+        data.reports = p.reports || [];
+        data.requests = p.requests || [];
         saveAll();
         refreshSite();
         renderAdminGames(); renderAdminSlider(); renderAdminLessons(); renderAdminUpdates(); fillSettingsForm();
@@ -2834,7 +3678,588 @@
     });
   }
 
+  /* ---------- Accounts & favorites & notifications ---------- */
+  function loadUsers() {
+    var u = load(K_USERS, []);
+    return Array.isArray(u) ? u : [];
+  }
+
+  function saveUsers(arr) {
+    store(K_USERS, arr);
+  }
+
+  function currentUser() {
+    var uid = null;
+    try { uid = localStorage.getItem(K_SESSION); } catch (e) {}
+    if (!uid) return null;
+    var arr = loadUsers();
+    for (var i = 0; i < arr.length; i++) if (arr[i].id === uid) return arr[i];
+    return null;
+  }
+
+  function setSession(id) {
+    try { localStorage.setItem(K_SESSION, id || ""); } catch (e) {}
+  }
+
+  function registerUser(name, email, pass) {
+    var arr = loadUsers();
+    var em = String(email || "").trim().toLowerCase();
+    var nm = String(name || "").trim();
+    if (nm.length < 2) return { err: "اكتب اسمك (حرفان على الأقل)." };
+    if (!em || em.indexOf("@") === -1) return { err: "اكتب بريدًا إلكترونيًا صحيحًا." };
+    for (var i = 0; i < arr.length; i++) if (arr[i].email === em) return { err: "هذا البريد مسجّل مسبقًا — سجّل الدخول بدلًا من ذلك." };
+    if (String(pass || "").length < 4) return { err: "كلمة المرور 4 أحرف على الأقل." };
+    var u = { id: "u" + Date.now(), name: nm.slice(0, 30), email: em, pass: hashPass(pass), favs: [], likes: [], createdAt: Date.now() };
+    arr.push(u);
+    saveUsers(arr);
+    setSession(u.id);
+    markNotifSeen();
+    return { ok: true, u: u };
+  }
+
+  function loginUser(email, pass) {
+    var arr = loadUsers();
+    var em = String(email || "").trim().toLowerCase();
+    var hp = hashPass(pass);
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i].email === em && arr[i].pass === hp) {
+        setSession(arr[i].id);
+        markNotifSeen();
+        return { ok: true, u: arr[i] };
+      }
+    }
+    return { err: "البريد أو كلمة المرور غير صحيحة." };
+  }
+
+  function logoutUser() {
+    setSession("");
+  }
+
+  function userRec() { return currentUser(); }
+
+  function userHasFav(id) { var u = userRec(); return !!(u && u.favs && u.favs.indexOf(String(id)) !== -1); }
+  function userHasLike(id) { var u = userRec(); return !!(u && u.likes && u.likes.indexOf(String(id)) !== -1); }
+
+  function updateUser(patch) {
+    var u = userRec();
+    if (!u) return;
+    var arr = loadUsers().map(function (x) { return x.id === u.id ? patch : x; });
+    saveUsers(arr);
+  }
+
+  function addUserFav(id) {
+    var u = userRec();
+    if (!u) return;
+    if (!u.favs) u.favs = [];
+    if (u.favs.indexOf(String(id)) === -1) u.favs.push(String(id));
+    updateUser(u);
+  }
+
+  function removeUserFav(id) {
+    var u = userRec();
+    if (!u) return;
+    u.favs = (u.favs || []).filter(function (x) { return x !== String(id); });
+    updateUser(u);
+  }
+
+  function addUserLike(id) {
+    var u = userRec();
+    if (!u) return;
+    if (!u.likes) u.likes = [];
+    if (u.likes.indexOf(String(id)) === -1) u.likes.push(String(id));
+    updateUser(u);
+  }
+
+  function removeUserLike(id) {
+    var u = userRec();
+    if (!u) return;
+    u.likes = (u.likes || []).filter(function (x) { return x !== String(id); });
+    updateUser(u);
+  }
+
+  /* ---------- Notifications ---------- */
+  function notifSeenTs() {
+    var v = load(K_NOTIF_SEEN, 0);
+    return parseInt(v, 10) || 0;
+  }
+
+  function markNotifSeen() {
+    store(K_NOTIF_SEEN, Date.now());
+  }
+
+  function buildNotifs() {
+    var arr = [];
+    var now = Date.now();
+    var NEW_DAYS = 14;
+    var favIds = [];
+    var u = currentUser();
+    if (u && u.favs) favIds = u.favs;
+    data.games.forEach(function (g) {
+      var d = new Date(g.date || 0).getTime();
+      var lu = g.lastUpdate ? new Date(g.lastUpdate).getTime() : 0;
+      if (!d && !lu) return;
+      if (now - d < NEW_DAYS * 864e5) {
+        arr.push({ icon: "🆕", text: "تعريب جديد: " + g.title, href: gamePageHref(g.id), ts: d });
+      } else if (lu && now - lu < NEW_DAYS * 864e5) {
+        arr.push({ icon: "🔄", text: "تم تحديث تعريب: " + g.title, href: gamePageHref(g.id), ts: lu });
+      }
+      if (favIds.indexOf(String(g.id)) !== -1 && lu && now - lu < 30 * 864e5) {
+        arr.push({ icon: "♥️", text: "تعريب في مفضلتك حُدّث: " + g.title, href: gamePageHref(g.id), ts: lu });
+      }
+    });
+    (data.control.notifOutbox || []).forEach(function (n) {
+      if (!n.sent) return;
+      if (n.scheduledAt && now < n.scheduledAt) return;
+      if (n.to === "all" || (u && String(n.to) === String(u.id))) {
+        arr.push({ icon: n.icon || "📣", text: n.text || "", href: n.href || "", ts: n.sentAt || n.sent });
+      }
+    });
+    arr.sort(function (a, b) { return b.ts - a.ts; });
+    return arr.slice(0, 12);
+  }
+
+  function updateNotifBadge() {
+    var badge = document.getElementById("ryNotifBadge");
+    if (!badge) return;
+    var seen = notifSeenTs();
+    var unread = buildNotifs().filter(function (n) { return n.ts > seen; }).length;
+    badge.textContent = unread > 9 ? "9+" : String(unread);
+    badge.hidden = unread === 0;
+  }
+
+  function openNotifPanel() {
+    var notifs = buildNotifs();
+    markNotifSeen();
+    var body = "";
+    if (!notifs.length) {
+      body = '<p class="empty-state">لا توجد إشعارات جديدة حاليًا 🔕</p>';
+    } else {
+      body = '<div class="notif-list">' + notifs.map(function (n) {
+        return '<a class="notif-item" href="' + esc(n.href) + '"><span class="notif-icon">' + n.icon + '</span><span>' + esc(n.text) + '</span></a>';
+      }).join("") + "</div>";
+    }
+    var backdrop = mountModal(
+      '<div class="modal-head"><h3>🔔 الإشعارات</h3><button class="ry-modal-x modal-close" type="button">✕</button></div>' +
+      '<div class="notif-body">' + body + "</div>"
+    );
+    updateNotifBadge();
+    return backdrop;
+  }
+
+  /* ---------- Header user UI (injected) ---------- */
+  function refreshHeaderUI() {
+    var wrap = document.querySelector(".header-actions");
+    if (!wrap) return;
+    if (!document.getElementById("ryNotifBtn")) {
+      var bell = document.createElement("button");
+      bell.id = "ryNotifBtn";
+      bell.type = "button";
+      bell.className = "btn-theme";
+      bell.title = "الإشعارات";
+      bell.innerHTML = '🔔<span class="notif-badge" id="ryNotifBadge" hidden>0</span>';
+      bell.addEventListener("click", openNotifPanel);
+      var acc = document.createElement("button");
+      acc.id = "ryAccountBtn";
+      acc.type = "button";
+      acc.className = "btn-theme";
+      acc.title = "دخول / حساب جديد";
+      acc.innerHTML = "👤";
+      acc.addEventListener("click", openAccountModal);
+      wrap.appendChild(bell);
+      wrap.appendChild(acc);
+    }
+    updateNotifBadge();
+    var acctBtn = document.getElementById("ryAccountBtn");
+    var u = currentUser();
+    if (acctBtn) {
+      acctBtn.innerHTML = u ? "🙂" : "👤";
+      acctBtn.title = u ? "حساب " + u.name : "دخول / حساب جديد";
+    }
+  }
+
+  /* ---------- Account modal ---------- */
+  function openAccountModal() {
+    var u = currentUser();
+    var body = "";
+    if (u) {
+      var favHtml = "";
+      if (u.favs && u.favs.length) {
+        favHtml = '<div class="acct-favs">' + u.favs.map(function (id) {
+          var g = gameById(parseInt(id, 10));
+          if (!g) return "";
+          return '<a class="acct-fav" href="' + esc(gamePageHref(g.id)) + '">🎮 ' + esc(g.ar || g.title) + "</a>";
+        }).join("") + "</div>";
+      } else {
+        favHtml = '<p class="hint">لا توجد ألعاب في مفضلتك بعد — أضف ألعابًا من صفحاتها لتجدها هنا.</p>';
+      }
+      body =
+        '<div class="acct-welcome">👋 أهلاً <b>' + esc(u.name) + "</b></div>" +
+        '<div class="acct-sec"><h4>⭐ المفضلة</h4>' + favHtml + "</div>" +
+        '<button class="btn btn-ghost" id="acctLogoutBtn" type="button">تسجيل الخروج</button>';
+    } else {
+      body =
+        '<p class="hint">أنشئ حسابًا مجانيًا لحفظ المفضلة والتقييم والإعجاب والإشعارات (يُحفظ في هذا المتصفح).</p>' +
+        '<div class="acct-toggle-row">' +
+        '<button class="chip active" id="acctTabLogin" type="button">دخول</button>' +
+        '<button class="chip" id="acctTabReg" type="button">حساب جديد</button>' +
+        "</div>" +
+        '<form id="acctForm" class="admin-form" autocomplete="off">' +
+        '<input type="text" id="acctName" placeholder="اسمك" hidden />' +
+        '<input type="email" id="acctEmail" placeholder="البريد الإلكتروني" autocomplete="email" />' +
+        '<input type="password" id="acctPass" placeholder="كلمة المرور" autocomplete="current-password" />' +
+        '<button class="btn btn-primary" type="submit" id="acctSubmit">دخول</button>' +
+        '<span class="req-status" id="acctMsg"></span>' +
+        "</form>";
+    }
+    var backdrop = mountModal(
+      '<div class="modal-head"><h3>👤 حسابي</h3><button class="ry-modal-x modal-close" type="button">✕</button></div>' +
+      '<div class="acct-body">' + body + "</div>"
+    );
+    var logoutBtn = document.getElementById("acctLogoutBtn");
+    if (logoutBtn) logoutBtn.addEventListener("click", function () {
+      logoutUser();
+      backdrop.remove();
+      document.body.style.overflow = "";
+      refreshHeaderUI();
+      toast("تم تسجيل الخروج.");
+    });
+    var tabLogin = document.getElementById("acctTabLogin");
+    var tabReg = document.getElementById("acctTabReg");
+    var nameIn = document.getElementById("acctName");
+    var submitBtn = document.getElementById("acctSubmit");
+    var isReg = false;
+    function setMode(reg) {
+      isReg = reg;
+      if (tabLogin) tabLogin.classList.toggle("active", !reg);
+      if (tabReg) tabReg.classList.toggle("active", reg);
+      if (nameIn) nameIn.hidden = !reg;
+      if (submitBtn) submitBtn.textContent = reg ? "إنشاء الحساب" : "دخول";
+    }
+    if (tabLogin) tabLogin.addEventListener("click", function () { setMode(false); });
+    if (tabReg) tabReg.addEventListener("click", function () { setMode(true); });
+    var form = document.getElementById("acctForm");
+    if (form) form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("acctMsg");
+      var r;
+      if (isReg) r = registerUser(getF("acctName"), getF("acctEmail"), getF("acctPass"));
+      else r = loginUser(getF("acctEmail"), getF("acctPass"));
+      if (msg) {
+        if (r.err) { msg.textContent = r.err; msg.style.color = "#dc2626"; }
+        else {
+          msg.textContent = "تم الدخول بنجاح ✓";
+          msg.style.color = "#16a34a";
+          setTimeout(function () {
+            backdrop.remove();
+            document.body.style.overflow = "";
+            refreshHeaderUI();
+            renderGamePage();
+          }, 600);
+        }
+      }
+    });
+  }
+
+  /* ---------- Reports (bug/problem) ---------- */
+  var REPORT_TYPES = ["مشكلة في التثبيت", "خطأ في الترجمة", "اللعبة لا تعمل", "الرابط لا يعمل", "مشكلة أخرى"];
+
+  function openReportModal(g) {
+    var backdrop = mountModal(
+      '<div class="modal-head"><h3>⚠️ الإبلاغ عن مشكلة</h3><button class="ry-modal-x modal-close" type="button">✕</button></div>' +
+      '<div class="report-body">' +
+      (g ? '<p class="hint">الإبلاغ عن مشكلة في: <b>' + esc(g.ar || g.title) + "</b></p>" : "") +
+      '<form id="reportForm" class="admin-form">' +
+      '<select id="reportType">' + REPORT_TYPES.map(function (t) { return '<option>' + esc(t) + "</option>"; }).join("") + "</select>" +
+      '<input type="text" id="reportContact" placeholder="طريقة التواصل (تلجرام / إيميل...) — اختياري" autocomplete="off" />' +
+      '<textarea id="reportText" rows="3" required placeholder="اشرح المشكلة بالتفصيل..." maxlength="800"></textarea>' +
+      '<label class="report-file"><span>📎 إرفاق صورة أو ملف (اختياري)</span>' +
+      '<input type="file" id="reportFile" accept="image/*,.zip,.txt,.log" /></label>' +
+      '<div class="report-preview" id="reportPreview" hidden></div>' +
+      '<button class="btn btn-primary" type="submit">إرسال البلاغ</button>' +
+      '<span class="req-status" id="reportMsg"></span>' +
+      "</form>" +
+      "</div>"
+    );
+    var fileInput = document.getElementById("reportFile");
+    var preview = document.getElementById("reportPreview");
+    var form = document.getElementById("reportForm");
+    if (form) wireReportForm(form, fileInput, preview, g, function () {
+      backdrop.remove();
+      document.body.style.overflow = "";
+    });
+  }
+
+  function wireReportForm(form, fileInput, preview, g, onDone) {
+    var attached = "";
+    if (fileInput) fileInput.addEventListener("change", function () {
+      var f = fileInput.files[0];
+      if (!f) return;
+      if (f.size > 1.5 * 1024 * 1024) { toast("الملف كبير — الحد الأقصى 1.5 ميجا."); fileInput.value = ""; return; }
+      var reader = new FileReader();
+      reader.onload = function () {
+        attached = reader.result;
+        if (preview) {
+          var isImg = /^image\//.test(f.type);
+          preview.hidden = false;
+          preview.innerHTML = isImg
+            ? '<img src="' + attached + '" alt="" />'
+            : "📎 " + esc(f.name) + " (" + Math.round(f.size / 1024) + " كيلوبايت)";
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("reportMsg");
+      var text = getF("reportText");
+      if (!text) return;
+      var rep = {
+        id: "rep" + Date.now(),
+        game: g ? (g.ar || g.title) : getF("reportGame"),
+        gameId: g ? g.id : null,
+        type: getF("reportType") || "مشكلة أخرى",
+        text: text.slice(0, 800),
+        contact: getF("reportContact"),
+        file: attached,
+        date: new Date().toLocaleString("ar-EG"),
+      };
+      data.reports.push(rep);
+      store(K_REPORTS, data.reports);
+      if (msg) { msg.textContent = "تم إرسال البلاغ — شكرًا لك! ✓"; msg.style.color = "#16a34a"; }
+      setTimeout(function () {
+        toast("وصلنا بلاغك وسنعالجه قريبًا.");
+        if (onDone) { onDone(); }
+        else if (msg) { form.reset(); if (preview) { preview.hidden = true; preview.innerHTML = ""; } }
+      }, 900);
+    });
+  }
+
+  function initReportPage() {
+    var form = document.getElementById("reportForm");
+    if (!form) return;
+    if (form.dataset.wired) return;
+    form.dataset.wired = "1";
+    wireReportForm(form, document.getElementById("reportFile"), document.getElementById("reportPreview"), null);
+  }
+
+  /* ---------- Requests voting ---------- */
+  function renderRequests() {
+    var wrap = document.getElementById("requestsVoteList");
+    if (!wrap) return;
+    var arr = data.requests.slice().sort(function (a, b) {
+      return (parseInt(b.votes, 10) || 0) - (parseInt(a.votes, 10) || 0);
+    });
+    if (!arr.length) {
+      wrap.innerHTML = '<p class="empty-state">لا توجد طلبات بعد — كن أول من يطلب تعريبًا! 🎮</p>';
+      return;
+    }
+    wrap.innerHTML = "";
+    var myVotes = load(K_MYVOTES, {});
+    arr.forEach(function (r) {
+      var voted = myVotes[r.id] === 1;
+      var item = el("div", "vote-item");
+      item.innerHTML =
+        '<div class="vote-info">' +
+        "<strong>🎮 " + esc(r.game) + "</strong>" +
+        (r.desc ? "<p>" + esc(r.desc) + "</p>" : "") +
+        "<small>🕐 " + esc(r.date || "") + "</small>" +
+        "</div>" +
+        '<button class="vote-btn' + (voted ? " voted" : "") + '" type="button">' +
+        (voted ? "🗳️ صوّت" : "⬆️ صوت") +
+        ' <b class="vote-count">' + (parseInt(r.votes, 10) || 0) + "</b></button>";
+      item.querySelector(".vote-btn").addEventListener("click", function () {
+        voteRequest(r.id);
+      });
+      wrap.appendChild(item);
+    });
+  }
+
+  function voteRequest(id) {
+    if (!currentUser()) { toast("سجّل الدخول للتصويت على الطلبات."); openAccountModal(); return; }
+    var myVotes = load(K_MYVOTES, {});
+    if (!myVotes || typeof myVotes !== "object" || Array.isArray(myVotes)) myVotes = {};
+    if (myVotes[id] === 1) { toast("صوّت لهذا الطلب مسبقًا."); return; }
+    myVotes[id] = 1;
+    store(K_MYVOTES, myVotes);
+    for (var i = 0; i < data.requests.length; i++) {
+      if (data.requests[i].id === id) {
+        data.requests[i].votes = (parseInt(data.requests[i].votes, 10) || 0) + 1;
+        break;
+      }
+    }
+    store(K_REQUESTS, data.requests);
+    renderRequests();
+    toast("تم تسجيل صوتك ✓");
+  }
+
+  /* ---------- Team page ---------- */
+  var TEAM_MEMBERS = [
+    { icon: "👨‍💻", name: "فريق ريان", role: "المؤسس والتطوير" },
+    { icon: "🖋️", name: "المترجمون", role: "ترجمة النصوص والحوارات" },
+    { icon: "🔍", name: "المراجعون", role: "مراجعة الجودة والتدقيق اللغوي" },
+    { icon: "🎨", name: "المصممون", role: "الواجهات والخطوط والأغلفة" },
+  ];
+
+  function renderTeam() {
+    var wrap = document.getElementById("teamMembers");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    TEAM_MEMBERS.forEach(function (m) {
+      var card = el("div", "team-card");
+      card.innerHTML =
+        '<span class="team-icon">' + m.icon + "</span>" +
+        "<h3>" + esc(m.name) + "</h3>" +
+        "<p>" + esc(m.role) + "</p>";
+      wrap.appendChild(card);
+    });
+    var contacts = document.getElementById("teamContacts");
+    if (contacts) {
+      var s = data.settings.socials || {};
+      contacts.innerHTML = "";
+      Object.keys(SOCIAL_META).forEach(function (key) {
+        if (s[key]) {
+          var a = el("a", "team-contact", SOCIAL_META[key]);
+          a.href = s[key];
+          a.target = "_blank";
+          a.rel = "noopener";
+          contacts.appendChild(a);
+        }
+      });
+      if (data.settings.contactEmail) {
+        var em = el("a", "team-contact", "📧 " + data.settings.contactEmail);
+        em.href = "mailto:" + data.settings.contactEmail;
+        contacts.appendChild(em);
+      }
+      if (!contacts.children.length) {
+        contacts.appendChild(el("p", "hint", "سيُتاح التواصل مع الفريق قريبًا."));
+      }
+    }
+  }
+
+  /* ---------- Extra nav links (injected) ---------- */
+  function injectExtraNav() {
+    var nav = document.getElementById("mainNav");
+    if (!nav) return;
+    if (!document.getElementById("ryNavTeam")) {
+      var a1 = document.createElement("a");
+      a1.id = "ryNavTeam";
+      a1.href = "team.html";
+      a1.textContent = "فريق الموقع";
+      nav.appendChild(a1);
+      var a2 = document.createElement("a");
+      a2.id = "ryNavReport";
+      a2.href = "problems.html";
+      a2.textContent = "الإبلاغ عن مشكلة";
+      nav.appendChild(a2);
+    }
+    if (data.control.news && data.control.news.length && !document.getElementById("ryNavNews")) {
+      var a3 = document.createElement("a");
+      a3.id = "ryNavNews";
+      a3.href = "news.html";
+      a3.textContent = "الأخبار";
+      nav.insertBefore(a3, document.getElementById("ryNavTeam") || null);
+    }
+  }
+
+  /* ---------- Generic modal mount ---------- */
+  function mountModal(innerHTML) {
+    var backdrop = el("div", "modal-backdrop", "");
+    backdrop.style.display = "flex";
+    var modal = el("div", "modal", innerHTML);
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+    document.body.style.overflow = "hidden";
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop) { backdrop.remove(); document.body.style.overflow = ""; }
+    });
+    var x = modal.querySelector(".ry-modal-x");
+    if (x) x.addEventListener("click", function () { backdrop.remove(); document.body.style.overflow = ""; });
+    return backdrop;
+  }
+
   /* ---------- Init ---------- */
+  function addJSONLD(id, obj) {
+    var existing = document.getElementById(id);
+    if (existing) existing.parentNode.removeChild(existing);
+    var s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.id = id;
+    s.textContent = JSON.stringify(obj);
+    document.head.appendChild(s);
+  }
+
+  function siteURL(path) {
+    return "https://cmn124you-byte.github.io/ryangames/" + (path || "");
+  }
+
+  function videoGameLD(g) {
+    var rating = gameRating(g);
+    var ld = {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": g.title,
+      "alternateName": g.ar || undefined,
+      "url": siteURL("game.html?id=" + g.id),
+      "image": g.cover || siteURL("icons/icon-512.png"),
+      "description": String(g.desc || "").slice(0, 500),
+      "genre": g.genres || [],
+      "inLanguage": "ar",
+      "datePublished": g.date || undefined,
+      "dateModified": g.lastUpdate || g.date || undefined,
+      "operatingSystem": g.compat || "Windows",
+      "gamePlatform": g.platforms || [],
+      "author": { "@type": "Organization", "name": "فريق ريان" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": siteURL("game.html?id=" + g.id) }
+    };
+    if (rating.count > 0) {
+      ld.aggregateRating = { "@type": "AggregateRating", "ratingValue": rating.score.toFixed(2), "ratingCount": rating.count, "bestRating": 5, "worstRating": 0 };
+    }
+    return ld;
+  }
+
+  function injectPageStructuredData() {
+    if (!document.body) return;
+    var page = document.body.dataset.page;
+    if (page === "game") {
+      var wrap = document.getElementById("gameDetailPage");
+      if (!wrap) return;
+      var p = queryParams();
+      var g = null;
+      if (p.id !== undefined) g = gameById(parseInt(p.id, 10));
+      else if (p.slug) g = data.games.filter(function (x) { return slugify(x.title) === p.slug; })[0];
+      else if (wrap.dataset.staticId) g = gameById(parseInt(wrap.dataset.staticId, 10));
+      if (g) addJSONLD("ld-videogame", videoGameLD(g));
+    } else if (document.getElementById("gameGrid")) {
+      addJSONLD("ld-games", {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "جميع الألعاب المعرّبة",
+        "numberOfItems": data.games.length,
+        "itemListElement": data.games.map(function (g, i) {
+          return { "@type": "ListItem", "position": i + 1, "url": siteURL("game.html?id=" + g.id), "name": g.ar || g.title };
+        })
+      });
+    }
+  }
+
+  function setupToTop() {
+    var btn = document.createElement("button");
+    btn.id = "toTopBtn";
+    btn.type = "button";
+    btn.title = "العودة للأعلى";
+    btn.setAttribute("aria-label", "العودة للأعلى");
+    btn.textContent = "⬆";
+    document.body.appendChild(btn);
+    function onScroll() {
+      btn.classList.toggle("show", (window.scrollY || document.documentElement.scrollTop) > 480);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    btn.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
   function init() {
     loadAll();
     refreshSite();
@@ -2848,6 +4273,10 @@
     initImageUploaders();
     initGenreBuilder();
     setupLiveSync();
+    initReportPage();
+    setupToTop();
+    injectPageStructuredData();
+    setupVisitLog();
 
     /* Search */
     var searchBtn = document.getElementById("searchBtn");
@@ -2855,6 +4284,10 @@
     if (searchBtn) searchBtn.addEventListener("click", function () { state.search = searchInput.value; renderGrid(); });
     if (searchInput) searchInput.addEventListener("keyup", function (e) {
       if (e.key === "Enter") { state.search = searchInput.value; renderGrid(); }
+    });
+    if (searchInput) searchInput.addEventListener("input", function () {
+      state.search = searchInput.value;
+      renderGrid();
     });
 
     /* Nav */
@@ -2898,6 +4331,11 @@
     on("addLessonBtn", "click", function () { openLessonForm("lesson", null); });
     on("addUpdateBtn", "click", function () { openLessonForm("update", null); });
     on("addNewsBtn", "click", function () { openNewsForm(null); });
+    on("newsForm", "submit", handleNewsSubmit);
+    on("newsFormCancel", "click", function () { document.getElementById("newsForm").hidden = true; });
+    on("addPageBtn", "click", function () { openPageForm(null); });
+    on("pageForm", "submit", handlePageSubmit);
+    on("pageFormCancel", "click", function () { document.getElementById("pageForm").hidden = true; });
 
     on("gameForm", "submit", handleGameSubmit);
     on("sliderAddBtn", "click", function () {

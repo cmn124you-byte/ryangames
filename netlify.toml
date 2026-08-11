@@ -38,3 +38,9 @@
 [[headers]]
   for = "/sw.js"
   values = { Cache-Control = "no-cache" }
+
+# Unknown pages -> 404 page (must stay last)
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404

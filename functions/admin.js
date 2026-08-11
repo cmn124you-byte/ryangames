@@ -210,10 +210,11 @@ exports.handler = async (event) => {
       const row = {
         slug: slug,
         title: String(n.title || ""),
-        content: String(n.content || ""),
+        content: String(n.content || n.body || n.desc || ""),
         image: String(n.image || ""),
         date: String(n.date || ""),
-        status: n.status || "published",
+        pinned: !!(n.pinned),
+        status: n.status || (n.published ? "published" : "draft"),
       };
       await supabase.from("news").upsert(row, { onConflict: "slug" });
     }
