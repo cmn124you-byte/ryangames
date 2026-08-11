@@ -128,6 +128,21 @@ create table if not exists public.translation_requests (
   created_at  timestamptz not null default now()
 );
 
+-- ---------- Minigame leaderboard scores ----------
+create table if not exists public.scores (
+  id          bigint generated always as identity primary key,
+  user_id     text not null,                            -- lowercase email
+  email       text not null default '',
+  nickname    text not null default '',
+  country     text not null default '',
+  flag        text not null default '🌍',
+  game        text not null,                            -- fish | jump | fight | words | ahmd | quiz | arrange | dhikr
+  score       integer not null default 0,
+  ts          bigint not null default 0,                -- Date.now() at submission
+  created_at  timestamptz not null default now(),
+  unique (game, user_id)                                -- best score per game + user
+);
+
 -- ---------- Site settings (single row, no secrets) ----------
 create table if not exists public.settings (
   id             int primary key default 1,
@@ -174,11 +189,13 @@ create index if not exists idx_translations_game on public.translations(game_id)
 create index if not exists idx_game_images_game  on public.game_images(game_id);
 create index if not exists idx_news_slug         on public.news(slug);
 create index if not exists idx_updates_game      on public.updates(game_id);
+create index if not exists idx_scores_game       on public.scores(game);
 
 -- ---------- Grants (public read via anon) ----------
 grant usage on schema public to anon, authenticated;
 grant select on public.games, public.translations, public.game_images,
-  public.news, public.updates, public.lessons, public.categories, public.settings
+  public.news, public.updates, public.lessons, public.categories, public.settings,
+  public.scores
   to anon, authenticated;
 grant insert on public.translation_requests to anon, authenticated;
 
@@ -192,6 +209,7 @@ alter table public.updates               enable row level security;
 alter table public.lessons               enable row level security;
 alter table public.translation_requests  enable row level security;
 alter table public.settings              enable row level security;
+alter table public.scores                enable row level security;
 
 -- Public: read published content only. Writes via service_role bypass RLS.
 drop policy if exists public_read_games         on public.games;
@@ -203,6 +221,7 @@ drop policy if exists public_read_lessons       on public.lessons;
 drop policy if exists public_read_categories    on public.categories;
 drop policy if exists public_read_settings      on public.settings;
 drop policy if exists public_insert_requests    on public.translation_requests;
+drop policy if exists public_read_scores        on public.scores;
 
 create policy public_read_games         on public.games        for select using (status = 'published');
 create policy public_read_translations  on public.translations for select using (status = 'published');
@@ -213,5 +232,6 @@ create policy public_read_lessons       on public.lessons      for select using 
 create policy public_read_categories    on public.categories   for select using (true);
 create policy public_read_settings      on public.settings     for select using (true);
 create policy public_insert_requests    on public.translation_requests for insert with check (true);
+create policy public_read_scores        on public.scores       for select using (true);
 
 -- Admin/service_role (server-side only) can do anything; no extra policy needed.

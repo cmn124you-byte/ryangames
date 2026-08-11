@@ -1,4 +1,23 @@
+/* ============================================================
+ * Ryan Games — minigame score submission (Supabase-first)
+ * Route: /api/submit-score
+ * POST -> record the best score per (game, user). Keeps only the
+ *         highest score; responds { saved:false, best } when the
+ *         existing score is already better.
+ * If Supabase is not configured, falls back to Netlify Blobs
+ * (legacy path) so nothing is lost during migration.
+ * ============================================================ */
 const { getStore } = require("@netlify/blobs");
+const { createClient } = require("@supabase/supabase-js");
+
+const ALLOWED_GAMES = ["fish", "jump", "fight", "words", "ahmd", "quiz", "arrange", "dhikr"];
+
+function supabase() {
+  const url = process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+}
 
 function getStoreSafe() {
   try {
@@ -15,16 +34,13 @@ function getStoreSafe() {
   }
 }
 
-const ALLOWED_GAMES = ["fish", "jump", "fight", "words", "ahmd", "quiz", "arrange", "dhikr"];
+const respond = (statusCode, body) => ({
+  statusCode,
+  headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Access-Control-Allow-Origin": "*" },
+  body: JSON.stringify(body),
+});
 
 exports.handler = async (event) => {
-  const base = {
-    statusCode: 200,
-    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Access-Control-Allow-Origin": "*" },
-  };
-  const respond = (statusCode, body) =>
-    Object.assign({}, base, { statusCode, body: JSON.stringify(body) });
-
   try {
     const body = JSON.parse(event.body || "{}");
     const game = String(body.game || "").trim();
@@ -47,11 +63,26 @@ exports.handler = async (event) => {
       ts: Date.now(),
     };
 
+    const sb = supabase();
+    if (sb) {
+      const { data: existing } = await sb
+        .from("scores")
+        .select("score")
+        .eq("game", game)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (existing && existing.score >= entry.score) {
+        return respond(200, { saved: false, best: existing.score });
+      }
+      const { error } = await sb.from("scores").upsert(entry, { onConflict: "game,user_id" });
+      if (!error) return respond(200, { saved: true, best: entry.score });
+    }
+
     const store = getStoreSafe();
     const key = "scores:" + game + ":" + userId;
-    const existing = await store.get(key, { type: "json" });
-    if (existing && existing.score >= entry.score) {
-      return respond(200, { saved: false, best: existing.score });
+    const legacy = await store.get(key, { type: "json" });
+    if (legacy && legacy.score >= entry.score) {
+      return respond(200, { saved: false, best: legacy.score });
     }
     await store.set(key, entry);
     return respond(200, { saved: true, best: entry.score });
