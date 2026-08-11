@@ -76,7 +76,7 @@ try {
     const lb = await call(leaderboard, { httpMethod: "GET", queryStringParameters: { game: "fish" } });
     const mine = Array.isArray(lb.body.list) && lb.body.list.find((e) => e.userId === testEmail);
     check("leaderboard shows test score", !!mine && mine.score === 150 && mine.nickname === "SmokeTester", mine ? JSON.stringify(mine) : "not found");
-    const r4 = await call(submitScore, { httpMethod: "POST", body: JSON.stringify({ email: testEmail, nickname: "X", game: "fish", score: 5 }) });
+    const r4 = await call(submitScore, { httpMethod: "POST", body: JSON.stringify({ nickname: "X", game: "fish", score: 5 }) });
     check("submit missing email 400", r4.status === 400, "status=" + r4.status);
     const r5 = await call(submitScore, { httpMethod: "POST", body: JSON.stringify({ email: testEmail, nickname: "X", game: "not-a-game", score: 5 }) });
     check("submit unknown game 400", r5.status === 400, "status=" + r5.status);
