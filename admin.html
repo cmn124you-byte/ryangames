@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة تحكم ريان ألعاب (خاص)</title>
-  <meta name="description" content="ريان ألعاب: مكتبة تحميل ألعاب معرّبة للعربية مجانًا — ألعاب كمبيوتر كاملة، ألعاب بلا نت، دروس تثبيت، ودعم فني. حمّل ألعابك المفضلة بالعربية الآن." />
+  <title>Ryan Games Studio — لوحة التحكم (خاص)</title>
+  <meta name="description" content="Ryan Games / ريان ألعاب: لوحة إدارة مركزية تتحكم في الموقع وتطبيقات أندرويد وويندوز عبر Supabase." />
   <link rel="canonical" href="index.html" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="ريان ألعاب معرّبة" />
@@ -12,7 +12,7 @@
   <meta property="og:description" content="تحميل ألعاب معرّبة للعربية مجانًا — ألعاب كمبيوتر وألعاب بلا نت ودروس تثبيت." />
   <meta property="og:locale" content="ar_AR" />
   <meta name="twitter:card" content="summary" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="noindex, nofollow" />
   <meta name="keywords" content="ألعاب, تحميل ألعاب, ألعاب معربة, ألعاب مجانية, ألعاب كمبيوتر, تعريب الألعاب, ألعاب بلا نت, ألعاب عربية, تحميل العاب" />
   <script type="application/ld+json">
   {
@@ -281,6 +281,7 @@
         <button class="tab" data-tab="slider">السلايدر</button>
         <button class="tab" data-tab="lessons">الدروس</button>
         <button class="tab" data-tab="updates">التحديثات</button>
+        <button class="tab" data-tab="news">الأخبار</button>
         <button class="tab" data-tab="requests">طلبات التعريب</button>
         <button class="tab" data-tab="settings" hidden>الإعدادات والإعلانات</button>
       </div>
@@ -333,6 +334,15 @@
         </div>
         <ul class="admin-list" id="adminRequestsList"></ul>
         <p class="hint">تُحفظ الطلبات في ملف على جهازك (المجلد _data) عند فتح الموقع عبر السيرفر. إن فتح الموقع مباشرة من الملف فتُحفظ في متصفحك فقط.</p>
+      </div>
+
+      <!-- Tab: news -->
+      <div class="tab-panel" id="tab-news" hidden>
+        <div class="admin-bar">
+          <h4>إدارة الأخبار</h4>
+          <button class="btn btn-primary btn-sm" id="addNewsBtn" type="button">+ إضافة خبر</button>
+        </div>
+        <ul class="admin-list" id="adminNewsList"></ul>
       </div>
 
       <!-- Tab: settings -->
@@ -473,6 +483,12 @@
           <label>الاسم العربي <span style="color:#e11d48">*</span>
             <input type="text" id="gAr" required placeholder="الفارس الفارغ" />
           </label>
+        </div>
+        <div class="form-row">
+          <label>الرابط الثابت (Slug) — يُفضّل بالإنجليزية
+            <input type="text" id="gSlug" placeholder="beyond-two-souls" />
+          </label>
+          <p class="hint" style="align-self:flex-end;margin:0">الرابط الثابت سيكون: <code>/game/الـslug</code> — اتركه فارغًا ليتولّد تلقائيًا من الاسم الإنجليزي.</p>
         </div>
         <div class="form-row">
           <label>صورة العرض 🎨 (تظهر قبل الضغط على اللعبة)
@@ -674,6 +690,8 @@
     </div>
   </div>
 
+  <script src="ry-config.js"></script>
+  <script src="ry-api.js"></script>
   <script src="data.js"></script>
   <script src="app.js"></script>
   <script>

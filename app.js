@@ -5,6 +5,7 @@
   var K_GAMES = "ry_games";
   var K_LESSONS = "ry_lessons";
   var K_UPDATES = "ry_updates";
+  var K_NEWS = "ry_news";
   var K_SETTINGS = "ry_settings";
   var K_REQUESTS = "ry_requests";
   var K_COMMENTS = "ry_comments";
@@ -18,6 +19,7 @@
     games: [],
     lessons: [],
     updates: [],
+    news: [],
     settings: null,
     requests: [],
   };
@@ -98,6 +100,8 @@
     if (!data.settings.ads || typeof data.settings.ads !== "object") data.settings.ads = Object.assign({}, DEFAULT_SETTINGS.ads);
     data.requests = load(K_REQUESTS, []);
     if (!Array.isArray(data.requests)) data.requests = [];
+    data.news = load(K_NEWS, []);
+    if (!Array.isArray(data.news)) data.news = [];
   }
 
   function normArray(stored, defaults, fix) {
@@ -111,6 +115,7 @@
     var ok = store(K_GAMES, data.games);
     ok = store(K_LESSONS, data.lessons) && ok;
     ok = store(K_UPDATES, data.updates) && ok;
+    ok = store(K_NEWS, data.news) && ok;
     ok = store(K_SETTINGS, data.settings) && ok;
     if (!ok) alert("تعذّر الحفظ! مساحة التخزين في المتصفح ممتلئة.\nالحل: قلّل حجم الصور أو احذف بعض العناصر ثم جرّب مجددًا.");
     if (ok) pushRemote();
@@ -128,6 +133,32 @@
 
   function fetchRemoteData() {
     if (!window.fetch) return Promise.resolve(false);
+    /* Unified data layer: Supabase (source of truth) -> local cache -> data.js */
+    if (window.RyAPI) {
+      return window.RyAPI.siteData().then(function (doc) {
+        if (!doc || typeof doc !== "object") return false;
+        var applied = false;
+        if (Array.isArray(doc.games) && doc.games.length) { data.games = doc.games.slice(); applied = true; }
+        if (Array.isArray(doc.lessons) && doc.lessons.length) { data.lessons = doc.lessons.slice(); applied = true; }
+        if (Array.isArray(doc.updates) && doc.updates.length) { data.updates = doc.updates.slice(); applied = true; }
+        if (Array.isArray(doc.news) && doc.news.length) { data.news = doc.news.slice(); applied = true; }
+        if (doc.settings && typeof doc.settings === "object") {
+          data.settings = Object.assign({}, DEFAULT_SETTINGS, data.settings || {}, doc.settings);
+          applied = true;
+        }
+        if (applied) {
+          store(K_GAMES, data.games);
+          store(K_LESSONS, data.lessons);
+          store(K_UPDATES, data.updates);
+          store(K_NEWS, data.news);
+          store(K_SETTINGS, data.settings);
+          var ts = (typeof doc.updatedAt === "number" && doc.updatedAt > 0) ? doc.updatedAt : Date.now();
+          store("ry_remote_ts", ts);
+          REMOTE_OK = true;
+        }
+        return applied;
+      }).catch(function () { return false; });
+    }
     return fetch(REMOTE_URL)
       .then(function (r) { if (!r.ok) throw new Error("http_" + r.status); return r.json(); })
       .then(function (doc) {
@@ -164,24 +195,34 @@
       games: data.games,
       lessons: data.lessons,
       updates: data.updates,
+      news: data.news,
       settings: data.settings,
     };
     var body = JSON.stringify(payload);
     if (body.length > 8 * 1024 * 1024) return;
-    fetch(REMOTE_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "X-Admin-Key": publishKey() },
-      body: body,
-    }).then(function (r) {
-      if (r.status === 403) {
-        alert("⚠️ فشل نشر التعديلات على السيرفر: مفتاح النشر غير صحيح.\n\nفي لوحة Netlify أضف متغير ADMIN_WRITE_KEY بنفس قيمة «مفتاح النشر» في إعدادات المالك.\n\nحُفظت التعديلات على هذا الجهاز فقط.");
-        return null;
-      }
-      if (!r.ok) return null;
-      return r.json();
-    }).then(function (res) {
+
+    var adminKey = publishKey();
+    var p = null;
+    if (window.RyAPI && window.RyAPI.adminSave) {
+      p = window.RyAPI.adminSave(payload, adminKey);
+    } else {
+      p = fetch(REMOTE_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Admin-Key": adminKey },
+        body: body,
+      }).then(function (r) {
+        if (!r.ok) { var e = new Error("http_" + r.status); e.status = r.status; throw e; }
+        return r.json();
+      });
+    }
+
+    p.then(function (res) {
       if (res && typeof res.updatedAt === "number") store("ry_remote_ts", res.updatedAt);
-    }).catch(function () {});
+    }).catch(function (err) {
+      if (err && err.status === 403) {
+        alert("⚠️ فشل نشر التعديلات على السيرفر: مفتاح النشر غير صحيح.\n\nفي لوحة Netlify أضف متغير ADMIN_WRITE_KEY بنفس قيمة «مفتاح النشر» في إعدادات المالك.\n\nحُفظت التعديلات على هذا الجهاز فقط.");
+      }
+    });
   }
 
   /* ---------- Helpers ---------- */
@@ -405,7 +446,10 @@
 
   function gamePageHref(id) {
     var g = gameById(id);
-    if (g && g.title && slugify(g.title)) return "game-" + slugify(g.title) + ".html";
+    if (g) {
+      var slug = g.slug || (g.title ? slugify(g.title) : "");
+      if (slug) return "game-" + slug + ".html";
+    }
     return "game.html?id=" + encodeURIComponent(id);
   }
 
@@ -1148,7 +1192,9 @@
     if (p.id !== undefined) {
       g = gameById(parseInt(p.id, 10));
     } else if (p.slug) {
-      g = data.games.filter(function (x) { return slugify(x.title) === p.slug; })[0];
+      g = data.games.filter(function (x) { return (x.slug && x.slug === p.slug) || slugify(x.title) === p.slug; })[0];
+    } else if (window.__GAME_SLUG) {
+      g = data.games.filter(function (x) { return (x.slug && x.slug === window.__GAME_SLUG) || slugify(x.title) === window.__GAME_SLUG; })[0];
     } else if (window.__GAME_ID !== undefined) {
       g = gameById(window.__GAME_ID);
     }
@@ -1764,11 +1810,12 @@
         document.querySelectorAll("#adminTabs .tab").forEach(function (t) { t.classList.remove("active"); });
         tab.classList.add("active");
         var name = tab.dataset.tab;
-        ["games", "slider", "lessons", "updates", "requests", "settings"].forEach(function (n) {
+        ["games", "slider", "lessons", "updates", "news", "requests", "settings"].forEach(function (n) {
           var panel = document.getElementById("tab-" + n);
           if (panel) panel.hidden = n !== name;
         });
         if (name === "requests") renderAdminRequests();
+        if (name === "news") renderAdminNews();
         if (name === "settings") fillSettingsForm();
       });
     });
@@ -1824,6 +1871,7 @@
     setF("gTradRate", g ? g.tradRate : "");
     setF("gInstallTime", g ? g.installTime : "");
     setF("gCompat", g ? g.compat : "");
+    setF("gSlug", g ? (g.slug || "") : "");
     setF("gPass", "");
     var keepWrap = document.getElementById("gPassKeepWrap");
     var keepChk = document.getElementById("gPassKeep");
@@ -1867,8 +1915,11 @@
       } else if (!gameFormState.videoLocal && gameFormState.videoHadLocal) {
         try { await mediaDel("video_" + id); } catch (err) {}
       }
+      var prevGame = (idx !== -1) ? data.games[idx] : null;
+      var customSlug = getF("gSlug");
       var game = {
         id: id,
+        slug: customSlug || (prevGame && prevGame.slug ? prevGame.slug : slugify(getF("gTitle"))),
         title: getF("gTitle"),
         ar: getF("gAr"),
         cover: getCover(),
@@ -1968,6 +2019,16 @@
     e.preventDefault();
     try {
       var kind = getF("lfKind");
+      if (kind === "news") {
+        handleNewsSubmit({
+          id: getF("lfId") ? parseInt(getF("lfId"), 10) : null,
+          title: getF("lfTitle"),
+          content: getF("lfDesc"),
+          link: getF("lfLink"),
+        });
+        closeModal("lessonModal");
+        return;
+      }
       var id = getF("lfId") ? parseInt(getF("lfId"), 10) : Date.now();
       var item = {
         id: id,
@@ -2018,6 +2079,60 @@
         } },
       ]));
     });
+  }
+
+  /* ---------- Admin: news ---------- */
+  function renderAdminNews() {
+    var list = document.getElementById("adminNewsList");
+    if (!list) return;
+    list.innerHTML = "";
+    if (!data.news.length) {
+      list.innerHTML = '<p class="empty-state">لا توجد أخبار بعد — أضف أول خبر.</p>';
+      return;
+    }
+    data.news.slice().reverse().forEach(function (n) {
+      list.appendChild(adminItem(n.title || "خبر", n.date || "", n, [
+        { cls: "edit", label: "تعديل", fn: function () { openNewsForm(n); } },
+        { cls: "del", label: "حذف", fn: function () {
+          data.news = data.news.filter(function (x) { return x.id !== n.id; });
+          saveAll(); refreshSite(); renderAdminNews();
+        } },
+      ]));
+    });
+  }
+
+  function openNewsForm(n) {
+    setF("lfKind", "news");
+    setF("lfId", n ? n.id : "");
+    setF("lfIcon", "");
+    setF("lfTitle", n ? n.title : "");
+    setF("lfDesc", n ? n.content : "");
+    setF("lfLink", n ? n.link || n.image : "");
+    var el = document.getElementById("lessonModalTitle");
+    if (el) el.textContent = n ? "تعديل خبر" : "إضافة خبر جديد";
+    var iconWrap = document.getElementById("lfIcon");
+    if (iconWrap) iconWrap.parentElement.parentElement.style.display = "none";
+    openModal("lessonModal");
+  }
+
+  function handleNewsSubmit(item) {
+    var id = item.id || Date.now();
+    var n = {
+      id: id,
+      slug: item.slug || slugify(item.title) || "news-" + id,
+      title: item.title,
+      content: item.content || "",
+      image: item.image || "",
+      link: item.link || "",
+      date: item.date || new Date().toISOString().slice(0, 10),
+      status: "published",
+    };
+    var idx = data.news.findIndex(function (x) { return x.id === id; });
+    if (idx !== -1) data.news[idx] = Object.assign({}, data.news[idx], n);
+    else data.news.push(n);
+    saveAll();
+    refreshSite();
+    renderAdminNews();
   }
 
   /* ---------- Admin: settings ---------- */
@@ -2782,6 +2897,7 @@
     on("addGameBtn", "click", function () { openGameForm(null); });
     on("addLessonBtn", "click", function () { openLessonForm("lesson", null); });
     on("addUpdateBtn", "click", function () { openLessonForm("update", null); });
+    on("addNewsBtn", "click", function () { openNewsForm(null); });
 
     on("gameForm", "submit", handleGameSubmit);
     on("sliderAddBtn", "click", function () {

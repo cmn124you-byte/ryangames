@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /.netlify/
+
+Sitemap: https://cmn124you-byte.github.io/ryangames/sitemap.xml

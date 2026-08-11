@@ -1,14 +1,40 @@
+# ============================================================
+# Ryan Games / ريان ألعاب — Netlify configuration
+# The frontend is hosted on GitHub Pages; these functions back the
+# /api/* admin layer. Supabase is the Single Source of Truth.
+# ============================================================
 [build]
   publish = "."
   functions = "functions"
 
 [functions]
   node_bundler = "esbuild"
+  included_files = ["functions/**"]
 
 [build.environment]
   AWS_LAMBDA_JS_RUNTIME = "nodejs20.x"
 
+# Map every /api/* request to a Netlify Function
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
+# Clean game URLs (works on Netlify; keep the .html links for GitHub Pages)
+[[redirects]]
+  from = "/game/:slug"
+  to = "/game-:slug.html"
+  status = 301
+
+# Cache static assets aggressively, never cache API responses
+[[headers]]
+  for = "/api/*"
+  values = { Cache-Control = "no-store" }
+
+[[headers]]
+  for = "/*"
+  values = { X-Content-Type-Options = "nosniff", Referrer-Policy = "strict-origin-when-cross-origin", X-Frame-Options = "SAMEORIGIN" }
+
+[[headers]]
+  for = "/sw.js"
+  values = { Cache-Control = "no-cache" }

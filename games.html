@@ -82,7 +82,7 @@
 
     <section class="section container">
       <div class="search-box">
-        <input type="search" id="searchInput" placeholder="ابحث عن لعبة..." autocomplete="off" />
+        <input type="search" id="searchInput" placeholder="ابحث عن لعبة بالعربية أو الإنجليزية..." autocomplete="off" />
         <button type="button" id="searchBtn">بحث</button>
       </div>
       <div class="filters" id="filters"></div>
@@ -146,6 +146,8 @@
     </div>
   </div>
 
+  <script src="ry-config.js"></script>
+  <script src="ry-api.js"></script>
   <script src="data.js"></script>
   <script src="app.js"></script>
   <script>
@@ -154,6 +156,18 @@
         navigator.serviceWorker.register("sw.js").catch(function () {});
       });
     }
+    /* Unified search: fill the box from ?search= and run it */
+    window.addEventListener("load", function () {
+      try {
+        var q = new URLSearchParams(location.search).get("search") || new URLSearchParams(location.search).get("q");
+        if (q) {
+          var inp = document.getElementById("searchInput");
+          var btn = document.getElementById("searchBtn");
+          if (inp) { inp.value = q; }
+          if (btn) btn.click();
+        }
+      } catch (e) {}
+    });
   </script>
 </body>
 </html>

@@ -2,3 +2,23 @@
 CNAME
 # Netlify-specific config (now deployed on Netlify)
 !netlify.toml
+
+# Secrets & local env — NEVER commit real keys
+supabase/seed/.env
+functions/.env
+*.env.local
+.env
+
+# Node
+node_modules/
+
+# Builds & generated artifacts
+desktop/dist/
+desktop/build/
+mobile/android/
+mobile/www/
+_pages/
+
+# Logs
+*.log
+npm-debug.log*

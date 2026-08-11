@@ -4372,3 +4372,77 @@ img {
     animation: none;
   }
 }
+
+/* ---------- Ryan Games homepage: install button ---------- */
+.install-fab {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 1.2rem;
+  z-index: 1200;
+  background: var(--accent, #e11d48);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.2rem;
+  font-weight: 800;
+  font-size: 0.9rem;
+  box-shadow: 0 8px 24px rgba(225, 29, 72, 0.45);
+  cursor: pointer;
+  animation: fab-pulse 2.4s infinite;
+}
+.install-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(225, 29, 72, 0.55);
+}
+@keyframes fab-pulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(225, 29, 72, 0.45); }
+  50% { box-shadow: 0 8px 34px rgba(225, 29, 72, 0.7); }
+}
+
+/* ---------- Ryan Games homepage: all-games grid ---------- */
+.home-grid-empty {
+  padding: 1.5rem 0;
+}
+.game-card.game-card {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ---------- Ryan Games homepage: news feed ---------- */
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.news-item {
+  display: flex;
+  gap: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border, rgba(0,0,0,0.08));
+  border-radius: var(--radius);
+  padding: 0.8rem;
+  align-items: flex-start;
+}
+.news-item img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+.news-body h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.news-date {
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: inline-block;
+  margin-bottom: 0.2rem;
+}
+.news-body p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}

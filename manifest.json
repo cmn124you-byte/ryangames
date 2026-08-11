@@ -1,16 +1,33 @@
 {
-  "name": "ريان — ألعاب معرّبة",
-  "short_name": "ريان",
-  "description": "مكتبة ألعاب معرّبة للغة العربية مع دروس ودعم فني.",
+  "name": "Ryan Games — ريان ألعاب",
+  "short_name": "ريان ألعاب",
+  "description": "منصة ريان ألعاب: تعريبات الألعاب العربية على الويب والجوال وويندوز.",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./",
   "scope": "./",
+  "id": "ryangames",
   "display": "standalone",
-  "background_color": "#f7f7f9",
+  "background_color": "#0f172a",
   "theme_color": "#e11d48",
+  "orientation": "any",
+  "categories": ["games", "entertainment"],
+  "shortcuts": [
+    {
+      "name": "جميع الألعاب",
+      "short_name": "الألعاب",
+      "url": "./games.html"
+    },
+    {
+      "name": "أحدث التعريبات",
+      "short_name": "الجديد",
+      "url": "./new.html"
+    }
+  ],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

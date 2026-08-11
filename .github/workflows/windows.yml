@@ -1,0 +1,52 @@
+name: Build Windows EXE (Electron)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install desktop deps
+        working-directory: desktop
+        run: npm install
+
+      - name: Create icon (ICO from PNG)
+        working-directory: desktop
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          $png = [System.Drawing.Image]::FromFile((Resolve-Path "..\icons\icon-512.png"))
+          $bmp = New-Object System.Drawing.Bitmap(256,256)
+          $g = [System.Drawing.Graphics]::FromImage($bmp)
+          $g.Clear([System.Drawing.Color]::FromArgb(255,15,23,42))
+          $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+          $g.DrawImage($png,0,0,256,256)
+          New-Item -ItemType Directory -Path "build" -Force | Out-Null
+          $ic = [System.Drawing.Icon]::FromHandle($bmp.GetHicon())
+          $fs = [System.IO.File]::OpenWrite((Join-Path (Get-Location) "build\icon.ico"))
+          $ic.Save($fs)
+          $fs.Close(); $ic.Dispose(); $g.Dispose(); $bmp.Dispose(); $png.Dispose()
+
+      - name: Build installer + portable
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --win --publish never
+
+      - name: Upload EXE artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: RyanGames-Windows
+          path: desktop/dist/*.exe

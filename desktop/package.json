@@ -1,0 +1,64 @@
+{
+  "name": "ryan-games-desktop",
+  "productName": "Ryan Games",
+  "version": "1.0.0",
+  "description": "Ryan Games — تعريبات الألعاب العربية. نسخة ويندوز.",
+  "author": "Ryan Games",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "pack": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.ryangames.app",
+    "productName": "Ryan Games",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js"
+    ],
+    "extraResources": [
+      {
+        "from": "..",
+        "to": "site",
+        "filter": [
+          "**/*",
+          "!**/node_modules/**",
+          "!.git/**",
+          "!desktop/**",
+          "!supabase/**",
+          "!backup-2026-08-10/**",
+          "!functions/node_modules/**",
+          "!*.log"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "artifactName": "RyanGames-${version}-setup.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Ryan Games"
+    },
+    "portable": {
+      "artifactName": "RyanGames-${version}-portable.${ext}"
+    }
+  }
+}

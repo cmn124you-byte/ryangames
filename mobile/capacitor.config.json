@@ -1,0 +1,13 @@
+{
+  "appId": "com.ryangames.app",
+  "appName": "Ryan Games",
+  "webDir": "..",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0f172a"
+  },
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  }
+}
