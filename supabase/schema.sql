@@ -110,7 +110,7 @@ create table if not exists public.lessons (
   id          uuid primary key default gen_random_uuid(),
   icon        text default '',
   title       text not null,
-  desc        text default '',
+  "desc"      text default '',
   link        text default '',
   sort_order  integer not null default 0,
   status      text not null default 'published',

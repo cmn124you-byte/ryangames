@@ -9,8 +9,8 @@
   window.RY_CONFIG = {
     // Your Supabase project (fill these in, or inject them at build time).
     // Example: SUPABASE_URL: "https://abcdefgh.supabase.co"
-    SUPABASE_URL: "",
-    SUPABASE_ANON_KEY: "",
+    SUPABASE_URL: "https://ytecufjqyezcbvpcokki.supabase.co",
+    SUPABASE_ANON_KEY: "sb_publishable_4dPspHL8PjOsIuvXIlCa4w_pTasnnGp",
 
     // Netlify Functions base path (admin writes, uploads, AI translation).
     API_BASE: "/api",
