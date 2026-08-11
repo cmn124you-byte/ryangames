@@ -15,6 +15,12 @@ jobs:
         with:
           node-version: 22
 
+      - name: Syntax-check Netlify functions
+        working-directory: functions
+        run: |
+          for f in *.js; do node --check "$f"; done
+          echo "All functions passed node --check"
+
       - name: Install seed deps
         working-directory: supabase/seed
         run: npm install
