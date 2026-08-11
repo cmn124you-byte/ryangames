@@ -1,9 +1,10 @@
 /* ============================================================
  * Ryan Games — static SEO page generator
- * Reads data.js defaults, generates game-<slug>.html pages
- * (SEO landing pages) + sitemap.xml. Run in GitHub Actions
- * before deploying to Pages. Runtime data still comes live
- * from Supabase via renderGamePage.
+ * Reads published games from Supabase (anon REST) first, falls
+ * back to data.js defaults when offline/unconfigured, and
+ * generates game-<slug>.html pages (SEO landing pages) +
+ * sitemap.xml. Run in GitHub Actions before deploying to Pages.
+ * Runtime data still comes live from Supabase via renderGamePage.
  * ============================================================ */
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,36 @@ const SITE_URL = "https://cmn124you-byte.github.io/ryangames/";
 
 function slugify(s) {
   return String(s || "").toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w\u0600-\u06FF-]+/g, "");
+}
+
+function loadConfig() {
+  const src = readFileSync(path.join(root, "ry-config.js"), "utf8");
+  const sandbox = { window: {}, console };
+  vm.createContext(sandbox);
+  vm.runInContext(src, sandbox);
+  return sandbox.window.RY_CONFIG || {};
+}
+
+async function fetchSupabaseGames() {
+  const cfg = loadConfig();
+  const url = cfg.SUPABASE_URL || "";
+  const anon = cfg.SUPABASE_ANON_KEY || "";
+  if (!url || !anon || url.indexOf("supabase.co") === -1) return null;
+  const r = await fetch(
+    url + "/rest/v1/games?select=*&status=eq.published&order=updated_at.desc&limit=500",
+    { headers: { apikey: anon, Authorization: "Bearer " + anon } },
+  );
+  if (!r.ok) return null;
+  const rows = await r.json();
+  if (!Array.isArray(rows) || !rows.length) return null;
+  return rows.map((g) => ({
+    slug: g.slug || slugify(g.title_en || g.title_ar || ""),
+    title: g.title_en || g.title_ar || "",
+    ar: g.title_ar || "",
+    cover: g.cover_url || "",
+    desc: g.description || "",
+    shortDesc: g.description || "",
+  }));
 }
 
 function loadDefaults() {
@@ -48,7 +79,19 @@ function buildPage(game, tpl) {
 }
 
 function main() {
-  const { games, settings } = loadDefaults();
+  const { games: defaultGames, settings } = loadDefaults();
+  fetchSupabaseGames()
+    .then((supaGames) => {
+      const games = supaGames || defaultGames;
+      writePages(games, settings, supaGames ? "supabase" : "data.js");
+    })
+    .catch((err) => {
+      console.error("[seo] Supabase fetch failed, using data.js:", String(err && err.message || err));
+      writePages(defaultGames, settings, "data.js");
+    });
+}
+
+function writePages(games, settings, source) {
   const tpl = readFileSync(path.join(root, "game.html"), "utf8");
   const outDir = path.join(root, "_pages");
   rmSync(outDir, { recursive: true, force: true });
@@ -68,7 +111,7 @@ function main() {
 
   let made = 0;
   for (const g of games || []) {
-    if (!g || !g.title) continue;
+    if (!g || !(g.title || g.ar)) continue;
     const slug = slugify(g.slug || g.title);
     if (!slug) continue;
     writeFileSync(path.join(outDir, `game-${slug}.html`), buildPage(g, tpl));
@@ -81,7 +124,7 @@ function main() {
     "\n</urlset>\n";
   writeFileSync(path.join(outDir, "sitemap.xml"), xml);
 
-  console.log(`[seo] generated ${made} game page(s) + sitemap.xml into _pages/ (site: ${settings.site ? settings.site.name : ""})`);
+  console.log(`[seo] generated ${made} game page(s) + sitemap.xml into _pages/ (source: ${source}, site: ${settings.site ? settings.site.name : ""})`);
 }
 
 main();
