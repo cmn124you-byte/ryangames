@@ -53,7 +53,7 @@ exports.handler = async (event) => {
 
     const userId = email;
     const entry = {
-      userId: userId,
+      user_id: userId,
       email: email,
       nickname: String(body.nickname || email.split("@")[0] || "لاعب").slice(0, 40),
       country: String(body.country || "").slice(0, 60),

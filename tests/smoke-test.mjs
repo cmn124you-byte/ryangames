@@ -73,6 +73,9 @@ try {
     check("submit higher score saved", r2.status === 200 && r2.body.saved === true && r2.body.best === 150, JSON.stringify(r2.body));
     const r3 = await call(submitScore, evt(120));
     check("submit lower score NOT saved", r3.status === 200 && r3.body.saved === false && r3.body.best === 150, JSON.stringify(r3.body));
+    const lb = await call(leaderboard, { httpMethod: "GET", queryStringParameters: { game: "fish" } });
+    const mine = Array.isArray(lb.body.list) && lb.body.list.find((e) => e.userId === testEmail);
+    check("leaderboard shows test score", !!mine && mine.score === 150 && mine.nickname === "SmokeTester", mine ? JSON.stringify(mine) : "not found");
     const r4 = await call(submitScore, { httpMethod: "POST", body: JSON.stringify({ email: testEmail, nickname: "X", game: "fish", score: 5 }) });
     check("submit missing email 400", r4.status === 400, "status=" + r4.status);
     const r5 = await call(submitScore, { httpMethod: "POST", body: JSON.stringify({ email: testEmail, nickname: "X", game: "not-a-game", score: 5 }) });

@@ -76,7 +76,8 @@ exports.handler = async (event) => {
       const { data, error } = await query;
       if (!error) {
         const rows = Array.isArray(data) ? data : [];
-        let list = dedupeBest(rows, (e) => e.user_id || e.email);
+        const uid = (e) => e.user_id || e.userId || e.email;
+        let list = dedupeBest(rows, uid);
         list.sort((a, b) => b.score - a.score || a.ts - b.ts);
         const top = list.slice(0, limit).map((e, i) => ({
           rank: i + 1,
@@ -86,7 +87,7 @@ exports.handler = async (event) => {
           game: e.game,
           score: e.score,
           ts: e.ts,
-          userId: e.user_id || e.email,
+          userId: uid(e),
         }));
         return respond(200, { game, country, list: top });
       }
