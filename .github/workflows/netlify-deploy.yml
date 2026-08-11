@@ -1,0 +1,50 @@
+name: netlify-deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: netlify-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p dist
+          rsync -a --exclude='.git' --exclude='.github' \
+            --exclude='backup-2026-08-10' --exclude='desktop' --exclude='mobile' \
+            --exclude='scripts' --exclude='supabase' --exclude='tests' \
+            --exclude='functions' --exclude='node_modules' \
+            --exclude='package.json' --exclude='package-lock.json' \
+            --exclude='README.md' --exclude='deploy-build.json' ./ dist/
+          echo "dist contents:"
+          ls -la dist
+
+      - name: Set environment variables (one-time; ignore if already set)
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          netlify env:set SUPABASE_URL "$SUPABASE_URL" --site "$NETLIFY_SITE_ID" || true
+          netlify env:set SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY" --site "$NETLIFY_SITE_ID" || true
+          netlify env:set ADMIN_WRITE_KEY "ryan2026" --site "$NETLIFY_SITE_ID" || true
+
+      - name: Direct deploy (no build credits used)
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: netlify deploy --prod --dir=dist --functions=functions --site="$NETLIFY_SITE_ID" --message "direct deploy from GitHub Actions"
